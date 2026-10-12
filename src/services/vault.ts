@@ -13,9 +13,17 @@ export class VaultManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed: VaultFile[] = JSON.parse(stored);
+        let parsed: VaultFile[] = JSON.parse(stored);
         if (parsed && parsed.length > 0) {
+          const existingIdx = parsed.findIndex(f => f.id === 'review-1-ppt');
+          if (existingIdx === -1 && DEFAULT_VAULT_FILES.length > 0) {
+            parsed = [DEFAULT_VAULT_FILES[0], ...parsed];
+          } else if (existingIdx > 0) {
+            const [ppt] = parsed.splice(existingIdx, 1);
+            parsed.unshift(ppt);
+          }
           this.files = parsed;
+          this.persist();
           return this.files;
         }
       }

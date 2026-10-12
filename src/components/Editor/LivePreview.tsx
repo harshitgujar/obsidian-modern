@@ -173,6 +173,23 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       const line = bodyLines[i];
       const realLineIndex = startLineOffset + i;
 
+      // 0. Image ![alt](src)
+      const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)/);
+      if (imgMatch) {
+        const alt = imgMatch[1];
+        const src = imgMatch[2];
+        blocks.push(
+          <div key={`img-${i}`} className="my-5 flex flex-col items-center justify-center">
+            <div className="rounded-xl overflow-hidden border border-zinc-700/80 shadow-xl bg-zinc-950 p-1 max-w-full">
+              <img src={src} alt={alt} className="max-h-[55vh] w-auto object-contain rounded-lg" />
+            </div>
+            {alt && <div className="text-xs text-zinc-400 mt-2 italic">{alt}</div>}
+          </div>
+        );
+        i++;
+        continue;
+      }
+
       // 1. Fenced Code Block ```
       if (line.trim().startsWith('```')) {
         const lang = line.trim().slice(3).trim();

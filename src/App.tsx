@@ -9,6 +9,7 @@ import { GraphView } from './components/Graph/GraphView';
 import { TabBar } from './components/Tabs/TabBar';
 import { QuickSwitcher } from './components/Modals/QuickSwitcher';
 import { CommandPalette } from './components/Modals/CommandPalette';
+import { SlideDeck } from './components/Presentation/SlideDeck';
 import { 
   PanelLeftClose, 
   PanelLeftOpen, 
@@ -16,7 +17,8 @@ import {
   PanelRightOpen, 
   Share2, 
   Sparkles,
-  Columns
+  Columns,
+  Presentation
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -33,6 +35,7 @@ export const App: React.FC = () => {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const [isGraphViewActive, setIsGraphViewActive] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [isPresentationOpen, setIsPresentationOpen] = useState(false);
 
   // Tabs
   const [tabs, setTabs] = useState<TabItem[]>([]);
@@ -336,6 +339,13 @@ export const App: React.FC = () => {
       action: () => handleExportZip()
     },
     {
+      id: 'start-presentation',
+      title: 'Start Slide Presentation',
+      category: 'View',
+      shortcut: 'Alt+P',
+      action: () => setIsPresentationOpen(true)
+    },
+    {
       id: 'reset-demo-vault',
       title: 'Reset to Default Starter Vault',
       category: 'Vault',
@@ -349,12 +359,15 @@ export const App: React.FC = () => {
     }
   ], [handleCreateFile, handleOpenDailyNote, handleSelectFile]);
 
-  // Global Keyboard Shortcuts (Ctrl+O, Ctrl+P, Ctrl+G, etc.)
+  // Global Keyboard Shortcuts (Ctrl+O, Ctrl+P, Ctrl+G, Alt+P etc.)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
-      if (isCmdOrCtrl && e.key.toLowerCase() === 'o') {
+      if (e.altKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setIsPresentationOpen(prev => !prev);
+      } else if (isCmdOrCtrl && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         setIsQuickSwitcherOpen(prev => !prev);
       } else if (isCmdOrCtrl && e.key.toLowerCase() === 'p') {
@@ -432,6 +445,16 @@ export const App: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsPresentationOpen(true)}
+              title="Start Slide Presentation (Alt+P)"
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-950/60 text-purple-300 border border-purple-800/60 hover:bg-purple-900/80 text-[11px] font-medium"
+            >
+              <Presentation className="w-3.5 h-3.5" />
+              <span>Present</span>
+              <kbd className="text-[10px] bg-purple-900/60 px-1 rounded text-purple-300">Alt+P</kbd>
+            </button>
+
+            <button
               onClick={() => setIsCommandPaletteOpen(true)}
               title="Command Palette (Ctrl+P)"
               className="flex items-center gap-1.5 px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 text-[11px]"
@@ -488,6 +511,7 @@ export const App: React.FC = () => {
                 setActiveSidebarTab('search');
                 setIsSidebarOpen(true);
               }}
+              onStartPresentation={() => setIsPresentationOpen(true)}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-zinc-500 text-sm select-none">
@@ -526,6 +550,16 @@ export const App: React.FC = () => {
         commands={commands}
         onClose={() => setIsCommandPaletteOpen(false)}
       />
+
+      {/* Fullscreen Slide Deck Presentation */}
+      {activeFile && (
+        <SlideDeck
+          file={activeFile}
+          isOpen={isPresentationOpen}
+          onClose={() => setIsPresentationOpen(false)}
+          onNavigateLink={handleNavigateLink}
+        />
+      )}
     </div>
   );
 };

@@ -12,7 +12,8 @@ import {
   Clock, 
   CheckCircle2, 
   Split,
-  Plus
+  Plus,
+  Presentation
 } from 'lucide-react';
 
 interface EditorProps {
@@ -24,6 +25,7 @@ interface EditorProps {
   onContentChange: (content: string) => void;
   onNavigateLink: (target: string) => void;
   onTagClick: (tag: string) => void;
+  onStartPresentation?: () => void;
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -34,7 +36,8 @@ export const Editor: React.FC<EditorProps> = ({
   onViewModeChange,
   onContentChange,
   onNavigateLink,
-  onTagClick
+  onTagClick,
+  onStartPresentation
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [cursorPos, setCursorPos] = useState<number>(0);
@@ -232,6 +235,17 @@ export const Editor: React.FC<EditorProps> = ({
             <BookOpen className="w-3.5 h-3.5" />
             <span>Reading</span>
           </button>
+
+          {onStartPresentation && (
+            <button
+              onClick={onStartPresentation}
+              title="Start Slide Presentation (Alt+P)"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors bg-purple-950/60 text-purple-300 border border-purple-800/60 hover:bg-purple-900/80 ml-1.5 font-medium"
+            >
+              <Presentation className="w-3.5 h-3.5" />
+              <span>Slides</span>
+            </button>
+          )}
         </div>
       </div>
 
