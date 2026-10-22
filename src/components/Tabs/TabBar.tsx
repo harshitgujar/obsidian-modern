@@ -25,7 +25,11 @@ import {
   Settings,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Bookmark,
+  Save,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 
 interface TabBarProps {
@@ -39,8 +43,13 @@ interface TabBarProps {
   activeViewMode?: EditorViewMode;
   canGoBack?: boolean;
   canGoForward?: boolean;
+  isBookmarked?: boolean;
+  isSaving?: boolean;
+  hasUnsavedChanges?: boolean;
   onGoBack?: () => void;
   onGoForward?: () => void;
+  onToggleBookmark?: () => void;
+  onSave?: () => void;
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
   onNewTab: () => void;
@@ -73,8 +82,13 @@ export const TabBar: React.FC<TabBarProps> = ({
   activeViewMode = 'live',
   canGoBack = false,
   canGoForward = false,
+  isBookmarked = false,
+  isSaving = false,
+  hasUnsavedChanges = false,
   onGoBack,
   onGoForward,
+  onToggleBookmark,
+  onSave,
   onSelectTab,
   onCloseTab,
   onNewTab,
@@ -210,7 +224,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         </button>
       </div>
 
-      {/* Right controls: Quick Switcher + View Mode + Split + Zen + Inspector + More */}
+      {/* Right controls: Quick Switcher + Save + Bookmark + View Mode + Split + Zen + Inspector + More */}
       <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
         {/* Quick Switcher Search Pill (on primary) */}
         {isPrimary && onOpenQuickSwitcher && (
@@ -225,41 +239,96 @@ export const TabBar: React.FC<TabBarProps> = ({
           </button>
         )}
 
+        {/* Save Button / Live Disk Status */}
+        {onSave && (
+          <button
+            onClick={onSave}
+            title={
+              isSaving
+                ? 'Writing to disk...'
+                : hasUnsavedChanges
+                ? 'Save note to disk (⌘S)'
+                : 'All changes saved to disk (⌘S)'
+            }
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition-all ${
+              isSaving
+                ? 'bg-purple-950/40 border-purple-500/50 text-purple-300 animate-pulse'
+                : hasUnsavedChanges
+                ? 'bg-amber-950/40 border-amber-500/60 text-amber-300 hover:bg-amber-900/50'
+                : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'
+            }`}
+          >
+            {isSaving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+            ) : hasUnsavedChanges ? (
+              <Save className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span className="text-[11px]">
+              {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
+            </span>
+            {hasUnsavedChanges && (
+              <kbd className="hidden lg:inline text-[9px] bg-zinc-800 px-1 py-0.2 rounded text-zinc-400 font-mono">
+                ⌘S
+              </kbd>
+            )}
+          </button>
+        )}
+
+        {/* Bookmark Button (toggles .obsidian/bookmarks.json) */}
+        {onToggleBookmark && (
+          <button
+            onClick={onToggleBookmark}
+            title={isBookmarked ? 'Remove bookmark from note (⌘D)' : 'Bookmark note to .obsidian/bookmarks.json (⌘D)'}
+            className={`p-1.5 rounded-lg border transition-all ${
+              isBookmarked
+                ? 'bg-amber-500/15 border-amber-500/50 text-amber-400 hover:bg-amber-500/25 shadow-sm'
+                : 'border-zinc-800/80 bg-zinc-900/60 text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60'
+            }`}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
+          </button>
+        )}
+
         {/* View Mode Segmented Switcher (Live / Source / Reading) */}
         {onToggleViewMode && (
-          <div className="flex items-center bg-zinc-900/80 p-0.5 rounded-lg border border-zinc-800">
+          <div className="flex items-center bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-800">
             <button
               onClick={() => onToggleViewMode('live')}
-              title="Live Preview Mode"
-              className={`p-1 rounded transition-colors ${
+              title="Live Preview Mode: Interactive editing with live styled formatting"
+              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
                 activeViewMode === 'live'
                   ? 'bg-purple-600/30 text-purple-300 font-medium'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Live</span>
             </button>
             <button
               onClick={() => onToggleViewMode('source')}
-              title="Source Mode (CodeMirror)"
-              className={`p-1 rounded transition-colors ${
+              title="Source Mode: Raw Markdown code editor with line numbers"
+              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
                 activeViewMode === 'source'
                   ? 'bg-purple-600/30 text-purple-300 font-medium'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
               <Code className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Source</span>
             </button>
             <button
               onClick={() => onToggleViewMode('reading')}
-              title="Reading View"
-              className={`p-1 rounded transition-colors ${
+              title="Reading View: Pristine read-only publication reader"
+              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
                 activeViewMode === 'reading'
                   ? 'bg-purple-600/30 text-purple-300 font-medium'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">Reading</span>
             </button>
           </div>
         )}

@@ -1,7 +1,7 @@
 {
   "leftSidebarOpen": true,
   "rightSidebarOpen": true,
-  "activeLeftTab": "files",
+  "activeLeftTab": "bookmarks",
   "activeRightTab": "backlinks",
   "splitDirection": null,
   "panes": [
@@ -16,7 +16,7 @@
         {
           "id": "tab-1792661937200-ft6",
           "filePath": "Plugins make Obsidian special for you.md",
-          "viewMode": "live"
+          "viewMode": "reading"
         },
         {
           "id": "tab-1792661940189-9hp",
@@ -119,11 +119,14 @@
           "viewMode": "live"
         }
       ],
-      "activeTabId": "tab-1792665678366-4z6"
+      "activeTabId": "tab-1792661945028-rk1"
     }
   ],
   "activePaneId": "pane-main",
   "lastOpenFiles": [
+    "Adventurer/From plain-text note-taking.md",
+    "Adventurer/From standard note-taking.md",
+    "Adventurer/No prior experience.md",
     "Attachments/Recording 2026-10-22T09-45-19.webm",
     "202610161643 Zettelkasten Note.md",
     "202610221606 Zettelkasten Note.md",
@@ -140,9 +143,20 @@
     "Untitled Canvas 20.canvas",
     "Untitled Canvas 19.canvas",
     "Untitled Canvas 18.canvas",
-    "Formatting/Internal link.md",
-    "Untitled Canvas 17.canvas",
-    "202610221509 Zettelkasten Note.md",
-    "Untitled Canvas 16.canvas"
-  ]
+    "Formatting/Internal link.md"
+  ],
+  "fileExplorer": {
+    "sortOrder": "name-asc",
+    "collapsedFolders": {},
+    "activeFilter": "all"
+  },
+  "history": {
+    "stack": [
+      "Attachments/Recording 2026-10-22T09-45-19.webm",
+      "202610221509 Zettelkasten Note.md",
+      "Plugins make Obsidian special for you.md",
+      "Daily/2026-10-22.md"
+    ],
+    "index": 3
+  }
 }

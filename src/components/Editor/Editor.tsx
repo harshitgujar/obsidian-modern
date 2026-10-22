@@ -13,7 +13,12 @@ import {
   X,
   Image as ImageIcon,
   Music,
-  ExternalLink
+  ExternalLink,
+  BookOpen,
+  Clock,
+  Edit3,
+  Code,
+  Eye
 } from 'lucide-react';
 
 interface EditorProps {
@@ -127,6 +132,15 @@ export const Editor: React.FC<EditorProps> = ({
       return [];
     }
   }, [file.content, findText, matchCase, useRegex]);
+
+  // Reading view statistics
+  const readingStats = useMemo(() => {
+    const text = file.content || '';
+    const clean = text.replace(/^---[\s\S]*?---/, '').replace(/`[^`]*`/g, '').trim();
+    const words = clean ? clean.split(/\s+/).filter(Boolean).length : 0;
+    const readingTime = Math.max(1, Math.ceil(words / 200));
+    return { words, readingTime };
+  }, [file.content]);
 
   const handleNextMatch = () => {
     if (!matches.length) return;
@@ -515,34 +529,95 @@ export const Editor: React.FC<EditorProps> = ({
             );
           }
 
-          if (viewMode === 'live' || viewMode === 'reading') {
+          if (viewMode === 'reading') {
             return (
-              <LivePreview
-                file={file}
-                allFiles={allFiles}
-                metadata={metadata}
-                backlinks={backlinks}
-                showFrontmatter={showFrontmatter}
-                foldHeading={foldHeading}
-                onNavigateLink={onNavigateLink}
-                onTagClick={onTagClick}
-                onToggleTask={handleToggleTask}
-                onAddProperty={handleAddProperty}
-                onEnterEditMode={() => onViewModeChange('source')}
-              />
+              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]">
+                {/* Reading View Header Bar */}
+                <div className="flex items-center justify-between px-6 py-2.5 bg-zinc-900/60 border-b border-zinc-800/80 text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5 text-purple-300 font-medium bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/30">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Reading View</span>
+                    </span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="flex items-center gap-1 text-zinc-400">
+                      <Clock className="w-3 h-3 text-zinc-500" />
+                      <span>{readingStats.readingTime} min read</span>
+                    </span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400">{readingStats.words} words</span>
+                  </div>
+                  <button
+                    onClick={() => onViewModeChange('live')}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition-colors text-xs font-medium"
+                    title="Switch to Live Preview to edit (⌘E)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Edit Note</span>
+                    <kbd className="text-[10px] bg-zinc-900 px-1 py-0.5 rounded text-zinc-400 font-mono">⌘E</kbd>
+                  </button>
+                </div>
+
+                <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+                  <LivePreview
+                    file={file}
+                    allFiles={allFiles}
+                    metadata={metadata}
+                    backlinks={backlinks}
+                    showFrontmatter={showFrontmatter}
+                    foldHeading={foldHeading}
+                    onNavigateLink={onNavigateLink}
+                    onTagClick={onTagClick}
+                    onToggleTask={handleToggleTask}
+                    onAddProperty={handleAddProperty}
+                    onEnterEditMode={() => onViewModeChange('live')}
+                  />
+                </div>
+              </div>
             );
           }
 
+          if (viewMode === 'live') {
+            return (
+              /* Live Preview Mode (Interactive WYSIWYG Editing) */
+              <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
+                <CodeMirrorEditor
+                  value={file.content}
+                  onChange={onContentChange}
+                  showLineNumbers={false}
+                  allFiles={allFiles}
+                  onNavigateLink={onNavigateLink}
+                  placeholder="Start typing your note... Use [[wikilinks]], #tags, and markdown."
+                />
+              </div>
+            );
+          }
+
+          /* Source Mode (Raw CodeMirror 6 with Line Numbers) */
           return (
-            /* High-Fidelity CodeMirror 6 Source Mode */
             <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
-              <CodeMirrorEditor
-                value={file.content}
-                onChange={onContentChange}
-                showLineNumbers={showLineNumbers}
-                allFiles={allFiles}
-                onNavigateLink={onNavigateLink}
-              />
+              <div className="px-4 py-1.5 bg-zinc-900/40 border-b border-zinc-800/60 flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Code className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="font-mono text-zinc-300">Source Mode</span>
+                  <span className="text-zinc-600">•</span>
+                  <span>Raw Markdown & Line Numbers</span>
+                </div>
+                <div className="flex items-center gap-2 text-zinc-500 font-mono text-[10px]">
+                  <span>{file.content.split('\n').length} lines</span>
+                  <span>•</span>
+                  <span>{file.content.length} chars</span>
+                </div>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <CodeMirrorEditor
+                  value={file.content}
+                  onChange={onContentChange}
+                  showLineNumbers={true}
+                  allFiles={allFiles}
+                  onNavigateLink={onNavigateLink}
+                />
+              </div>
             </div>
           );
         })()}

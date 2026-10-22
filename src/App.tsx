@@ -137,6 +137,8 @@ export const App: React.FC = () => {
   // Auto-Save Debounce & Flush Refs for 60 FPS Lag-free Typing
   const saveTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const pendingContentRef = useRef<Map<string, string>>(new Map());
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const flushPendingSave = useCallback((filePath?: string) => {
     if (filePath) {
@@ -156,6 +158,31 @@ export const App: React.FC = () => {
       });
       pendingContentRef.current.clear();
     }
+  }, []);
+
+  const handleManualSave = useCallback(async (filePath?: string) => {
+    setIsSaving(true);
+    if (filePath) {
+      const timer = saveTimersRef.current.get(filePath);
+      if (timer) clearTimeout(timer);
+      saveTimersRef.current.delete(filePath);
+      const content = pendingContentRef.current.get(filePath);
+      if (content !== undefined) {
+        pendingContentRef.current.delete(filePath);
+        await vault.saveNote(filePath, content);
+      }
+    } else {
+      saveTimersRef.current.forEach(timer => clearTimeout(timer));
+      saveTimersRef.current.clear();
+      for (const [p, content] of Array.from(pendingContentRef.current.entries())) {
+        await vault.saveNote(p, content);
+      }
+      pendingContentRef.current.clear();
+    }
+    setTimeout(() => {
+      setIsSaving(false);
+      setHasUnsavedChanges(false);
+    }, 250);
   }, []);
 
   useEffect(() => {
@@ -536,8 +563,9 @@ export const App: React.FC = () => {
     // 2. Optimistic update of local `files` state for instant 60 FPS response
     setFiles(prev => prev.map(f => f.path === filePath ? { ...f, content: newContent, updatedAt: Date.now() } : f));
 
-    // 3. Track pending content for flush
+    // 3. Track pending content for flush and update save state
     pendingContentRef.current.set(filePath, newContent);
+    setHasUnsavedChanges(true);
 
     // 4. Debounced save to disk (350ms)
     const existing = saveTimersRef.current.get(filePath);
@@ -549,6 +577,9 @@ export const App: React.FC = () => {
       if (latest !== undefined) {
         pendingContentRef.current.delete(filePath);
         await vault.saveNote(filePath, latest);
+        if (pendingContentRef.current.size === 0) {
+          setHasUnsavedChanges(false);
+        }
       }
     }, 350);
 
@@ -1056,9 +1087,17 @@ export const App: React.FC = () => {
       }
     },
     {
+      id: 'editor:save-file',
+      title: 'Save active file to disk',
+      category: 'Editor',
+      shortcut: 'Ctrl+S',
+      action: () => handleManualSave()
+    },
+    {
       id: 'bookmarks:bookmark-current-view',
       title: 'Bookmarks: Bookmark active file',
       category: 'Bookmarks',
+      shortcut: 'Ctrl+D',
       action: () => {
         if (activeFile) {
           handleToggleBookmark(activeFile.path, activeFile.name.replace(/\.[^/.]+$/, ''));
@@ -1177,6 +1216,31 @@ export const App: React.FC = () => {
         e.preventDefault();
         if (activePane && activeTab) {
           handleCloseTabInPane(activePane.id, activeTab.id);
+        }
+        return;
+      }
+
+      // Save Shortcut (Cmd+S / Ctrl+S)
+      if (isCmdOrCtrl && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleManualSave();
+        return;
+      }
+
+      // Bookmark Toggle Shortcut (Cmd+D / Ctrl+D)
+      if (isCmdOrCtrl && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        if (activeFile) {
+          handleToggleBookmark(activeFile.path, activeFile.name.replace(/\.[^/.]+$/, ''));
+        }
+        return;
+      }
+
+      // Cycle / Toggle Reading View (Cmd+E / Ctrl+E)
+      if (isCmdOrCtrl && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        if (activePane && activeTab) {
+          handleViewModeChangeInPane(activePane.id, activeTab.viewMode === 'reading' ? 'live' : 'reading');
         }
         return;
       }
@@ -1403,8 +1467,17 @@ export const App: React.FC = () => {
                     activeViewMode={currentPaneTab?.viewMode || 'live'}
                     canGoBack={canGoBack}
                     canGoForward={canGoForward}
+                    isBookmarked={paneFile ? bookmarks.some(b => b.path === paneFile.path) : false}
+                    isSaving={isSaving}
+                    hasUnsavedChanges={hasUnsavedChanges}
                     onGoBack={handleGoBack}
                     onGoForward={handleGoForward}
+                    onToggleBookmark={() => {
+                      if (paneFile) {
+                        handleToggleBookmark(paneFile.path, paneFile.name.replace(/\.[^/.]+$/, ''));
+                      }
+                    }}
+                    onSave={() => handleManualSave(paneFile?.path)}
                     onSelectTab={tabId => handleSelectTabInPane(pane.id, tabId)}
                     onCloseTab={tabId => handleCloseTabInPane(pane.id, tabId)}
                     onNewTab={() => handleNewTabInPane(pane.id)}
