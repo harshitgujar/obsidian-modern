@@ -89,6 +89,23 @@ export const App: React.FC = () => {
   const [isGraphViewActive, setIsGraphViewActive] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
+  const prevSidebarStateRef = useRef({ sidebar: true, inspector: true });
+
+  const handleToggleZenMode = useCallback(() => {
+    setIsZenMode(prev => {
+      const next = !prev;
+      if (next) {
+        prevSidebarStateRef.current = { sidebar: isSidebarOpen, inspector: isInspectorOpen };
+        setIsSidebarOpen(false);
+        setIsInspectorOpen(false);
+      } else {
+        setIsSidebarOpen(prevSidebarStateRef.current.sidebar);
+        setIsInspectorOpen(prevSidebarStateRef.current.inspector);
+      }
+      return next;
+    });
+  }, [isSidebarOpen, isInspectorOpen]);
 
   // Split Panes & Tabs State
   const [panes, setPanes] = useState<PaneItem[]>([]);
@@ -747,6 +764,13 @@ export const App: React.FC = () => {
   // Comprehensive Obsidian Command Registry (from app.js)
   const commands: CommandItem[] = useMemo(() => [
     {
+      id: 'app:toggle-zen-mode',
+      title: 'View: Toggle Focus / Zen Mode',
+      category: 'View',
+      shortcut: 'Ctrl+Shift+F',
+      action: () => handleToggleZenMode()
+    },
+    {
       id: 'switcher:open',
       title: 'Quick switcher: Open quick switcher',
       category: 'Quick switcher',
@@ -1191,115 +1215,53 @@ export const App: React.FC = () => {
 
       {/* 2. Main Center Workspace (Supports Split Panes) */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        {/* Top Window Control Strip */}
-        <div className="flex items-center justify-between bg-[#121214] border-b border-zinc-800/80 px-3 py-1.5 text-xs shrink-0 select-none">
-          <div className="flex items-center gap-2.5">
-            {/* macOS Window Controls */}
-            <div className="flex items-center gap-1.5 mr-1">
-              <div className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]" />
-              <div className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]" />
-              <div className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]" />
-            </div>
-
-            <button
-              onClick={() => setIsSidebarOpen(prev => !prev)}
-              title={isSidebarOpen ? 'Collapse Left Sidebar' : 'Expand Left Sidebar'}
-              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded transition-colors"
-            >
-              {isSidebarOpen ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
-            </button>
-
-            {corePluginsConfig['switcher'] !== false && (
-              <button
-                onClick={() => setIsQuickSwitcherOpen(true)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-700/60 text-zinc-400 hover:text-zinc-200 hover:border-purple-500/50 transition-all text-[11px]"
-              >
-                <span>Quick Switcher...</span>
-                <kbd className="text-[10px] bg-zinc-800 px-1 rounded text-zinc-500">Ctrl+O</kbd>
-              </button>
-            )}
-
-            {corePluginsConfig['templates'] !== false && (
-              <button
-                onClick={() => setIsTemplateModalOpen(true)}
-                className="flex items-center gap-1 px-2 py-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 text-[11px]"
-                title="Insert Template (Ctrl+T)"
-              >
-                <FileCode className="w-3.5 h-3.5 text-purple-400" />
-                <span>Templates</span>
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {corePluginsConfig['graph'] !== false && (
-              <button
-                onClick={() => setIsGraphViewActive(prev => !prev)}
-                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-medium border transition-colors ${
-                  isGraphViewActive
-                    ? 'bg-purple-600/30 text-purple-200 border-purple-500/50'
-                    : 'text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:bg-zinc-800/60'
-                }`}
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Graph</span>
-              </button>
-            )}
-
-            {corePluginsConfig['slides'] !== false && (
-              <button
-                onClick={() => setIsPresentationOpen(true)}
-                title="Start Slide Presentation (Alt+P)"
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-950/60 text-purple-300 border border-purple-800/60 hover:bg-purple-900/80 text-[11px] font-medium"
-              >
-                <Presentation className="w-3.5 h-3.5" />
-                <span>Slides</span>
-              </button>
-            )}
-
-            {corePluginsConfig['command-palette'] !== false && (
-              <button
-                onClick={() => setIsCommandPaletteOpen(true)}
-                title="Command Palette (Ctrl+P)"
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 text-[11px]"
-              >
-                <span>Commands</span>
-                <kbd className="text-[10px] bg-zinc-800 px-1 rounded text-zinc-500">Ctrl+P</kbd>
-              </button>
-            )}
-
-            <button
-              onClick={() => setIsInspectorOpen(prev => !prev)}
-              title={isInspectorOpen ? 'Collapse Right Inspector' : 'Expand Right Inspector'}
-              className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded transition-colors"
-            >
-              {isInspectorOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        </div>
-
         {/* Main Workspace Body: Fullscreen Graph OR Split Panes */}
         <div className="flex-1 flex overflow-hidden relative">
           {isGraphViewActive ? (
-            <GraphView
-              data={graphData}
-              activeFileId={activeFilePath}
-              onSelectNode={filePath => {
-                handleNavigateLink(filePath);
-                setIsGraphViewActive(false);
-              }}
-              isMini={false}
-              initialSettings={graphConfig}
-              onSettingsChange={settings => {
-                setGraphConfig(settings);
-                vault.saveConfig('graph', settings);
-              }}
-              onClose={() => setIsGraphViewActive(false)}
-              onSplitRight={filePath => {
-                setIsGraphViewActive(false);
-                handleSplitPaneRight(filePath);
-              }}
-            />
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              <TabBar
+                tabs={[{ id: 'tab-graph', filePath: 'Interactive Graph', isPinned: true, viewMode: 'live' }]}
+                activeTabId="tab-graph"
+                files={files}
+                isPrimary={true}
+                isSidebarOpen={isSidebarOpen}
+                isInspectorOpen={false}
+                isZenMode={isZenMode}
+                onSelectTab={() => setIsGraphViewActive(false)}
+                onCloseTab={() => setIsGraphViewActive(false)}
+                onNewTab={() => {
+                  setIsGraphViewActive(false);
+                  handleNewTabInPane(activePaneId);
+                }}
+                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                onToggleZenMode={handleToggleZenMode}
+                onOpenQuickSwitcher={() => setIsQuickSwitcherOpen(true)}
+                onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onToggleGraph={() => setIsGraphViewActive(false)}
+              />
+              <div className="flex-1 overflow-hidden relative">
+                <GraphView
+                  data={graphData}
+                  activeFileId={activeFilePath}
+                  onSelectNode={filePath => {
+                    handleNavigateLink(filePath);
+                    setIsGraphViewActive(false);
+                  }}
+                  isMini={false}
+                  initialSettings={graphConfig}
+                  onSettingsChange={settings => {
+                    setGraphConfig(settings);
+                    vault.saveConfig('graph', settings);
+                  }}
+                  onClose={() => setIsGraphViewActive(false)}
+                  onSplitRight={filePath => {
+                    setIsGraphViewActive(false);
+                    handleSplitPaneRight(filePath);
+                  }}
+                />
+              </div>
+            </div>
           ) : (
             panes.map((pane, idx) => {
               const currentPaneTab = pane.tabs.find(t => t.id === pane.activeTabId) || pane.tabs[0];
@@ -1320,6 +1282,11 @@ export const App: React.FC = () => {
                     tabs={pane.tabs}
                     activeTabId={pane.activeTabId}
                     files={files}
+                    isPrimary={idx === 0}
+                    isSidebarOpen={isSidebarOpen}
+                    isInspectorOpen={isInspectorOpen}
+                    isZenMode={isZenMode}
+                    activeViewMode={currentPaneTab?.viewMode || 'live'}
                     onSelectTab={tabId => handleSelectTabInPane(pane.id, tabId)}
                     onCloseTab={tabId => handleCloseTabInPane(pane.id, tabId)}
                     onNewTab={() => handleNewTabInPane(pane.id)}
@@ -1333,7 +1300,18 @@ export const App: React.FC = () => {
                       }
                     }}
                     onFindReplace={() => setFindReplacePaneId(pane.id)}
-                    onToggleViewMode={handleCycleActiveViewMode}
+                    onToggleViewMode={mode =>
+                      mode ? handleViewModeChangeInPane(pane.id, mode) : handleCycleActiveViewMode()
+                    }
+                    onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                    onToggleInspector={() => setIsInspectorOpen(prev => !prev)}
+                    onToggleZenMode={handleToggleZenMode}
+                    onOpenQuickSwitcher={() => setIsQuickSwitcherOpen(true)}
+                    onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+                    onOpenTemplates={() => setIsTemplateModalOpen(true)}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                    onOpenSlides={() => setIsPresentationOpen(true)}
+                    onToggleGraph={() => setIsGraphViewActive(prev => !prev)}
                   />
 
                   <div className="flex-1 overflow-hidden relative">
@@ -1359,6 +1337,7 @@ export const App: React.FC = () => {
                         showFrontmatter={appConfig.showFrontmatter !== false}
                         foldHeading={appConfig.foldHeading !== false}
                         findReplaceOpen={findReplacePaneId === pane.id}
+                        isBookmarked={bookmarks.some(b => b.path === paneFile.path)}
                         onCloseFindReplace={() => setFindReplacePaneId(null)}
                         onViewModeChange={mode => handleViewModeChangeInPane(pane.id, mode)}
                         onContentChange={content => handleContentChange(paneFile.path, content)}
@@ -1369,6 +1348,10 @@ export const App: React.FC = () => {
                           setIsSidebarOpen(true);
                         }}
                         onStartPresentation={() => setIsPresentationOpen(true)}
+                        onToggleBookmark={() => handleToggleBookmark(paneFile.path, paneFile.name.replace(/\.md$/, ''))}
+                        onCopyNoteLink={() => {
+                          navigator.clipboard.writeText(`[[${paneFile.name.replace(/\.md$/, '')}]]`);
+                        }}
                       />
                     )}
                   </div>
@@ -1405,6 +1388,7 @@ export const App: React.FC = () => {
         isGraphActive={isGraphViewActive}
         graphStats={{ nodesCount: graphData.nodes.length, edgesCount: graphData.edges.length }}
         canvasStats={activeCanvasStats}
+        isZenMode={isZenMode}
         showWordCount={corePluginsConfig['word-count'] !== false}
         showBacklinks={corePluginsConfig['backlink'] !== false}
         onOpenVaultSwitcher={() => setIsVaultModalOpen(true)}

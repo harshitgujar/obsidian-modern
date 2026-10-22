@@ -12,6 +12,7 @@ interface StatusBarProps {
   isGraphActive?: boolean;
   graphStats?: { nodesCount: number; edgesCount: number };
   canvasStats?: { nodesCount: number; edgesCount: number };
+  isZenMode?: boolean;
   onOpenVaultSwitcher?: () => void;
   onCycleViewMode?: () => void;
   onOpenBacklinks?: () => void;
@@ -29,12 +30,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   isGraphActive = false,
   graphStats,
   canvasStats,
+  isZenMode = false,
   onOpenVaultSwitcher,
   onCycleViewMode,
   onOpenBacklinks,
   showWordCount = true,
   showBacklinks = true
 }) => {
+  if (isZenMode) return null;
   // Compute word and character counts for active markdown note
   const wordCount = React.useMemo(() => {
     if (!activeFile || activeFile.extension !== 'md') return 0;
@@ -62,9 +65,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <span className="font-medium truncate max-w-[140px]">{vaultName}</span>
         </button>
 
-        <div className="flex items-center gap-1 text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px]">Ready</span>
+        <div className="flex items-center gap-1.5 text-zinc-400">
+          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+          <span className="text-[10px] text-zinc-300">Synced to disk</span>
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5 text-zinc-500 text-[10px] pl-2 border-l border-zinc-800">

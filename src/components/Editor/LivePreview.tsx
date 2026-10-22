@@ -906,6 +906,15 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           </div>
         );
 
+        // Suppress redundant H1 if it duplicates the inline title at the top of note
+        const cleanFileName = file.name.replace(/\.md$/, '').trim().toLowerCase();
+        const isDuplicateDocTitle = level === 1 && i <= 3 && hText.trim().toLowerCase() === cleanFileName;
+
+        if (isDuplicateDocTitle) {
+          i++;
+          continue;
+        }
+
         if (level === 1) {
           blocks.push(<h1 key={`h1-${i}`} id={id}>{headingContent}</h1>);
         } else if (level === 2) {

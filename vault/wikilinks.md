@@ -6,3 +6,6 @@ tags: []
 
 # wikilinks
 
+
+
+![[Attachments/Recording 2026-10-22T09-52-34.webm]]

@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {
+      "id": "node-1792665352723",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": -318,
+      "y": -80,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1792665355248",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": -318,
+      "y": -80,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    }
+  ],
+  "edges": []
+}
