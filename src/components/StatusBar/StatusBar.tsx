@@ -95,24 +95,26 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           </div>
         ) : activeFile?.extension === 'md' ? (
           <>
-            {/* Word count and char count */}
-            {showWordCount && (
-              <div className="flex items-center gap-1.5 text-zinc-400 text-[10px]">
-                <span>{wordCount.toLocaleString()} words</span>
-                <span>•</span>
-                <span>{charCount.toLocaleString()} chars</span>
-              </div>
-            )}
-
             {/* Backlinks */}
             {showBacklinks && (
               <button
                 onClick={onOpenBacklinks}
-                className="hidden md:flex items-center gap-1 text-zinc-400 hover:text-purple-300 transition-colors cursor-pointer text-[10px]"
+                className="flex items-center gap-1 text-zinc-400 hover:text-purple-300 transition-colors cursor-pointer text-[10px]"
                 title="View Backlinks in Inspector"
               >
                 <span>{backlinksCount} {backlinksCount === 1 ? 'backlink' : 'backlinks'}</span>
               </button>
+            )}
+
+            {showBacklinks && showWordCount && <span className="text-zinc-600">•</span>}
+
+            {/* Word count and char count */}
+            {showWordCount && (
+              <div className="flex items-center gap-1.5 text-zinc-400 text-[10px]">
+                <span>{wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}</span>
+                <span className="text-zinc-600">•</span>
+                <span>{charCount.toLocaleString()} characters</span>
+              </div>
             )}
 
             {/* View mode toggle */}

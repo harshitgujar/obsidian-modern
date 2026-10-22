@@ -1857,6 +1857,28 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           return null;
         })}
 
+        {/* Obsidian Empty Canvas Guide (matching user screenshot) */}
+        {canvasData.nodes.length === 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              zIndex: 10
+            }}
+            className="bg-[#1c1926]/90 border border-purple-500/30 rounded-2xl px-8 py-6 text-center shadow-2xl backdrop-blur-md"
+          >
+            <div className="text-sm font-medium text-purple-300 space-y-1.5">
+              <div className="text-purple-200 font-semibold">Drag from below or double click</div>
+              <div className="text-xs text-purple-400/80">Space + Drag to pan</div>
+              <div className="text-xs text-purple-400/80">⌘ + Scroll to zoom</div>
+            </div>
+          </div>
+        )}
+
         {/* Node Cards Layer */}
         {canvasData.nodes.map(node => {
           const isSelected = selectedNodeId === node.id;

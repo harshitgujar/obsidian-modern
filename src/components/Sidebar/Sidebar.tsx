@@ -34,7 +34,10 @@ import {
   History,
   HelpCircle,
   Printer,
-  ExternalLink 
+  ExternalLink,
+  ArrowUpDown,
+  Filter,
+  Check 
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -135,19 +138,63 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }));
   };
 
-  // Group files and folders into tree
+  // Sort & Filter state
+  const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'mtime-desc' | 'ctime-desc'>('name-asc');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'journal' | 'canvas'>('all');
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  useEffect(() => {
+    const handleOutside = () => {
+      setShowSortMenu(false);
+      setShowFilterMenu(false);
+    };
+    if (showSortMenu || showFilterMenu) {
+      window.addEventListener('click', handleOutside);
+      return () => window.removeEventListener('click', handleOutside);
+    }
+  }, [showSortMenu, showFilterMenu]);
+
+  // Filtered files
+  const filteredFiles = useMemo(() => {
+    return files.filter(f => {
+      if (activeFilter === 'all') return true;
+      if (activeFilter === 'journal') {
+        const isDailyFolder = f.folder === 'Daily' || f.path.startsWith('Daily/');
+        const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(f.name);
+        const hasJournalTag = f.content?.includes('#journal') || f.content?.includes('#daily');
+        return isDailyFolder || isDatePattern || hasJournalTag;
+      }
+      if (activeFilter === 'canvas') return f.extension === 'canvas';
+      return true;
+    });
+  }, [files, activeFilter]);
+
+  // Group files and folders into tree with sorting
   const folderTree = useMemo(() => {
     const map: Record<string, VaultFile[]> = { '': [] };
     folders.forEach(f => {
       if (!map[f]) map[f] = [];
     });
-    files.forEach(file => {
+    filteredFiles.forEach(file => {
       const f = file.folder || '';
       if (!map[f]) map[f] = [];
       map[f].push(file);
     });
+
+    // Sort files inside each folder
+    Object.keys(map).forEach(key => {
+      map[key].sort((a, b) => {
+        if (sortOrder === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortOrder === 'name-desc') return b.name.localeCompare(a.name);
+        if (sortOrder === 'mtime-desc') return (b.updatedAt || 0) - (a.updatedAt || 0);
+        if (sortOrder === 'ctime-desc') return (b.createdAt || 0) - (a.createdAt || 0);
+        return 0;
+      });
+    });
+
     return map;
-  }, [files, folders]);
+  }, [filteredFiles, folders, sortOrder]);
 
   // Extract all tags across vault with frequencies
   const tagsList = useMemo(() => {
@@ -312,64 +359,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <LayoutGrid className="w-4 h-4" />
             </button>
           )}
-
-          {corePluginsConfig['daily-notes'] !== false && (
-            <button
-              onClick={onOpenDailyNote}
-              title="Open Today's Daily Note (Ctrl+Shift+D)"
-              className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/60 transition-colors"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
-          )}
-
-          {corePluginsConfig['zk-prefixer'] !== false && (
-            <button
-              onClick={onCreateZkNote}
-              title="Create Unique Zettelkasten Note"
-              className="p-2 rounded-lg text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800/60 transition-colors"
-            >
-              <Clock className="w-4 h-4" />
-            </button>
-          )}
-
-          {corePluginsConfig['random-note'] !== false && (
-            <button
-              onClick={onOpenRandomNote}
-              title="Open Random Note"
-              className="p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800/60 transition-colors"
-            >
-              <Shuffle className="w-4 h-4" />
-            </button>
-          )}
-
-          {corePluginsConfig['audio-recorder'] !== false && (
-            <button
-              onClick={onToggleAudioRecording}
-              title={isRecordingAudio ? 'Stop Recording & Save Audio Note' : 'Start Audio Recorder (.webm)'}
-              className={`p-2 rounded-lg transition-colors ${
-                isRecordingAudio
-                  ? 'bg-rose-600/30 text-rose-400 animate-pulse border border-rose-500/50'
-                  : 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/60'
-              }`}
-            >
-              {isRecordingAudio ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </button>
-          )}
         </div>
 
         {/* Bottom Ribbon Utilities */}
         <div className="flex flex-col items-center gap-1.5">
-          {corePluginsConfig['file-recovery'] !== false && (
-            <button
-              onClick={onOpenFileRecovery}
-              title="File Recovery Snapshots"
-              className="p-2 rounded-lg text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 transition-colors"
-            >
-              <History className="w-4 h-4" />
-            </button>
-          )}
-
           <button
             onClick={onOpenVaultManager}
             title="Manage Vaults on Disk"
@@ -430,9 +423,150 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <FolderPlus className="w-3.5 h-3.5" />
               </button>
+
+              {/* Sort Menu */}
+              <div className="relative">
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowSortMenu(prev => !prev);
+                    setShowFilterMenu(false);
+                  }}
+                  title="Change sort order"
+                  className={`p-1 rounded transition-colors ${
+                    showSortMenu ? 'text-purple-400 bg-zinc-800' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                  }`}
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                </button>
+                {showSortMenu && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    className="absolute right-0 top-full mt-1.5 w-48 bg-[#1a1a20]/95 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl p-1 z-50 text-xs text-zinc-300 flex flex-col gap-0.5"
+                  >
+                    <button
+                      onClick={() => {
+                        setSortOrder('name-asc');
+                        setShowSortMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-asc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span>File name (A to Z)</span>
+                      {sortOrder === 'name-asc' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSortOrder('name-desc');
+                        setShowSortMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span>File name (Z to A)</span>
+                      {sortOrder === 'name-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSortOrder('mtime-desc');
+                        setShowSortMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'mtime-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span>Modified time (new first)</span>
+                      {sortOrder === 'mtime-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSortOrder('ctime-desc');
+                        setShowSortMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'ctime-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span>Created time (new first)</span>
+                      {sortOrder === 'ctime-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Filter Menu */}
+              <div className="relative">
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowFilterMenu(prev => !prev);
+                    setShowSortMenu(false);
+                  }}
+                  title="Filter notes by type or tag"
+                  className={`p-1 rounded transition-colors ${
+                    activeFilter !== 'all' ? 'text-purple-300 bg-purple-600/30' : showFilterMenu ? 'text-purple-400 bg-zinc-800' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                  }`}
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                </button>
+                {showFilterMenu && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    className="absolute right-0 top-full mt-1.5 w-48 bg-[#1a1a20]/95 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl p-1 z-50 text-xs text-zinc-300 flex flex-col gap-0.5"
+                  >
+                    <button
+                      onClick={() => {
+                        setActiveFilter('all');
+                        setShowFilterMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'all' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span>All Notes</span>
+                      {activeFilter === 'all' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveFilter('journal');
+                        setShowFilterMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'journal' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Daily Journals</span>
+                      </span>
+                      {activeFilter === 'journal' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveFilter('canvas');
+                        setShowFilterMenu(false);
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'canvas' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <LayoutGrid className="w-3.5 h-3.5 text-orange-400" />
+                        <span>Canvases (.canvas)</span>
+                      </span>
+                      {activeFilter === 'canvas' && <Check className="w-3 h-3 text-purple-400" />}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
+
+        {/* Active Filter Indicator */}
+        {activeFilter !== 'all' && activeSidebarTab === 'files' && (
+          <div className="px-3 py-1.5 bg-purple-950/40 border-b border-purple-900/40 text-[11px] text-purple-300 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 capitalize font-medium">
+              <Filter className="w-3 h-3 text-purple-400" />
+              <span>Filter: {activeFilter === 'journal' ? 'Daily Journals' : activeFilter}</span>
+            </span>
+            <button
+              onClick={() => setActiveFilter('all')}
+              className="text-purple-400 hover:text-purple-100 p-0.5 rounded hover:bg-purple-900/50"
+              title="Clear filter"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {/* New Folder Input */}
         {isCreatingFolder && activeSidebarTab === 'files' && (
