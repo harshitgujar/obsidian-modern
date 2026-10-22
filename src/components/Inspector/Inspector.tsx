@@ -22,6 +22,8 @@ interface InspectorProps {
   onNavigateFile: (filePath: string) => void;
   onLinkMention: (sourceFilePath: string, mentionKeyword: string) => void;
   corePluginsConfig?: Record<string, any>;
+  activeTab?: InspectorTab;
+  onSelectTab?: (tab: InspectorTab) => void;
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -32,7 +34,9 @@ export const Inspector: React.FC<InspectorProps> = ({
   graphData,
   onNavigateFile,
   onLinkMention,
-  corePluginsConfig = {}
+  corePluginsConfig = {},
+  activeTab: externalActiveTab,
+  onSelectTab
 }) => {
   const showBacklinks = corePluginsConfig['backlink'] !== false;
   const showOutlinks = corePluginsConfig['outgoing-link'] !== false;
@@ -40,7 +44,14 @@ export const Inspector: React.FC<InspectorProps> = ({
   const showGraph = corePluginsConfig['graph'] !== false;
 
   const defaultTab: InspectorTab = showBacklinks ? 'backlinks' : showOutlinks ? 'outgoing' : showOutline ? 'outline' : 'localGraph';
-  const [activeTab, setActiveTab] = useState<InspectorTab>(defaultTab);
+  const [internalTab, setInternalTab] = useState<InspectorTab>(defaultTab);
+  const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalTab;
+
+  const handleTabClick = (tab: InspectorTab) => {
+    setInternalTab(tab);
+    if (onSelectTab) onSelectTab(tab);
+  };
+
   const [collapsedSections, setCollapsedSections] = useState<{ linked: boolean; unlinked: boolean }>({
     linked: false,
     unlinked: false
@@ -62,7 +73,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       <div className="flex items-center gap-1 border-b border-zinc-800/80 bg-[#101012] p-1.5 shrink-0 overflow-x-auto">
         {showBacklinks && (
           <button
-            onClick={() => setActiveTab('backlinks')}
+            onClick={() => handleTabClick('backlinks')}
             title="Backlinks"
             className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
               activeTab === 'backlinks'
@@ -82,7 +93,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {showOutlinks && (
           <button
-            onClick={() => setActiveTab('outgoing')}
+            onClick={() => handleTabClick('outgoing')}
             title="Outgoing Links"
             className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
               activeTab === 'outgoing'
@@ -102,7 +113,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {showOutline && (
           <button
-            onClick={() => setActiveTab('outline')}
+            onClick={() => handleTabClick('outline')}
             title="Document Outline"
             className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
               activeTab === 'outline'
@@ -117,7 +128,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {showGraph && (
           <button
-            onClick={() => setActiveTab('localGraph')}
+            onClick={() => handleTabClick('localGraph')}
             title="Local Graph"
             className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
               activeTab === 'localGraph'

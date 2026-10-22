@@ -8,7 +8,8 @@ import {
   CommandItem, 
   GraphData, 
   BookmarkItem, 
-  VaultInfo 
+  VaultInfo,
+  InspectorTab 
 } from './types';
 import { vault } from './services/vault';
 import { graphIndexer } from './services/graphIndexer';
@@ -85,12 +86,18 @@ export const App: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('files');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
+  const [inspectorActiveTab, setInspectorActiveTab] = useState<InspectorTab>('backlinks');
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const [isGraphViewActive, setIsGraphViewActive] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
   const prevSidebarStateRef = useRef({ sidebar: true, inspector: true });
+
+  // True File Navigation History Stack (< and > buttons, Alt+Left/Alt+Right, Cmd+[/Cmd+])
+  const [historyStack, setHistoryStack] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const isNavigatingHistoryRef = useRef<boolean>(false);
 
   const handleToggleZenMode = useCallback(() => {
     setIsZenMode(prev => {
@@ -309,6 +316,27 @@ export const App: React.FC = () => {
 
   const activeFilePath = activeTab?.filePath || '';
 
+  // Maintain true file navigation history stack
+  useEffect(() => {
+    if (!activeFilePath) return;
+    if (isNavigatingHistoryRef.current) {
+      isNavigatingHistoryRef.current = false;
+      return;
+    }
+    setHistoryStack(prev => {
+      if (historyIndex >= 0 && prev[historyIndex] === activeFilePath) {
+        return prev;
+      }
+      const sliced = historyIndex >= 0 ? prev.slice(0, historyIndex + 1) : [];
+      if (sliced.length > 0 && sliced[sliced.length - 1] === activeFilePath) {
+        return sliced;
+      }
+      const next = [...sliced, activeFilePath];
+      setHistoryIndex(next.length - 1);
+      return next;
+    });
+  }, [activeFilePath]);
+
   const activeFile = useMemo(() => {
     return files.find(f => f.path === activeFilePath);
   }, [files, activeFilePath]);
@@ -386,6 +414,32 @@ export const App: React.FC = () => {
       })
     );
   }, [activePaneId, appConfig.defaultViewMode]);
+
+  // History traversal methods
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex >= 0 && historyIndex < historyStack.length - 1;
+
+  const handleGoBack = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const targetIndex = historyIndex - 1;
+    const targetPath = historyStack[targetIndex];
+    if (!targetPath) return;
+
+    isNavigatingHistoryRef.current = true;
+    setHistoryIndex(targetIndex);
+    handleSelectFile(targetPath);
+  }, [historyIndex, historyStack, handleSelectFile]);
+
+  const handleGoForward = useCallback(() => {
+    if (historyIndex < 0 || historyIndex >= historyStack.length - 1) return;
+    const targetIndex = historyIndex + 1;
+    const targetPath = historyStack[targetIndex];
+    if (!targetPath) return;
+
+    isNavigatingHistoryRef.current = true;
+    setHistoryIndex(targetIndex);
+    handleSelectFile(targetPath);
+  }, [historyIndex, historyStack, handleSelectFile]);
 
   const handleCreateFile = useCallback(async (folder: string = '', ext: string = 'md', titleHint?: string) => {
     const prefix = ext === 'canvas' ? 'Untitled Canvas' : 'Untitled Note';
@@ -766,6 +820,20 @@ export const App: React.FC = () => {
   // Comprehensive Obsidian Command Registry (from app.js)
   const commands: CommandItem[] = useMemo(() => [
     {
+      id: 'app:go-back',
+      title: 'Navigate back',
+      category: 'Navigate',
+      shortcut: 'Alt+Left',
+      action: () => handleGoBack()
+    },
+    {
+      id: 'app:go-forward',
+      title: 'Navigate forward',
+      category: 'Navigate',
+      shortcut: 'Alt+Right',
+      action: () => handleGoForward()
+    },
+    {
       id: 'app:toggle-zen-mode',
       title: 'View: Toggle Focus / Zen Mode',
       category: 'View',
@@ -1039,6 +1107,8 @@ export const App: React.FC = () => {
     handleDeleteFile,
     handleContentChange,
     handleSelectFile,
+    handleGoBack,
+    handleGoForward,
     syncFromVaultManager
   ]);
 
@@ -1084,6 +1154,18 @@ export const App: React.FC = () => {
         if (activePane && activeTab) {
           handleCloseTabInPane(activePane.id, activeTab.id);
         }
+        return;
+      }
+
+      // History navigation shortcuts (Alt+Left / Cmd+[ and Alt+Right / Cmd+])
+      if ((e.altKey && (e.key === 'ArrowLeft' || e.key === 'Left')) || ((e.metaKey || e.ctrlKey) && e.key === '[')) {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
+      if ((e.altKey && (e.key === 'ArrowRight' || e.key === 'Right')) || ((e.metaKey || e.ctrlKey) && e.key === ']')) {
+        e.preventDefault();
+        handleGoForward();
         return;
       }
 
@@ -1150,7 +1232,9 @@ export const App: React.FC = () => {
     isPresentationOpen,
     activePane,
     activeTab,
-    handleCloseTabInPane
+    handleCloseTabInPane,
+    handleGoBack,
+    handleGoForward
   ]);
 
   if (!isVaultLoaded) {
@@ -1229,6 +1313,10 @@ export const App: React.FC = () => {
                 isSidebarOpen={isSidebarOpen}
                 isInspectorOpen={false}
                 isZenMode={isZenMode}
+                canGoBack={canGoBack}
+                canGoForward={canGoForward}
+                onGoBack={handleGoBack}
+                onGoForward={handleGoForward}
                 onSelectTab={() => setIsGraphViewActive(false)}
                 onCloseTab={() => setIsGraphViewActive(false)}
                 onNewTab={() => {
@@ -1289,6 +1377,10 @@ export const App: React.FC = () => {
                     isInspectorOpen={isInspectorOpen}
                     isZenMode={isZenMode}
                     activeViewMode={currentPaneTab?.viewMode || 'live'}
+                    canGoBack={canGoBack}
+                    canGoForward={canGoForward}
+                    onGoBack={handleGoBack}
+                    onGoForward={handleGoForward}
                     onSelectTab={tabId => handleSelectTabInPane(pane.id, tabId)}
                     onCloseTab={tabId => handleCloseTabInPane(pane.id, tabId)}
                     onNewTab={() => handleNewTabInPane(pane.id)}
@@ -1375,6 +1467,8 @@ export const App: React.FC = () => {
           corePluginsConfig={corePluginsConfig}
           onNavigateFile={handleNavigateLink}
           onLinkMention={handleLinkMention}
+          activeTab={inspectorActiveTab}
+          onSelectTab={setInspectorActiveTab}
         />
       )}
       </div>
@@ -1395,7 +1489,10 @@ export const App: React.FC = () => {
         showBacklinks={corePluginsConfig['backlink'] !== false}
         onOpenVaultSwitcher={() => setIsVaultModalOpen(true)}
         onCycleViewMode={handleCycleActiveViewMode}
-        onOpenBacklinks={() => setIsInspectorOpen(true)}
+        onOpenBacklinks={() => {
+          setIsInspectorOpen(true);
+          setInspectorActiveTab('backlinks');
+        }}
       />
 
       {/* Quick Switcher Modal (Ctrl+O) */}

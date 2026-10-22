@@ -23,7 +23,9 @@ import {
   Presentation,
   FileCode,
   Settings,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface TabBarProps {
@@ -35,6 +37,10 @@ interface TabBarProps {
   isInspectorOpen?: boolean;
   isZenMode?: boolean;
   activeViewMode?: EditorViewMode;
+  canGoBack?: boolean;
+  canGoForward?: boolean;
+  onGoBack?: () => void;
+  onGoForward?: () => void;
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
   onNewTab: () => void;
@@ -65,6 +71,10 @@ export const TabBar: React.FC<TabBarProps> = ({
   isInspectorOpen = true,
   isZenMode = false,
   activeViewMode = 'live',
+  canGoBack = false,
+  canGoForward = false,
+  onGoBack,
+  onGoForward,
   onSelectTab,
   onCloseTab,
   onNewTab,
@@ -108,6 +118,26 @@ export const TabBar: React.FC<TabBarProps> = ({
               <div className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] hover:brightness-110 cursor-pointer" />
               <div className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] hover:brightness-110 cursor-pointer" />
               <div className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] hover:brightness-110 cursor-pointer" />
+            </div>
+
+            {/* Navigation History Arrows (< and >) matching Real Obsidian */}
+            <div className="flex items-center gap-0.5 ml-0.5">
+              <button
+                onClick={onGoBack}
+                disabled={!canGoBack}
+                title="Navigate Back (Alt+← / ⌘[)"
+                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={onGoForward}
+                disabled={!canGoForward}
+                title="Navigate Forward (Alt+→ / ⌘])"
+                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {onToggleSidebar && (

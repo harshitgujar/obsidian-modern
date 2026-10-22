@@ -37,7 +37,12 @@ import {
   ExternalLink,
   ArrowUpDown,
   Filter,
-  Check 
+  Check,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Image as ImageIcon,
+  Music,
+  FileCode 
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -201,6 +206,77 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     return map;
   }, [filteredFiles, folders, sortOrder]);
+
+  const allFoldersList = useMemo(() => {
+    return Object.keys(folderTree).filter(f => f !== '');
+  }, [folderTree]);
+
+  const areAllFoldersCollapsed = useMemo(() => {
+    if (allFoldersList.length === 0) return false;
+    return allFoldersList.every(f => collapsedFolders[f]);
+  }, [allFoldersList, collapsedFolders]);
+
+  const handleToggleCollapseAll = () => {
+    if (areAllFoldersCollapsed) {
+      // Expand all folders
+      setCollapsedFolders({});
+    } else {
+      // Collapse all folders
+      const nextCollapsed: Record<string, boolean> = {};
+      allFoldersList.forEach(f => {
+        nextCollapsed[f] = true;
+      });
+      setCollapsedFolders(nextCollapsed);
+    }
+  };
+
+  const renderFileTypeIcon = (ext: string) => {
+    const lower = ext.toLowerCase();
+    if (lower === 'canvas') {
+      return <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-amber-400/90" />;
+    }
+    if (lower === 'pdf') {
+      return <FileText className="w-3.5 h-3.5 shrink-0 text-rose-400/90" />;
+    }
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
+      return <ImageIcon className="w-3.5 h-3.5 shrink-0 text-sky-400/90" />;
+    }
+    if (['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lower)) {
+      return <Music className="w-3.5 h-3.5 shrink-0 text-emerald-400/90" />;
+    }
+    if (lower === 'base') {
+      return <FileCode className="w-3.5 h-3.5 shrink-0 text-purple-400/90" />;
+    }
+    return <FileText className="w-3.5 h-3.5 shrink-0 opacity-60" />;
+  };
+
+  const renderFileTypeBadge = (ext: string) => {
+    const lower = ext.toLowerCase();
+    if (lower === 'md') return null;
+
+    let label = lower.toUpperCase();
+    let badgeClasses = 'bg-zinc-800/90 text-zinc-400 border-zinc-700/70';
+
+    if (lower === 'canvas') {
+      badgeClasses = 'bg-amber-500/15 text-amber-400 border-amber-500/35';
+    } else if (lower === 'pdf') {
+      badgeClasses = 'bg-rose-500/15 text-rose-400 border-rose-500/35';
+    } else if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
+      label = lower === 'jpg' || lower === 'jpeg' ? 'IMG' : lower.toUpperCase();
+      badgeClasses = 'bg-sky-500/15 text-sky-400 border-sky-500/35';
+    } else if (lower === 'base') {
+      badgeClasses = 'bg-purple-500/15 text-purple-400 border-purple-500/35';
+    } else if (['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lower)) {
+      label = 'AUDIO';
+      badgeClasses = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35';
+    }
+
+    return (
+      <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider shrink-0 select-none ${badgeClasses}`}>
+        {label}
+      </span>
+    );
+  };
 
   // Extract all tags across vault with frequencies
   const tagsList = useMemo(() => {
@@ -471,6 +547,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
 
+              {/* Collapse / Expand All Folders Toggle */}
+              <button
+                onClick={handleToggleCollapseAll}
+                title={areAllFoldersCollapsed ? 'Expand all folders' : 'Collapse all folders'}
+                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              >
+                {areAllFoldersCollapsed ? <ChevronsUpDown className="w-3.5 h-3.5" /> : <ChevronsDownUp className="w-3.5 h-3.5" />}
+              </button>
+
               {/* Filter Menu */}
               <div className="relative">
                 <button
@@ -636,11 +721,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
-                        {isCanvas ? (
-                          <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-orange-400/90" />
-                        ) : (
-                          <FileText className="w-3.5 h-3.5 shrink-0 opacity-60" />
-                        )}
+                        {renderFileTypeIcon(file.extension)}
 
                         {editingFilePath === file.path ? (
                           <input
@@ -656,16 +737,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             className="bg-zinc-900 text-zinc-100 px-1 py-0.5 rounded border border-purple-500 focus:outline-none w-32"
                           />
                         ) : (
-                          <span className="truncate">{file.name.replace(/\.(md|canvas|png|jpg|base)$/, '')}</span>
+                          <span className="truncate">{file.name.replace(/\.(md|canvas|png|jpg|jpeg|webp|gif|svg|base|pdf|webm|mp3|wav|ogg|m4a)$/, '')}</span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {file.extension !== 'md' && (
-                          <span className="text-[9px] font-mono text-zinc-500 font-semibold uppercase tracking-wider">
-                            {file.extension}
-                          </span>
-                        )}
+                        {renderFileTypeBadge(file.extension)}
                       </div>
 
                       <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0">

@@ -10,7 +10,10 @@ import {
   Search, 
   ChevronUp, 
   ChevronDown, 
-  X
+  X,
+  Image as ImageIcon,
+  Music,
+  ExternalLink
 } from 'lucide-react';
 
 interface EditorProps {
@@ -444,32 +447,105 @@ export const Editor: React.FC<EditorProps> = ({
           </div>
         )}
 
-        {viewMode === 'live' || viewMode === 'reading' ? (
-          <LivePreview
-            file={file}
-            allFiles={allFiles}
-            metadata={metadata}
-            backlinks={backlinks}
-            showFrontmatter={showFrontmatter}
-            foldHeading={foldHeading}
-            onNavigateLink={onNavigateLink}
-            onTagClick={onTagClick}
-            onToggleTask={handleToggleTask}
-            onAddProperty={handleAddProperty}
-            onEnterEditMode={() => onViewModeChange('source')}
-          />
-        ) : (
-          /* High-Fidelity CodeMirror 6 Source Mode */
-          <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
-            <CodeMirrorEditor
-              value={file.content}
-              onChange={onContentChange}
-              showLineNumbers={showLineNumbers}
-              allFiles={allFiles}
-              onNavigateLink={onNavigateLink}
-            />
-          </div>
-        )}
+        {(() => {
+          const lowerExt = file.extension.toLowerCase();
+          const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lowerExt);
+          const isAudio = ['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lowerExt);
+          const isPdf = lowerExt === 'pdf';
+
+          if (isImage) {
+            return (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#141416] overflow-auto select-none">
+                <div className="max-w-4xl max-h-[80vh] flex flex-col items-center gap-4 bg-[#18181b] p-4 rounded-xl border border-zinc-800 shadow-2xl">
+                  <img
+                    src={`/api/vault/file/raw?path=${encodeURIComponent(file.path)}`}
+                    alt={file.name}
+                    className="max-h-[66vh] max-w-full object-contain rounded-lg"
+                  />
+                  <div className="flex items-center justify-between w-full text-xs text-zinc-400 px-2 pt-2 border-t border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                      <span className="font-mono text-zinc-300">{file.name}</span>
+                      <span>•</span>
+                      <span>{(file.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                    <button
+                      onClick={() => vault.openInDefaultApp(file.path)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Open in default app</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (isAudio) {
+            return (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#141416] select-none">
+                <div className="w-full max-w-md bg-[#18181b] p-6 rounded-2xl border border-zinc-800 shadow-2xl flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <Music className="w-8 h-8" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-zinc-100 text-sm">{file.name}</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Audio recording • {(file.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                  <audio
+                    controls
+                    src={`/api/vault/file/raw?path=${encodeURIComponent(file.path)}`}
+                    className="w-full mt-2"
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          if (isPdf) {
+            return (
+              <div className="flex-1 flex flex-col h-full bg-[#141416]">
+                <iframe
+                  src={`/api/vault/file/raw?path=${encodeURIComponent(file.path)}`}
+                  title={file.name}
+                  className="w-full h-full border-0"
+                />
+              </div>
+            );
+          }
+
+          if (viewMode === 'live' || viewMode === 'reading') {
+            return (
+              <LivePreview
+                file={file}
+                allFiles={allFiles}
+                metadata={metadata}
+                backlinks={backlinks}
+                showFrontmatter={showFrontmatter}
+                foldHeading={foldHeading}
+                onNavigateLink={onNavigateLink}
+                onTagClick={onTagClick}
+                onToggleTask={handleToggleTask}
+                onAddProperty={handleAddProperty}
+                onEnterEditMode={() => onViewModeChange('source')}
+              />
+            );
+          }
+
+          return (
+            /* High-Fidelity CodeMirror 6 Source Mode */
+            <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
+              <CodeMirrorEditor
+                value={file.content}
+                onChange={onContentChange}
+                showLineNumbers={showLineNumbers}
+                allFiles={allFiles}
+                onNavigateLink={onNavigateLink}
+              />
+            </div>
+          );
+        })()}
 
         {/* Obsidian-Style Wikilink Autocomplete Dropdown */}
         {showSuggest && filteredSuggestions.length > 0 && (

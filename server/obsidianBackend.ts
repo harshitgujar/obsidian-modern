@@ -821,6 +821,43 @@ export class ObsidianVaultServer {
           return sendJson(200, { ok: true, path: body.path });
         }
 
+        if (pathname === '/api/vault/file/raw' && req.method === 'GET') {
+          const filePath = parsedUrl.searchParams.get('path');
+          if (!filePath) return sendJson(400, { error: 'Missing path query parameter' });
+          try {
+            const absPath = this.safeJoinVault(filePath);
+            if (!fs.existsSync(absPath)) return sendJson(404, { error: 'File not found' });
+            const ext = path.extname(absPath).slice(1).toLowerCase();
+            const mimeTypes: Record<string, string> = {
+              png: 'image/png',
+              jpg: 'image/jpeg',
+              jpeg: 'image/jpeg',
+              gif: 'image/gif',
+              webp: 'image/webp',
+              svg: 'image/svg+xml',
+              pdf: 'application/pdf',
+              mp3: 'audio/mpeg',
+              wav: 'audio/wav',
+              webm: 'audio/webm',
+              ogg: 'audio/ogg',
+              txt: 'text/plain',
+              md: 'text/markdown'
+            };
+            const mimeType = mimeTypes[ext] || 'application/octet-stream';
+            const stat = fs.statSync(absPath);
+            res.writeHead(200, {
+              'Content-Type': mimeType,
+              'Content-Length': stat.size,
+              'Cache-Control': 'no-cache'
+            });
+            const stream = fs.createReadStream(absPath);
+            stream.pipe(res);
+            return;
+          } catch (e: any) {
+            return sendJson(500, { error: e?.message || 'Error serving file' });
+          }
+        }
+
         if (pathname === '/api/vault/folder/create' && req.method === 'POST') {
           const body = await readJsonBody();
           if (!body.path) return sendJson(400, { error: 'Missing folder path' });
