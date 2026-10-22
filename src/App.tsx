@@ -672,8 +672,10 @@ export const App: React.FC = () => {
   }, [isRecordingAudio, appConfig.attachmentFolderPath, activeFile, handleContentChange, syncFromVaultManager]);
 
   // Split Pane Operations
-  const handleSplitPaneRight = useCallback((targetPath?: string) => {
-    const fileToOpen = targetPath || activeFilePath || files[0]?.path;
+  const handleSplitPaneRight = useCallback((targetPath?: string | any) => {
+    const fileToOpen = (typeof targetPath === 'string' && targetPath.trim())
+      ? targetPath.trim()
+      : (activeFilePath || (files.length > 0 ? files[0].path : ''));
     if (!fileToOpen) return;
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
@@ -1405,6 +1407,11 @@ export const App: React.FC = () => {
         onSelectFile={handleSelectFile}
         onSplitFile={filePath => handleSplitPaneRight(filePath)}
         onCreateFile={title => handleCreateFile('', 'md', title)}
+        onOpenVaultSearch={q => {
+          setSearchFilter(q);
+          setActiveSidebarTab('search');
+          setIsSidebarOpen(true);
+        }}
       />
 
       {/* Command Palette Modal (Ctrl+P) */}

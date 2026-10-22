@@ -237,7 +237,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         {/* Split Pane Control */}
         {onSplitRight && (
           <button
-            onClick={onSplitRight}
+            onClick={() => onSplitRight()}
             title="Split Right (Ctrl+\)"
             className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-lg transition-colors"
           >

@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { VaultFile } from '../../types';
-import { Search, FileText, Plus, CornerDownLeft, X, LayoutGrid } from 'lucide-react';
+import { 
+  Search, 
+  FileText, 
+  Plus, 
+  CornerDownLeft, 
+  X, 
+  LayoutGrid, 
+  AlignLeft,
+  ArrowRight
+} from 'lucide-react';
 
 interface QuickSwitcherProps {
   isOpen: boolean;
@@ -10,6 +19,13 @@ interface QuickSwitcherProps {
   onSelectFile: (filePath: string) => void;
   onSplitFile?: (filePath: string) => void;
   onCreateFile: (title: string) => void;
+  onOpenVaultSearch?: (query: string) => void;
+}
+
+interface ContentMatch {
+  file: VaultFile;
+  snippet: string;
+  lineNumber: number;
 }
 
 export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
@@ -19,7 +35,8 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
   onClose,
   onSelectFile,
   onSplitFile,
-  onCreateFile
+  onCreateFile,
+  onOpenVaultSearch
 }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -33,27 +50,77 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
     }
   }, [isOpen]);
 
-  const matchedFiles = useMemo(() => {
-    const mdAndCanvas = files.filter(f => !f.isBinary);
+  const mdAndCanvas = useMemo(() => files.filter(f => !f.isBinary), [files]);
+
+  // Title / Filename Matches
+  const matchedTitles = useMemo(() => {
     if (!query.trim()) {
       const recentMap = new Map(recentPaths.map((p, idx) => [p, idx]));
-      return [...mdAndCanvas].sort((a, b) => {
-        const rA = recentMap.has(a.path) ? recentMap.get(a.path)! : 9999;
-        const rB = recentMap.has(b.path) ? recentMap.get(b.path)! : 9999;
-        return rA - rB;
-      }).slice(0, 12);
+      return [...mdAndCanvas]
+        .sort((a, b) => {
+          const rA = recentMap.has(a.path) ? recentMap.get(a.path)! : 9999;
+          const rB = recentMap.has(b.path) ? recentMap.get(b.path)! : 9999;
+          return rA - rB;
+        })
+        .slice(0, 10);
     }
 
     const q = query.toLowerCase();
     return mdAndCanvas
       .filter(f => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q))
-      .slice(0, 12);
-  }, [files, query, recentPaths]);
+      .slice(0, 8);
+  }, [mdAndCanvas, query, recentPaths]);
+
+  // Content Matches (Searching inside note bodies)
+  const matchedContents = useMemo((): ContentMatch[] => {
+    const q = query.trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+
+    const results: ContentMatch[] = [];
+    const matchedPaths = new Set(matchedTitles.map(f => f.path));
+
+    for (const file of mdAndCanvas) {
+      if (file.extension !== 'md' || !file.content) continue;
+      const lower = file.content.toLowerCase();
+      const matchIdx = lower.indexOf(q);
+      if (matchIdx !== -1) {
+        // Find line number and snippet
+        const before = file.content.slice(0, matchIdx);
+        const lineNumber = before.split('\n').length;
+        const lineStart = Math.max(0, file.content.lastIndexOf('\n', matchIdx) + 1);
+        let lineEnd = file.content.indexOf('\n', matchIdx);
+        if (lineEnd === -1) lineEnd = file.content.length;
+        const snippet = file.content.slice(lineStart, lineEnd).trim();
+
+        results.push({ file, snippet, lineNumber });
+        if (results.length >= 6) break;
+      }
+    }
+    return results;
+  }, [mdAndCanvas, query, matchedTitles]);
 
   const exactMatchExists = useMemo(() => {
     const qClean = query.trim().replace(/\.[^/.]+$/, '').toLowerCase();
-    return files.some(f => f.name.replace(/\.[^/.]+$/, '').toLowerCase() === qClean || f.path.toLowerCase() === qClean);
+    return files.some(
+      f =>
+        f.name.replace(/\.[^/.]+$/, '').toLowerCase() === qClean ||
+        f.path.toLowerCase() === qClean
+    );
   }, [files, query]);
+
+  // Combine items for keyboard navigation index
+  // 1. matchedTitles
+  // 2. matchedContents
+  // 3. create note (if query & !exactMatchExists)
+  // 4. search vault action (if query)
+  const hasCreate = !exactMatchExists && query.trim().length > 0;
+  const hasVaultSearch = query.trim().length > 0 && Boolean(onOpenVaultSearch);
+
+  const totalItemsCount =
+    matchedTitles.length +
+    matchedContents.length +
+    (hasCreate ? 1 : 0) +
+    (hasVaultSearch ? 1 : 0);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -61,26 +128,32 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
       return;
     }
 
-    const totalCount = matchedFiles.length + (!exactMatchExists && query.trim() ? 1 : 0);
-
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % Math.max(1, totalCount));
+      setSelectedIndex(prev => (prev + 1) % Math.max(1, totalItemsCount));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + totalCount) % Math.max(1, totalCount));
+      setSelectedIndex(prev => (prev - 1 + totalItemsCount) % Math.max(1, totalItemsCount));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const openSplit = e.ctrlKey || e.metaKey || e.shiftKey;
-      if (selectedIndex < matchedFiles.length) {
-        if (openSplit && onSplitFile) {
-          onSplitFile(matchedFiles[selectedIndex].path);
-        } else {
-          onSelectFile(matchedFiles[selectedIndex].path);
-        }
+
+      // Check which section selectedIndex falls into
+      if (selectedIndex < matchedTitles.length) {
+        const file = matchedTitles[selectedIndex];
+        if (openSplit && onSplitFile) onSplitFile(file.path);
+        else onSelectFile(file.path);
         onClose();
-      } else if (!exactMatchExists && query.trim()) {
+      } else if (selectedIndex < matchedTitles.length + matchedContents.length) {
+        const item = matchedContents[selectedIndex - matchedTitles.length];
+        if (openSplit && onSplitFile) onSplitFile(item.file.path);
+        else onSelectFile(item.file.path);
+        onClose();
+      } else if (hasCreate && selectedIndex === matchedTitles.length + matchedContents.length) {
         onCreateFile(query.trim());
+        onClose();
+      } else if (hasVaultSearch && onOpenVaultSearch) {
+        onOpenVaultSearch(query.trim());
         onClose();
       }
     }
@@ -88,18 +161,20 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
   if (!isOpen) return null;
 
+  let currentIndex = 0;
+
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-100"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-20 select-none animate-in fade-in duration-100"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-xl bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden flex flex-col text-sm"
+        className="w-full max-w-xl bg-[#1a1a20]/98 border border-zinc-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-sm"
       >
         {/* Input Bar */}
-        <div className="flex items-center px-4 py-3 border-b border-zinc-800">
-          <Search className="w-4 h-4 text-zinc-400 mr-3 shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-zinc-800 bg-[#16161c]">
+          <Search className="w-4 h-4 text-purple-400 mr-3 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -109,86 +184,198 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Type note or canvas name to open or create..."
+            placeholder="Search by note title, content, or create new..."
             className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 focus:outline-none text-base"
           />
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
+          <button
+            onClick={onClose}
+            className="text-zinc-500 hover:text-zinc-300 p-1 rounded-lg hover:bg-zinc-800/60"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="max-h-80 overflow-y-auto p-1.5 space-y-0.5">
-          {matchedFiles.map((file, idx) => {
-            const isCanvas = file.extension === 'canvas';
-            return (
-              <div
-                key={file.path}
-                onClick={() => {
-                  onSelectFile(file.path);
-                  onClose();
-                }}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                  idx === selectedIndex
-                    ? 'bg-purple-600/30 text-purple-200'
-                    : 'text-zinc-300 hover:bg-zinc-800/60'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  {isCanvas ? (
-                    <LayoutGrid className="w-4 h-4 text-orange-400 shrink-0" />
-                  ) : (
-                    <FileText className="w-4 h-4 text-purple-400 shrink-0" />
-                  )}
-                  <span className="font-medium truncate">{file.name.replace(/\.md$/, '')}</span>
-                  {file.folder && (
-                    <span className="text-xs text-zinc-500 truncate">{file.folder}</span>
-                  )}
-                  {isCanvas && (
-                    <span className="text-[9px] px-1 rounded bg-orange-950/80 text-orange-300 border border-orange-700/40 font-mono uppercase">
-                      canvas
-                    </span>
-                  )}
-                </div>
-
-                {idx === selectedIndex && (
-                  <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                )}
+        <div className="max-h-96 overflow-y-auto p-2 space-y-1">
+          {/* Section 1: Note Titles */}
+          {matchedTitles.length > 0 && (
+            <div>
+              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+                Notes & Canvases
               </div>
-            );
-          })}
+              {matchedTitles.map(file => {
+                const isCanvas = file.extension === 'canvas';
+                const idx = currentIndex++;
+                const isSelected = idx === selectedIndex;
 
-          {/* Option to create note if doesn't exist */}
-          {!exactMatchExists && query.trim() && (
-            <div
-              onClick={() => {
-                onCreateFile(query.trim());
-                onClose();
-              }}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                selectedIndex === matchedFiles.length
-                  ? 'bg-purple-600/30 text-purple-200'
-                  : 'text-emerald-400 hover:bg-zinc-800/60'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Plus className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Create note: <strong>"{query.trim()}"</strong></span>
+                return (
+                  <div
+                    key={file.path}
+                    onClick={() => {
+                      onSelectFile(file.path);
+                      onClose();
+                    }}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
+                        : 'text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      {isCanvas ? (
+                        <LayoutGrid className="w-4 h-4 text-orange-400 shrink-0" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                      )}
+                      <span className="font-medium truncate">
+                        {file.name.replace(/\.md$/, '')}
+                      </span>
+                      {file.folder && (
+                        <span className="text-xs text-zinc-500 truncate">{file.folder}</span>
+                      )}
+                      {isCanvas && (
+                        <span className="text-[9px] px-1 rounded bg-orange-950/80 text-orange-300 border border-orange-700/40 font-mono uppercase">
+                          canvas
+                        </span>
+                      )}
+                    </div>
+
+                    {isSelected && (
+                      <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section 2: Content Matches (In-File Search) */}
+          {matchedContents.length > 0 && (
+            <div className="pt-1.5 border-t border-zinc-800/80">
+              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider flex items-center gap-1.5">
+                <AlignLeft className="w-3 h-3 text-zinc-400" />
+                <span>Text Matches in Notes</span>
               </div>
-              <CornerDownLeft className="w-3.5 h-3.5 text-purple-400" />
+              {matchedContents.map(match => {
+                const idx = currentIndex++;
+                const isSelected = idx === selectedIndex;
+
+                return (
+                  <div
+                    key={`${match.file.path}-${match.lineNumber}`}
+                    onClick={() => {
+                      onSelectFile(match.file.path);
+                      onClose();
+                    }}
+                    className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
+                        : 'text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span>{match.file.name.replace(/\.md$/, '')}</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          line {match.lineNumber}
+                        </span>
+                      </div>
+                      {isSelected && (
+                        <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      )}
+                    </div>
+                    <div className="text-[11px] text-zinc-400 truncate font-mono pl-5">
+                      {match.snippet}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section 3: Option to create note if doesn't exist */}
+          {hasCreate && (
+            <div className="pt-1.5 border-t border-zinc-800/80">
+              {(() => {
+                const idx = currentIndex++;
+                const isSelected = idx === selectedIndex;
+                return (
+                  <div
+                    onClick={() => {
+                      onCreateFile(query.trim());
+                      onClose();
+                    }}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
+                        : 'text-emerald-400 hover:bg-zinc-800/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Plus className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Create note: <strong>"{query.trim()}"</strong>
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Section 4: Full Vault Search Action in Sidebar */}
+          {hasVaultSearch && (
+            <div className="pt-1.5 border-t border-zinc-800/80">
+              {(() => {
+                const idx = currentIndex++;
+                const isSelected = idx === selectedIndex;
+                return (
+                  <div
+                    onClick={() => {
+                      if (onOpenVaultSearch) onOpenVaultSearch(query.trim());
+                      onClose();
+                    }}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
+                        : 'text-zinc-400 hover:bg-zinc-800/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Search className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>
+                        Search entire vault for <strong>"{query.trim()}"</strong> in sidebar
+                      </span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-500" />
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-4 py-2 border-t border-zinc-800/80 bg-zinc-950/40 text-[11px] text-zinc-500 flex items-center justify-between">
+        <div className="px-4 py-2 border-t border-zinc-800/80 bg-zinc-950/60 text-[11px] text-zinc-500 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span><strong>↑↓</strong> navigate</span>
-            <span><strong>↵</strong> open</span>
-            <span><strong>Shift+↵</strong> open to right</span>
-            <span><strong>esc</strong> close</span>
+            <span>
+              <strong>↑↓</strong> navigate
+            </span>
+            <span>
+              <strong>↵</strong> open
+            </span>
+            <span>
+              <strong>Shift+↵</strong> open to right
+            </span>
+            <span>
+              <strong>esc</strong> close
+            </span>
           </div>
-          <span>Quick Switcher (Ctrl+O)</span>
+          <span>Universal Switcher (⌘O)</span>
         </div>
       </div>
     </div>
