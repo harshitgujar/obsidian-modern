@@ -204,11 +204,19 @@ export const App: React.FC = () => {
       syncFromVaultManager();
 
       const ws = vault.getConfig('workspace');
-      if (ws && Array.isArray(ws.panes) && ws.panes.length > 0) {
-        setPanes(ws.panes);
-        setActivePaneId(ws.activePaneId || ws.panes[0].id);
+      if (ws) {
+        if (Array.isArray(ws.panes) && ws.panes.length > 0) {
+          setPanes(ws.panes);
+          setActivePaneId(ws.activePaneId || ws.panes[0].id);
+        }
         if (typeof ws.leftSidebarOpen === 'boolean') setIsSidebarOpen(ws.leftSidebarOpen);
         if (typeof ws.rightSidebarOpen === 'boolean') setIsInspectorOpen(ws.rightSidebarOpen);
+        if (ws.activeLeftTab) setActiveSidebarTab(ws.activeLeftTab);
+        if (ws.activeRightTab) setInspectorActiveTab(ws.activeRightTab);
+        if (ws.history && Array.isArray(ws.history.stack) && ws.history.stack.length > 0) {
+          setHistoryStack(ws.history.stack);
+          setHistoryIndex(typeof ws.history.index === 'number' ? ws.history.index : ws.history.stack.length - 1);
+        }
       } else if (loadedFiles.length > 0) {
         const startNote = loadedFiles.find(f => f.path === 'Start here.md') || loadedFiles[0];
         const initialTab: TabItem = {
@@ -257,6 +265,12 @@ export const App: React.FC = () => {
         ...ws,
         leftSidebarOpen: isSidebarOpen,
         rightSidebarOpen: isInspectorOpen,
+        activeLeftTab: activeSidebarTab,
+        activeRightTab: inspectorActiveTab,
+        history: {
+          stack: historyStack,
+          index: historyIndex
+        },
         panes,
         activePaneId
       });
@@ -265,7 +279,17 @@ export const App: React.FC = () => {
     return () => {
       if (saveWorkspaceTimer.current) clearTimeout(saveWorkspaceTimer.current);
     };
-  }, [panes, activePaneId, isSidebarOpen, isInspectorOpen, isVaultLoaded]);
+  }, [
+    panes, 
+    activePaneId, 
+    isSidebarOpen, 
+    isInspectorOpen, 
+    activeSidebarTab, 
+    inspectorActiveTab, 
+    historyStack, 
+    historyIndex, 
+    isVaultLoaded
+  ]);
 
   // Theme, Fonts & Custom CSS Snippets synchronization
   useEffect(() => {

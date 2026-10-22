@@ -375,6 +375,17 @@ export class VaultManager {
     return false;
   }
 
+  async searchVault(query: string): Promise<{ results: any[]; totalMatches: number }> {
+    try {
+      const res = await fetch(`/api/vault/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        return { results: data.results || [], totalMatches: data.totalMatches || 0 };
+      }
+    } catch {}
+    return { results: [], totalMatches: 0 };
+  }
+
   async getRecoverySnapshots(filePath?: string): Promise<RecoverySnapshot[]> {
     try {
       const url = filePath ? `/api/vault/recovery?path=${encodeURIComponent(filePath)}` : '/api/vault/recovery';

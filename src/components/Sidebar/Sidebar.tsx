@@ -155,6 +155,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
+  // Initialize sort order, filter, and collapsed folders from backend config (workspace.json)
+  useEffect(() => {
+    const ws = vault.getConfig('workspace') || {};
+    if (ws.fileExplorer) {
+      if (ws.fileExplorer.sortOrder) setSortOrder(ws.fileExplorer.sortOrder);
+      if (ws.fileExplorer.collapsedFolders) setCollapsedFolders(ws.fileExplorer.collapsedFolders);
+      if (ws.fileExplorer.activeFilter) setActiveFilter(ws.fileExplorer.activeFilter);
+    }
+  }, []);
+
+  const isExplorerInit = useRef(true);
+  useEffect(() => {
+    if (isExplorerInit.current) {
+      isExplorerInit.current = false;
+      return;
+    }
+    const ws = vault.getConfig('workspace') || {};
+    vault.saveConfig('workspace', {
+      ...ws,
+      fileExplorer: {
+        sortOrder,
+        collapsedFolders,
+        activeFilter
+      }
+    });
+  }, [sortOrder, collapsedFolders, activeFilter]);
+
   useEffect(() => {
     const handleOutside = () => {
       setShowSortMenu(false);
@@ -295,7 +322,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [files]);
 
-  // Search Results
+  // Search Results & Backend Search Integration
+  const [backendSearchResults, setBackendSearchResults] = useState<any[]>([]);
+  const [totalBackendMatches, setTotalBackendMatches] = useState(0);
+  const [isSearchingBackend, setIsSearchingBackend] = useState(false);
+
+  useEffect(() => {
+    const q = searchFilter.trim();
+    if (!q) {
+      setBackendSearchResults([]);
+      setTotalBackendMatches(0);
+      setIsSearchingBackend(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setIsSearchingBackend(true);
+    const timer = setTimeout(async () => {
+      const res = await vault.searchVault(q);
+      if (!isCancelled) {
+        setBackendSearchResults(res.results || []);
+        setTotalBackendMatches(res.totalMatches || 0);
+        setIsSearchingBackend(false);
+      }
+    }, 150);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchFilter]);
+
   const searchResults = useMemo(() => {
     const q = searchFilter.trim();
     if (!q) return files.filter(f => !f.isBinary);
@@ -924,45 +981,70 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button onClick={() => onSearchChange('file:')} className="hover:text-purple-400">file:</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1 text-xs">
-              {searchResults.length === 0 ? (
-                <div className="p-4 text-center text-zinc-500 italic text-[11px]">
-                  No notes match your search query.
-                </div>
-              ) : (
-                searchResults.map(file => {
-                  let snippet = '';
-                  if (searchFilter.trim()) {
-                    const cleanQ = searchFilter.replace(/^(path|file|tag):/i, '').trim().toLowerCase();
-                    if (cleanQ) {
-                      const lines = file.content.split('\n');
-                      const matchLine = lines.find(l => l.toLowerCase().includes(cleanQ));
-                      if (matchLine) {
-                        snippet = matchLine.trim().slice(0, 110);
-                      }
-                    }
-                  }
+            {searchFilter.trim() && (
+              <div className="flex items-center justify-between px-1 text-[10px] text-zinc-400 font-mono">
+                {isSearchingBackend ? (
+                  <span className="text-purple-400 animate-pulse">Searching vault files...</span>
+                ) : (
+                  <span>
+                    {totalBackendMatches} match{totalBackendMatches === 1 ? '' : 'es'} across {backendSearchResults.length} file{backendSearchResults.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+            )}
 
-                  return (
+            <div className="flex-1 overflow-y-auto space-y-1.5 text-xs">
+              {searchFilter.trim() ? (
+                backendSearchResults.length === 0 && !isSearchingBackend ? (
+                  <div className="p-4 text-center text-zinc-500 italic text-[11px]">
+                    No notes match &quot;{searchFilter}&quot;.
+                  </div>
+                ) : (
+                  backendSearchResults.map(res => (
                     <div
-                      key={file.path}
-                      onClick={() => onSelectFile(file.path)}
-                      className="p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/80 cursor-pointer border border-zinc-800/50 transition-colors group"
+                      key={res.path}
+                      onClick={() => onSelectFile(res.path)}
+                      className="p-2 rounded-lg bg-zinc-900/60 hover:bg-zinc-800/90 cursor-pointer border border-zinc-800/70 hover:border-purple-500/40 transition-colors group space-y-1"
                     >
                       <div className="flex items-center justify-between text-zinc-200 font-medium">
-                        <span className="truncate group-hover:text-purple-300 font-semibold">{file.name.replace(/\.md$/, '')}</span>
+                        <span className="truncate group-hover:text-purple-300 font-semibold">{res.name.replace(/\.md$/, '')}</span>
+                        {res.totalMatches > 0 && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-800/40 font-mono">
+                            {res.totalMatches}
+                          </span>
+                        )}
                       </div>
-                      {file.folder && (
-                        <div className="text-[10px] text-zinc-500 mt-0.5 font-mono">{file.folder}</div>
+                      {res.folder && (
+                        <div className="text-[10px] text-zinc-500 font-mono">{res.folder}</div>
                       )}
-                      {snippet && (
-                        <div className="text-[11px] text-zinc-400 mt-1 pl-2 border-l-2 border-purple-500/40 italic truncate font-sans">
-                          {snippet}
+                      {res.matches && res.matches.length > 0 && (
+                        <div className="space-y-1 mt-1">
+                          {res.matches.slice(0, 3).map((m: any, mIdx: number) => (
+                            <div key={mIdx} className="text-[10.5px] text-zinc-400 pl-2 border-l-2 border-purple-500/50 italic truncate font-sans">
+                              <span className="font-mono text-zinc-500 mr-1.5 not-italic">L{m.line}:</span>
+                              <span>{m.text}</span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
-                  );
-                })
+                  ))
+                )
+              ) : (
+                searchResults.map(file => (
+                  <div
+                    key={file.path}
+                    onClick={() => onSelectFile(file.path)}
+                    className="p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/80 cursor-pointer border border-zinc-800/50 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between text-zinc-200 font-medium">
+                      <span className="truncate group-hover:text-purple-300 font-semibold">{file.name.replace(/\.md$/, '')}</span>
+                    </div>
+                    {file.folder && (
+                      <div className="text-[10px] text-zinc-500 mt-0.5 font-mono">{file.folder}</div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </div>

@@ -169,7 +169,16 @@ const DEFAULT_CONFIGS: Record<string, any> = {
       }
     ],
     activePaneId: 'pane-main',
-    lastOpenFiles: ['Start here.md']
+    lastOpenFiles: ['Start here.md'],
+    history: {
+      stack: ['Start here.md'],
+      index: 0
+    },
+    fileExplorer: {
+      sortOrder: 'name-asc',
+      collapsedFolders: {},
+      activeFilter: 'all'
+    }
   }
 };
 
@@ -407,6 +416,92 @@ export class ObsidianVaultServer {
     fs.mkdirSync(obsidianDir, { recursive: true });
     this.suppressWatchUntil = Date.now() + 2000;
     fs.writeFileSync(path.join(obsidianDir, `${safeName}.json`), JSON.stringify(data, null, 2));
+  }
+
+  public searchVaultFiles(query: string): { results: any[]; totalMatches: number } {
+    const q = query.trim();
+    if (!q) return { results: [], totalMatches: 0 };
+
+    const { files } = this.scanVault();
+    const lower = q.toLowerCase();
+    const results: any[] = [];
+    let grandTotalMatches = 0;
+
+    const isPathFilter = lower.startsWith('path:');
+    const isFileFilter = lower.startsWith('file:');
+    const isTagFilter = lower.startsWith('tag:');
+
+    let targetTerm = lower;
+    if (isPathFilter) targetTerm = lower.slice(5).trim();
+    else if (isFileFilter) targetTerm = lower.slice(5).trim();
+    else if (isTagFilter) targetTerm = lower.slice(4).trim().replace(/^#/, '');
+
+    for (const file of files) {
+      if (file.isBinary) continue;
+
+      const fileLowerName = file.name.toLowerCase();
+      const fileLowerPath = file.path.toLowerCase();
+      const fileContent = file.content || '';
+      const lines = fileContent.split('\n');
+      const matches: Array<{ line: number; text: string; matchText: string }> = [];
+
+      if (isPathFilter) {
+        if (!fileLowerPath.includes(targetTerm)) continue;
+      } else if (isFileFilter) {
+        if (!fileLowerName.includes(targetTerm)) continue;
+      } else if (isTagFilter) {
+        const tagRegex = new RegExp(`(?:^|\\s)#${targetTerm}\\b`, 'i');
+        lines.forEach((lineText, idx) => {
+          if (tagRegex.test(lineText)) {
+            matches.push({
+              line: idx + 1,
+              text: lineText.trim().slice(0, 120),
+              matchText: `#${targetTerm}`
+            });
+          }
+        });
+        if (matches.length === 0 && !fileLowerName.includes(targetTerm)) continue;
+      } else {
+        // General text search
+        const termRegex = new RegExp(targetTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        lines.forEach((lineText, idx) => {
+          if (termRegex.test(lineText)) {
+            matches.push({
+              line: idx + 1,
+              text: lineText.trim().slice(0, 120),
+              matchText: q
+            });
+          }
+        });
+      }
+
+      const pathMatched = isPathFilter && fileLowerPath.includes(targetTerm);
+      const fileFilterMatched = isFileFilter && fileLowerName.includes(targetTerm);
+      const nameMatched = !isPathFilter && fileLowerName.includes(targetTerm);
+
+      if (matches.length > 0 || nameMatched || pathMatched || fileFilterMatched) {
+        grandTotalMatches += Math.max(matches.length, 1);
+        results.push({
+          path: file.path,
+          name: file.name,
+          folder: file.folder,
+          extension: file.extension,
+          size: file.size,
+          updatedAt: file.updatedAt,
+          matches: matches.slice(0, 10),
+          totalMatches: matches.length
+        });
+      }
+    }
+
+    // Sort by relevance (file name matches or highest match counts first)
+    results.sort((a, b) => {
+      const aName = a.name.toLowerCase().includes(targetTerm) ? 100 : 0;
+      const bName = b.name.toLowerCase().includes(targetTerm) ? 100 : 0;
+      return (bName + b.totalMatches) - (aName + a.totalMatches);
+    });
+
+    return { results, totalMatches: grandTotalMatches };
   }
 
   public writeFile(relPath: string, content: string): DiskFileEntry {
@@ -856,6 +951,12 @@ export class ObsidianVaultServer {
           } catch (e: any) {
             return sendJson(500, { error: e?.message || 'Error serving file' });
           }
+        }
+
+        if (pathname === '/api/vault/search' && req.method === 'GET') {
+          const q = parsedUrl.searchParams.get('q') || '';
+          const searchData = this.searchVaultFiles(q);
+          return sendJson(200, { ok: true, ...searchData });
         }
 
         if (pathname === '/api/vault/folder/create' && req.method === 'POST') {

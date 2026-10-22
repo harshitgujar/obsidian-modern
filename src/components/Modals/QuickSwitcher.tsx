@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { VaultFile } from '../../types';
+import { vault } from '../../services/vault';
 import { 
   Search, 
   FileText, 
@@ -72,7 +73,44 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
   }, [mdAndCanvas, query, recentPaths]);
 
   // Content Matches (Searching inside note bodies)
-  const matchedContents = useMemo((): ContentMatch[] => {
+  const [backendMatches, setBackendMatches] = useState<ContentMatch[]>([]);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || q.length < 2) {
+      setBackendMatches([]);
+      return;
+    }
+
+    let isCancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await vault.searchVault(q);
+      if (!isCancelled && res.results) {
+        const matches: ContentMatch[] = [];
+        const matchedTitlePaths = new Set(matchedTitles.map(f => f.path));
+        for (const item of res.results) {
+          if (matchedTitlePaths.has(item.path)) continue;
+          const fullFile = files.find(f => f.path === item.path);
+          if (!fullFile) continue;
+          const firstMatch = item.matches && item.matches[0];
+          matches.push({
+            file: fullFile,
+            snippet: firstMatch ? firstMatch.text : item.name,
+            lineNumber: firstMatch ? firstMatch.line : 1
+          });
+          if (matches.length >= 8) break;
+        }
+        setBackendMatches(matches);
+      }
+    }, 100);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, files, matchedTitles]);
+
+  const localMatchedContents = useMemo((): ContentMatch[] => {
     const q = query.trim().toLowerCase();
     if (!q || q.length < 2) return [];
 
@@ -99,6 +137,10 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
     return results;
   }, [mdAndCanvas, query, matchedTitles]);
 
+  const activeContentMatches = useMemo(() => {
+    return backendMatches.length > 0 ? backendMatches : localMatchedContents;
+  }, [backendMatches, localMatchedContents]);
+
   const exactMatchExists = useMemo(() => {
     const qClean = query.trim().replace(/\.[^/.]+$/, '').toLowerCase();
     return files.some(
@@ -110,7 +152,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
   // Combine items for keyboard navigation index
   // 1. matchedTitles
-  // 2. matchedContents
+  // 2. activeContentMatches
   // 3. create note (if query & !exactMatchExists)
   // 4. search vault action (if query)
   const hasCreate = !exactMatchExists && query.trim().length > 0;
@@ -118,7 +160,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
   const totalItemsCount =
     matchedTitles.length +
-    matchedContents.length +
+    activeContentMatches.length +
     (hasCreate ? 1 : 0) +
     (hasVaultSearch ? 1 : 0);
 
@@ -144,12 +186,12 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
         if (openSplit && onSplitFile) onSplitFile(file.path);
         else onSelectFile(file.path);
         onClose();
-      } else if (selectedIndex < matchedTitles.length + matchedContents.length) {
-        const item = matchedContents[selectedIndex - matchedTitles.length];
+      } else if (selectedIndex < matchedTitles.length + activeContentMatches.length) {
+        const item = activeContentMatches[selectedIndex - matchedTitles.length];
         if (openSplit && onSplitFile) onSplitFile(item.file.path);
         else onSelectFile(item.file.path);
         onClose();
-      } else if (hasCreate && selectedIndex === matchedTitles.length + matchedContents.length) {
+      } else if (hasCreate && selectedIndex === matchedTitles.length + activeContentMatches.length) {
         onCreateFile(query.trim());
         onClose();
       } else if (hasVaultSearch && onOpenVaultSearch) {
@@ -250,13 +292,13 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
           )}
 
           {/* Section 2: Content Matches (In-File Search) */}
-          {matchedContents.length > 0 && (
+          {activeContentMatches.length > 0 && (
             <div className="pt-1.5 border-t border-zinc-800/80">
               <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider flex items-center gap-1.5">
                 <AlignLeft className="w-3 h-3 text-zinc-400" />
                 <span>Text Matches in Notes</span>
               </div>
-              {matchedContents.map(match => {
+              {activeContentMatches.map(match => {
                 const idx = currentIndex++;
                 const isSelected = idx === selectedIndex;
 
