@@ -276,15 +276,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* 1. Left Vertical Ribbon */}
       <div className="w-11 bg-[#0e0e10] border-r border-zinc-800/60 flex flex-col items-center py-2.5 justify-between shrink-0">
         <div className="flex flex-col items-center gap-1.5">
-          {/* Vault Icon */}
-          <button
-            onClick={onOpenVaultManager}
-            title={`Vault: ${vaultName} (Click to switch vault)`}
-            className="w-7 h-7 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold text-xs mb-1.5 border border-purple-500/30 hover:bg-purple-600/30 transition-colors shadow-sm"
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
-
           <button
             onClick={() => onSelectTab('files')}
             title="File Explorer (Ctrl+Shift+E)"
@@ -297,17 +288,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Files className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={() => onSelectTab('search')}
-            title="Search Vault (Ctrl+Shift+F)"
-            className={`p-2 rounded-lg transition-colors ${
-              activeSidebarTab === 'search'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <Search className="w-4 h-4" />
-          </button>
 
           {corePluginsConfig['bookmarks'] !== false && (
             <button
