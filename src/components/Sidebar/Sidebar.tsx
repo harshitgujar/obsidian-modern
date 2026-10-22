@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { VaultFile, SidebarTab } from '../../types';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { VaultFile, SidebarTab, BookmarkItem } from '../../types';
+import { vault } from '../../services/vault';
 import { 
   Files, 
   Search, 
@@ -13,56 +14,120 @@ import {
   FileText, 
   ChevronRight, 
   ChevronDown, 
-  MoreVertical, 
   Trash2, 
   Edit3, 
   Download, 
   HardDrive, 
   Sun, 
-  Moon,
-  X
+  Moon, 
+  X, 
+  Bookmark, 
+  LayoutGrid, 
+  Shuffle, 
+  Clock, 
+  Settings, 
+  Mic, 
+  Square, 
+  Copy, 
+  Columns, 
+  Link as LinkIcon, 
+  History,
+  HelpCircle,
+  Printer,
+  ExternalLink 
 } from 'lucide-react';
 
 interface SidebarProps {
   files: VaultFile[];
-  activeFileId?: string;
+  folders: string[];
+  bookmarks: BookmarkItem[];
+  activeFilePath?: string;
   activeSidebarTab: SidebarTab;
   isDarkTheme: boolean;
+  vaultName: string;
+  isRecordingAudio?: boolean;
   onSelectTab: (tab: SidebarTab) => void;
-  onSelectFile: (fileId: string) => void;
-  onCreateFile: (folder?: string) => void;
-  onDeleteFile: (fileId: string) => void;
-  onRenameFile: (fileId: string, newTitle: string) => void;
+  onSelectFile: (filePath: string) => void;
+  onSplitFile?: (filePath: string) => void;
+  onCreateFile: (folder?: string, ext?: string) => void;
+  onCreateFolder: (folderPath: string) => void;
+  onDeleteFile: (filePath: string) => void;
+  onRenameFile: (filePath: string, newTitle: string) => void;
+  onDuplicateFile: (filePath: string) => void;
+  onToggleBookmark: (filePath: string, title: string) => void;
   onOpenDailyNote: () => void;
-  onOpenLocalFolder: () => void;
+  onOpenRandomNote: () => void;
+  onCreateZkNote: () => void;
+  onToggleAudioRecording: () => void;
+  onOpenVaultManager: () => void;
+  onOpenSettings: () => void;
+  onOpenFileRecovery: () => void;
+  onToggleGraphView: () => void;
   onExportZip: () => void;
   onToggleTheme: () => void;
   searchFilter: string;
   onSearchChange: (q: string) => void;
+  corePluginsConfig?: Record<string, any>;
+  onExportPdf?: (filePath: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   files,
-  activeFileId,
+  folders,
+  bookmarks,
+  activeFilePath,
   activeSidebarTab,
   isDarkTheme,
+  vaultName,
+  isRecordingAudio = false,
   onSelectTab,
   onSelectFile,
+  onSplitFile,
   onCreateFile,
+  onCreateFolder,
   onDeleteFile,
   onRenameFile,
+  onDuplicateFile,
+  onToggleBookmark,
   onOpenDailyNote,
-  onOpenLocalFolder,
+  onOpenRandomNote,
+  onCreateZkNote,
+  onToggleAudioRecording,
+  onOpenVaultManager,
+  onOpenSettings,
+  onOpenFileRecovery,
+  onToggleGraphView,
   onExportZip,
   onToggleTheme,
   searchFilter,
-  onSearchChange
+  onSearchChange,
+  corePluginsConfig = {},
+  onExportPdf
 }) => {
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
-  const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [editingFilePath, setEditingFilePath] = useState<string | null>(null);
   const [editTitleValue, setEditTitleValue] = useState('');
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
-  // Toggle folder collapse
+  // Right-click Context Menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    file: VaultFile;
+  } | null>(null);
+
+  // Close context menu on window click or escape
+  useEffect(() => {
+    const handleCloseMenu = () => setContextMenu(null);
+    window.addEventListener('click', handleCloseMenu);
+    window.addEventListener('contextmenu', handleCloseMenu);
+    return () => {
+      window.removeEventListener('click', handleCloseMenu);
+      window.removeEventListener('contextmenu', handleCloseMenu);
+    };
+  }, []);
+
   const toggleFolder = (folderName: string) => {
     setCollapsedFolders(prev => ({
       ...prev,
@@ -70,23 +135,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }));
   };
 
-  // Group files into folder tree
-  const folderTree = React.useMemo(() => {
-    const folders: Record<string, VaultFile[]> = { '': [] };
-
+  // Group files and folders into tree
+  const folderTree = useMemo(() => {
+    const map: Record<string, VaultFile[]> = { '': [] };
+    folders.forEach(f => {
+      if (!map[f]) map[f] = [];
+    });
     files.forEach(file => {
       const f = file.folder || '';
-      if (!folders[f]) folders[f] = [];
-      folders[f].push(file);
+      if (!map[f]) map[f] = [];
+      map[f].push(file);
     });
-
-    return folders;
-  }, [files]);
+    return map;
+  }, [files, folders]);
 
   // Extract all tags across vault with frequencies
-  const tagsList = React.useMemo(() => {
+  const tagsList = useMemo(() => {
     const counts: Record<string, number> = {};
     files.forEach(f => {
+      if (f.extension !== 'md') return;
       const tagRegex = /(?:^|\s)#([a-zA-Z0-9_\-\/]+)/g;
       let m;
       while ((m = tagRegex.exec(f.content)) !== null) {
@@ -99,32 +166,81 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [files]);
 
+  // Search Results
+  const searchResults = useMemo(() => {
+    const q = searchFilter.trim();
+    if (!q) return files.filter(f => !f.isBinary);
+
+    const lower = q.toLowerCase();
+    return files.filter(f => {
+      if (f.isBinary) return false;
+      if (lower.startsWith('path:')) {
+        const p = lower.slice(5).trim();
+        return f.path.toLowerCase().includes(p);
+      }
+      if (lower.startsWith('file:')) {
+        const fn = lower.slice(5).trim();
+        return f.name.toLowerCase().includes(fn);
+      }
+      if (lower.startsWith('tag:')) {
+        const tg = lower.slice(4).trim().replace(/^#/, '');
+        return f.content.toLowerCase().includes(`#${tg}`) || f.content.toLowerCase().includes(tg);
+      }
+      return f.name.toLowerCase().includes(lower) || f.content.toLowerCase().includes(lower);
+    });
+  }, [files, searchFilter]);
+
   const handleStartRename = (file: VaultFile, e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditingFileId(file.id);
-    setEditTitleValue(file.name.replace(/\.md$/, ''));
+    setEditingFilePath(file.path);
+    setEditTitleValue(file.name.replace(/\.[^/.]+$/, ''));
   };
 
-  const handleFinishRename = (fileId: string) => {
+  const handleFinishRename = (filePath: string) => {
     if (editTitleValue.trim()) {
-      onRenameFile(fileId, editTitleValue.trim());
+      onRenameFile(filePath, editTitleValue.trim());
     }
-    setEditingFileId(null);
+    setEditingFilePath(null);
+  };
+
+  const handleCreateFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newFolderName.trim()) {
+      onCreateFolder(newFolderName.trim());
+      setNewFolderName('');
+      setIsCreatingFolder(false);
+    }
+  };
+
+  const isBookmarked = (path: string) => bookmarks.some(b => b.path === path);
+
+  const handleContextMenuOpen = (e: React.MouseEvent, file: VaultFile) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: Math.min(window.innerWidth - 220, e.clientX),
+      y: Math.min(window.innerHeight - 260, e.clientY),
+      file
+    });
   };
 
   return (
-    <div className="flex h-full bg-[#121214] border-r border-zinc-800/80 select-none shrink-0">
-      {/* 1. Left Vertical Ribbon (Obsidian style) */}
-      <div className="w-12 bg-[#0e0e10] border-r border-zinc-800/60 flex flex-col items-center py-3 justify-between shrink-0">
-        <div className="flex flex-col items-center gap-2">
-          {/* Obsidian Vault Logo */}
-          <div className="w-7 h-7 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold text-xs mb-2 border border-purple-500/30">
+    <div className="flex h-full bg-[#121214] border-r border-zinc-800/80 select-none shrink-0 relative">
+      {/* 1. Left Vertical Ribbon */}
+      <div className="w-11 bg-[#0e0e10] border-r border-zinc-800/60 flex flex-col items-center py-2.5 justify-between shrink-0">
+        <div className="flex flex-col items-center gap-1.5">
+          {/* Vault Icon */}
+          <button
+            onClick={onOpenVaultManager}
+            title={`Vault: ${vaultName} (Click to switch vault)`}
+            className="w-7 h-7 rounded-lg bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold text-xs mb-1.5 border border-purple-500/30 hover:bg-purple-600/30 transition-colors shadow-sm"
+          >
             <Share2 className="w-4 h-4" />
-          </div>
+          </button>
 
           <button
             onClick={() => onSelectTab('files')}
-            title="Files (Ctrl+Shift+E)"
+            title="File Explorer (Ctrl+Shift+E)"
             className={`p-2 rounded-lg transition-colors ${
               activeSidebarTab === 'files'
                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
@@ -146,58 +262,120 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={() => onSelectTab('graph')}
-            title="Graph View (Ctrl+G)"
-            className={`p-2 rounded-lg transition-colors ${
-              activeSidebarTab === 'graph'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
+          {corePluginsConfig['bookmarks'] !== false && (
+            <button
+              onClick={() => onSelectTab('bookmarks')}
+              title="Bookmarks (.obsidian/bookmarks.json)"
+              className={`p-2 rounded-lg transition-colors ${
+                activeSidebarTab === 'bookmarks'
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              }`}
+            >
+              <Bookmark className="w-4 h-4" />
+            </button>
+          )}
 
-          <button
-            onClick={() => onSelectTab('tags')}
-            title="Tags Pane"
-            className={`p-2 rounded-lg transition-colors ${
-              activeSidebarTab === 'tags'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-            }`}
-          >
-            <TagIcon className="w-4 h-4" />
-          </button>
+          {corePluginsConfig['tag-pane'] !== false && (
+            <button
+              onClick={() => onSelectTab('tags')}
+              title="Tags Pane"
+              className={`p-2 rounded-lg transition-colors ${
+                activeSidebarTab === 'tags'
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              }`}
+            >
+              <TagIcon className="w-4 h-4" />
+            </button>
+          )}
 
           <div className="w-6 h-[1px] bg-zinc-800 my-1" />
 
-          {/* Daily Note shortcut */}
-          <button
-            onClick={onOpenDailyNote}
-            title="Open Today's Daily Note"
-            className="p-2 rounded-lg text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 transition-colors"
-          >
-            <Calendar className="w-4 h-4" />
-          </button>
+          {/* Core Plugin Ribbon Actions */}
+          {corePluginsConfig['graph'] !== false && (
+            <button
+              onClick={onToggleGraphView}
+              title="Open Graph View (Ctrl+G)"
+              className="p-2 rounded-lg text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          )}
+
+          {corePluginsConfig['canvas'] !== false && (
+            <button
+              onClick={() => onCreateFile('', 'canvas')}
+              title="Create New Canvas (.canvas)"
+              className="p-2 rounded-lg text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          )}
+
+          {corePluginsConfig['daily-notes'] !== false && (
+            <button
+              onClick={onOpenDailyNote}
+              title="Open Today's Daily Note (Ctrl+Shift+D)"
+              className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <Calendar className="w-4 h-4" />
+            </button>
+          )}
+
+          {corePluginsConfig['zk-prefixer'] !== false && (
+            <button
+              onClick={onCreateZkNote}
+              title="Create Unique Zettelkasten Note"
+              className="p-2 rounded-lg text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <Clock className="w-4 h-4" />
+            </button>
+          )}
+
+          {corePluginsConfig['random-note'] !== false && (
+            <button
+              onClick={onOpenRandomNote}
+              title="Open Random Note"
+              className="p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <Shuffle className="w-4 h-4" />
+            </button>
+          )}
+
+          {corePluginsConfig['audio-recorder'] !== false && (
+            <button
+              onClick={onToggleAudioRecording}
+              title={isRecordingAudio ? 'Stop Recording & Save Audio Note' : 'Start Audio Recorder (.webm)'}
+              className={`p-2 rounded-lg transition-colors ${
+                isRecordingAudio
+                  ? 'bg-rose-600/30 text-rose-400 animate-pulse border border-rose-500/50'
+                  : 'text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/60'
+              }`}
+            >
+              {isRecordingAudio ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+          )}
         </div>
 
-        {/* Bottom Ribbon utilities */}
-        <div className="flex flex-col items-center gap-2">
+        {/* Bottom Ribbon Utilities */}
+        <div className="flex flex-col items-center gap-1.5">
+          {corePluginsConfig['file-recovery'] !== false && (
+            <button
+              onClick={onOpenFileRecovery}
+              title="File Recovery Snapshots"
+              className="p-2 rounded-lg text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 transition-colors"
+            >
+              <History className="w-4 h-4" />
+            </button>
+          )}
+
           <button
-            onClick={onOpenLocalFolder}
-            title="Open Local Folder on Computer (File System Access API)"
+            onClick={onOpenVaultManager}
+            title="Manage Vaults on Disk"
             className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/60 transition-colors"
           >
             <HardDrive className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={onExportZip}
-            title="Export Entire Vault as ZIP"
-            className="p-2 rounded-lg text-zinc-400 hover:text-sky-400 hover:bg-zinc-800/60 transition-colors"
-          >
-            <Download className="w-4 h-4" />
           </button>
 
           <button
@@ -207,185 +385,317 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             {isDarkTheme ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+
+          <button
+            onClick={onOpenSettings}
+            title="Settings (Ctrl+,)"
+            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       {/* 2. Main Sidebar Drawer Content */}
-      <div className="w-60 flex flex-col h-full bg-[#141416]">
+      <div className="w-64 flex flex-col h-full bg-[#141416]">
         {/* Tab Header */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-800/80">
-          <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-            {activeSidebarTab === 'files' && 'Vault Files'}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/80">
+          <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate">
+            {activeSidebarTab === 'files' && vaultName}
             {activeSidebarTab === 'search' && 'Search Vault'}
-            {activeSidebarTab === 'graph' && 'Graph Overview'}
-            {activeSidebarTab === 'tags' && 'Vault Tags'}
+            {activeSidebarTab === 'bookmarks' && 'Bookmarks'}
+            {activeSidebarTab === 'tags' && 'Tags'}
           </span>
 
           {activeSidebarTab === 'files' && (
             <div className="flex items-center gap-1">
               <button
-                onClick={() => onCreateFile()}
-                title="New Note in Root"
+                onClick={() => onCreateFile('', 'md')}
+                title="New Note"
                 className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
               >
                 <FilePlus className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onCreateFile('', 'canvas')}
+                title="New Canvas"
+                className="p-1 rounded text-zinc-400 hover:text-orange-300 hover:bg-zinc-800 transition-colors"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setIsCreatingFolder(prev => !prev)}
+                title="New Folder"
+                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              >
+                <FolderPlus className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Tab 1: File Tree */}
+        {/* New Folder Input */}
+        {isCreatingFolder && activeSidebarTab === 'files' && (
+          <form onSubmit={handleCreateFolderSubmit} className="p-2 border-b border-zinc-800 bg-zinc-900/60">
+            <input
+              type="text"
+              value={newFolderName}
+              onChange={e => setNewFolderName(e.target.value)}
+              placeholder="New folder name..."
+              autoFocus
+              onBlur={() => setIsCreatingFolder(false)}
+              className="w-full bg-zinc-950 border border-purple-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none"
+            />
+          </form>
+        )}
+
+        {/* Tab 1: File Explorer */}
         {activeSidebarTab === 'files' && (
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5 text-xs">
-            {Object.entries(folderTree).map(([folderName, folderFiles]) => {
-              if (folderName === '') {
-                // Root files
-                return folderFiles.map(file => (
-                  <div
-                    key={file.id}
-                    onClick={() => onSelectFile(file.id)}
-                    className={`group flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors ${
-                      file.id === activeFileId
-                        ? 'bg-purple-600/20 text-purple-200 font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                      {editingFileId === file.id ? (
-                        <input
-                          type="text"
-                          value={editTitleValue}
-                          onChange={e => setEditTitleValue(e.target.value)}
-                          onBlur={() => handleFinishRename(file.id)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') handleFinishRename(file.id);
-                            if (e.key === 'Escape') setEditingFileId(null);
-                          }}
-                          autoFocus
-                          className="bg-zinc-900 text-zinc-100 px-1 py-0.5 rounded border border-purple-500 focus:outline-none w-32"
-                        />
-                      ) : (
-                        <span className="truncate">{file.name.replace(/\.md$/, '')}</span>
-                      )}
-                    </div>
-
-                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={e => handleStartRename(file, e)}
-                        title="Rename"
-                        className="p-0.5 text-zinc-500 hover:text-zinc-300"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (confirm(`Delete "${file.name}"?`)) onDeleteFile(file.id);
-                        }}
-                        title="Delete"
-                        className="p-0.5 text-zinc-500 hover:text-rose-400"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ));
+          <div
+            onDragOver={e => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={async e => {
+              e.preventDefault();
+              const obsData = e.dataTransfer.getData('application/obsidian-file');
+              if (obsData) {
+                try {
+                  const { path: sourcePath, name } = JSON.parse(obsData);
+                  const targetPath = name; // root folder
+                  if (sourcePath !== targetPath) {
+                    await onRenameFile(sourcePath, targetPath);
+                  }
+                } catch {}
+                return;
               }
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                  const droppedFile = e.dataTransfer.files[i];
+                  const reader = new FileReader();
+                  reader.onloadend = async () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    const relPath = droppedFile.name.endsWith('.md') || droppedFile.name.endsWith('.canvas')
+                      ? droppedFile.name
+                      : `Attachments/${droppedFile.name}`;
+                    await vault.saveBinaryFile(relPath, base64);
+                  };
+                  reader.readAsDataURL(droppedFile);
+                }
+              }
+            }}
+            className="flex-1 overflow-y-auto p-1.5 space-y-0.5 text-xs"
+          >
+            {Object.entries(folderTree)
+              .sort(([a], [b]) => {
+                if (a === '') return 1;
+                if (b === '') return -1;
+                return a.localeCompare(b);
+              })
+              .map(([folderName, folderFiles]) => {
+                const renderFileRow = (file: VaultFile) => {
+                  const isCanvas = file.extension === 'canvas';
+                  const isActive = file.path === activeFilePath;
+                  const bookmarked = isBookmarked(file.path);
 
-              // Subfolder
-              const isCollapsed = collapsedFolders[folderName];
-
-              return (
-                <div key={folderName} className="space-y-0.5">
-                  <div
-                    onClick={() => toggleFolder(folderName)}
-                    className="flex items-center justify-between px-2 py-1.5 rounded text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 cursor-pointer font-medium"
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      {isCollapsed ? (
-                        <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-                      )}
-                      {isCollapsed ? (
-                        <Folder className="w-3.5 h-3.5 text-purple-400" />
-                      ) : (
-                        <FolderOpen className="w-3.5 h-3.5 text-purple-400" />
-                      )}
-                      <span className="truncate">{folderName}</span>
-                    </div>
-
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        onCreateFile(folderName);
+                  return (
+                    <div
+                      key={file.path}
+                      draggable={true}
+                      onDragStart={e => {
+                        e.dataTransfer.setData('application/obsidian-file', JSON.stringify({
+                          path: file.path,
+                          name: file.name,
+                          extension: file.extension
+                        }));
+                        e.dataTransfer.setData('text/plain', file.extension === 'md' ? `[[${file.name.replace(/\.md$/, '')}]]` : `![[${file.name}]]`);
                       }}
-                      title={`New note in ${folderName}`}
-                      className="opacity-0 hover:opacity-100 p-0.5 text-zinc-500 hover:text-zinc-200"
+                      onClick={() => onSelectFile(file.path)}
+                      onContextMenu={e => handleContextMenuOpen(e, file)}
+                      className={`group flex items-center justify-between px-2.5 py-1 rounded-md cursor-pointer transition-colors ${
+                        isActive
+                          ? 'bg-zinc-800 text-zinc-100 font-medium'
+                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                      }`}
                     >
-                      <FilePlus className="w-3 h-3" />
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-2 truncate">
+                        {isCanvas ? (
+                          <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-orange-400/90" />
+                        ) : (
+                          <FileText className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                        )}
 
-                  {!isCollapsed && (
-                    <div className="pl-4 space-y-0.5 border-l border-zinc-800/60 ml-2">
-                      {folderFiles.map(file => (
-                        <div
-                          key={file.id}
-                          onClick={() => onSelectFile(file.id)}
-                          className={`group flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition-colors ${
-                            file.id === activeFileId
-                              ? 'bg-purple-600/20 text-purple-200 font-medium'
-                              : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200'
-                          }`}
+                        {editingFilePath === file.path ? (
+                          <input
+                            type="text"
+                            value={editTitleValue}
+                            onChange={e => setEditTitleValue(e.target.value)}
+                            onBlur={() => handleFinishRename(file.path)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleFinishRename(file.path);
+                              if (e.key === 'Escape') setEditingFilePath(null);
+                            }}
+                            autoFocus
+                            className="bg-zinc-900 text-zinc-100 px-1 py-0.5 rounded border border-purple-500 focus:outline-none w-32"
+                          />
+                        ) : (
+                          <span className="truncate">{file.name.replace(/\.(md|canvas|png|jpg|base)$/, '')}</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {file.extension !== 'md' && (
+                          <span className="text-[9px] font-mono text-zinc-500 font-semibold uppercase tracking-wider">
+                            {file.extension}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0">
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            onToggleBookmark(file.path, file.name.replace(/\.[^/.]+$/, ''));
+                          }}
+                          title={bookmarked ? 'Remove Bookmark' : 'Bookmark'}
+                          className={`p-0.5 ${bookmarked ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-300'}`}
                         >
-                          <div className="flex items-center gap-2 truncate">
-                            <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                            {editingFileId === file.id ? (
-                              <input
-                                type="text"
-                                value={editTitleValue}
-                                onChange={e => setEditTitleValue(e.target.value)}
-                                onBlur={() => handleFinishRename(file.id)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') handleFinishRename(file.id);
-                                  if (e.key === 'Escape') setEditingFileId(null);
-                                }}
-                                autoFocus
-                                className="bg-zinc-900 text-zinc-100 px-1 py-0.5 rounded border border-purple-500 focus:outline-none w-28"
-                              />
-                            ) : (
-                              <span className="truncate">{file.name.replace(/\.md$/, '')}</span>
-                            )}
-                          </div>
-
-                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
-                            <button
-                              onClick={e => handleStartRename(file, e)}
-                              title="Rename"
-                              className="p-0.5 text-zinc-500 hover:text-zinc-300"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                if (confirm(`Delete "${file.name}"?`)) onDeleteFile(file.id);
-                              }}
-                              title="Delete"
-                              className="p-0.5 text-zinc-500 hover:text-rose-400"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                          <Bookmark className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => handleStartRename(file, e)}
+                          title="Rename (auto-updates links)"
+                          className="p-0.5 text-zinc-500 hover:text-zinc-300"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            onDuplicateFile(file.path);
+                          }}
+                          title="Make a copy"
+                          className="p-0.5 text-zinc-500 hover:text-zinc-300"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            onDeleteFile(file.path);
+                          }}
+                          title="Move to .trash"
+                          className="p-0.5 text-zinc-500 hover:text-rose-400"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                };
+
+                if (folderName === '') {
+                  return folderFiles.map(renderFileRow);
+                }
+
+                const isCollapsed = collapsedFolders[folderName];
+
+                return (
+                  <div key={folderName} className="space-y-0.5">
+                    <div
+                      onClick={() => toggleFolder(folderName)}
+                      onDragOver={e => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'copy';
+                      }}
+                      onDrop={async e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const obsData = e.dataTransfer.getData('application/obsidian-file');
+                        if (obsData) {
+                          try {
+                            const { path: sourcePath, name } = JSON.parse(obsData);
+                            const targetPath = `${folderName}/${name}`;
+                            if (sourcePath !== targetPath) {
+                              await onRenameFile(sourcePath, targetPath);
+                            }
+                          } catch {}
+                          return;
+                        }
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                            const droppedFile = e.dataTransfer.files[i];
+                            const reader = new FileReader();
+                            reader.onloadend = async () => {
+                              const base64 = (reader.result as string).split(',')[1];
+                              const relPath = `${folderName}/${droppedFile.name}`;
+                              await vault.saveBinaryFile(relPath, base64);
+                            };
+                            reader.readAsDataURL(droppedFile);
+                          }
+                        }
+                      }}
+                      className="group flex items-center justify-between px-2 py-1.5 rounded text-zinc-300 hover:bg-zinc-800/40 cursor-pointer font-medium"
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        {isCollapsed ? (
+                          <ChevronRight className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                        )}
+                        {isCollapsed ? (
+                          <Folder className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        ) : (
+                          <FolderOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        )}
+                        <span className="truncate">{folderName}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-zinc-600">{folderFiles.length}</span>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            onCreateFile(folderName, 'md');
+                          }}
+                          title={`New note in ${folderName}`}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-zinc-100 transition-opacity"
+                        >
+                          <FilePlus className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            onCreateFile(folderName, 'canvas');
+                          }}
+                          title={`New canvas in ${folderName}`}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-orange-400 transition-opacity"
+                        >
+                          <LayoutGrid className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (window.confirm(`Move folder "${folderName}" and all its notes to .trash?`)) {
+                              onDeleteFile(folderName);
+                            }
+                          }}
+                          title={`Delete folder "${folderName}" to .trash`}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-rose-400 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {!isCollapsed && (
+                      <div className="pl-3.5 space-y-0.5 border-l border-zinc-800/60 ml-2">
+                        {folderFiles.map(renderFileRow)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         )}
 
@@ -398,9 +708,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 type="text"
                 value={searchFilter}
                 onChange={e => onSearchChange(e.target.value)}
-                placeholder="Search all notes..."
+                placeholder="Search (or path:, tag:, file:)..."
                 autoFocus
-                className="w-full pl-8 pr-2 py-1.5 bg-zinc-900 border border-zinc-700/80 rounded-md text-xs text-zinc-200 placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
+                className="w-full pl-8 pr-6 py-1.5 bg-zinc-900 border border-zinc-700/80 rounded-md text-xs text-zinc-200 placeholder-zinc-500 focus:border-purple-500 focus:outline-none"
               />
               {searchFilter && (
                 <button
@@ -412,55 +722,89 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
+            <div className="flex items-center gap-1 text-[10px] text-zinc-500 px-1">
+              <button onClick={() => onSearchChange('path:Formatting')} className="hover:text-purple-400">path:</button>
+              <span>·</span>
+              <button onClick={() => onSearchChange('tag:')} className="hover:text-purple-400">tag:</button>
+              <span>·</span>
+              <button onClick={() => onSearchChange('file:')} className="hover:text-purple-400">file:</button>
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-1 text-xs">
-              {files
-                .filter(f => {
-                  if (!searchFilter.trim()) return true;
-                  const q = searchFilter.toLowerCase();
-                  return f.name.toLowerCase().includes(q) || f.content.toLowerCase().includes(q);
-                })
-                .map(file => {
-                  const matchCount = searchFilter.trim()
-                    ? (file.content.toLowerCase().match(new RegExp(searchFilter.toLowerCase(), 'g')) || []).length
-                    : 0;
+              {searchResults.length === 0 ? (
+                <div className="p-4 text-center text-zinc-500 italic text-[11px]">
+                  No notes match your search query.
+                </div>
+              ) : (
+                searchResults.map(file => {
+                  let snippet = '';
+                  if (searchFilter.trim()) {
+                    const cleanQ = searchFilter.replace(/^(path|file|tag):/i, '').trim().toLowerCase();
+                    if (cleanQ) {
+                      const lines = file.content.split('\n');
+                      const matchLine = lines.find(l => l.toLowerCase().includes(cleanQ));
+                      if (matchLine) {
+                        snippet = matchLine.trim().slice(0, 110);
+                      }
+                    }
+                  }
 
                   return (
                     <div
-                      key={file.id}
-                      onClick={() => onSelectFile(file.id)}
-                      className="p-2 rounded bg-zinc-900/50 hover:bg-zinc-800/80 cursor-pointer border border-zinc-800/50 transition-colors"
+                      key={file.path}
+                      onClick={() => onSelectFile(file.path)}
+                      className="p-2 rounded-lg bg-zinc-900/50 hover:bg-zinc-800/80 cursor-pointer border border-zinc-800/50 transition-colors group"
                     >
                       <div className="flex items-center justify-between text-zinc-200 font-medium">
-                        <span className="truncate">{file.name.replace(/\.md$/, '')}</span>
-                        {matchCount > 0 && (
-                          <span className="px-1.5 py-0.2 rounded bg-purple-950 text-purple-400 text-[10px] border border-purple-800/40">
-                            {matchCount}
-                          </span>
-                        )}
+                        <span className="truncate group-hover:text-purple-300 font-semibold">{file.name.replace(/\.md$/, '')}</span>
                       </div>
                       {file.folder && (
-                        <div className="text-[10px] text-zinc-500 mt-0.5">{file.folder}</div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5 font-mono">{file.folder}</div>
+                      )}
+                      {snippet && (
+                        <div className="text-[11px] text-zinc-400 mt-1 pl-2 border-l-2 border-purple-500/40 italic truncate font-sans">
+                          {snippet}
+                        </div>
                       )}
                     </div>
                   );
-                })}
+                })
+              )}
             </div>
           </div>
         )}
 
-        {/* Tab 3: Graph Tab button or Quick instructions */}
-        {activeSidebarTab === 'graph' && (
-          <div className="p-3 text-xs text-zinc-400 space-y-3">
-            <div className="p-2.5 rounded-lg bg-purple-950/30 border border-purple-800/40 text-purple-300 text-[11px]">
-              The interactive Graph View is active in the main workspace!
-            </div>
-            <p>Every note and link is modeled as a physical particle with spring connections.</p>
-            <ul className="list-disc pl-4 space-y-1 text-zinc-500 text-[11px]">
-              <li>Drag nodes to rearrange</li>
-              <li>Hover to highlight links</li>
-              <li>Click to open note</li>
-              <li>Zoom with mousewheel</li>
-            </ul>
+        {/* Tab 3: Bookmarks */}
+        {activeSidebarTab === 'bookmarks' && (
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 text-xs">
+            {bookmarks.length === 0 ? (
+              <div className="text-zinc-500 text-center py-8 text-[11px] italic">
+                No bookmarked files yet.<br />Click the bookmark icon on any file to save it to <code className="text-zinc-400">.obsidian/bookmarks.json</code>.
+              </div>
+            ) : (
+              bookmarks.map((bm, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => onSelectFile(bm.path)}
+                  className="group flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-zinc-800/60 cursor-pointer text-zinc-300"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Bookmark className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400/20" />
+                    <span className="truncate">{bm.title || bm.path}</span>
+                  </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      onToggleBookmark(bm.path, bm.title);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-500 hover:text-rose-400"
+                    title="Remove Bookmark"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         )}
 
@@ -476,7 +820,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div
                   key={tag}
                   onClick={() => {
-                    onSearchChange(`#${tag}`);
+                    onSearchChange(`tag:${tag}`);
                     onSelectTab('search');
                   }}
                   className="flex items-center justify-between px-2.5 py-1.5 rounded hover:bg-zinc-800/60 cursor-pointer text-zinc-300"
@@ -490,7 +834,169 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         )}
+
+        {/* Bottom Vault Footer matching user screenshot */}
+        <div className="px-2.5 py-1.5 border-t border-zinc-800/80 bg-[#121214] flex items-center justify-between text-xs text-zinc-400 select-none shrink-0">
+          <button
+            onClick={onOpenVaultManager}
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-800 text-zinc-300 transition-colors truncate max-w-[140px]"
+            title="Open Vault Switcher"
+          >
+            <span className="truncate font-medium">{vaultName}</span>
+            <span className="text-[10px] text-zinc-500">▾</span>
+          </button>
+
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={onOpenFileRecovery}
+              className="p-1 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+              title="Help & Recovery"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onOpenSettings}
+              className="p-1 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+              title="Settings (Ctrl+,)"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Obsidian File Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 w-52 bg-zinc-900/95 border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 text-xs text-zinc-200 backdrop-blur-xl animate-in fade-in duration-75 space-y-0.5"
+          style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="px-2.5 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider truncate border-b border-zinc-800 mb-1">
+            {contextMenu.file.name}
+          </div>
+
+          <button
+            onClick={() => {
+              onSelectFile(contextMenu.file.path);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5 text-purple-400" />
+            <span>Open</span>
+          </button>
+
+          {onSplitFile && (
+            <button
+              onClick={() => {
+                onSplitFile(contextMenu.file.path);
+                setContextMenu(null);
+              }}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+            >
+              <Columns className="w-3.5 h-3.5 text-purple-400" />
+              <span>Open to the right (Split)</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              const clean = contextMenu.file.name.replace(/\.[^/.]+$/, '');
+              navigator.clipboard.writeText(`[[${clean}]]`);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <LinkIcon className="w-3.5 h-3.5 text-sky-400" />
+            <span>Copy [[wikilink]]</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const clean = contextMenu.file.name.replace(/\.[^/.]+$/, '');
+              onToggleBookmark(contextMenu.file.path, clean);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <Bookmark className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isBookmarked(contextMenu.file.path) ? 'Remove Bookmark' : 'Bookmark'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              onDuplicateFile(contextMenu.file.path);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <Copy className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Make a copy</span>
+          </button>
+
+          <div className="h-[1px] bg-zinc-800 my-1" />
+
+          <button
+            onClick={() => {
+              vault.revealInSystemExplorer(contextMenu.file.path);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Show in system explorer</span>
+          </button>
+
+          <button
+            onClick={() => {
+              vault.openInDefaultApp(contextMenu.file.path);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Open in default app</span>
+          </button>
+
+          {onExportPdf && contextMenu.file.extension === 'md' && (
+            <button
+              onClick={() => {
+                onExportPdf(contextMenu.file.path);
+                setContextMenu(null);
+              }}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5 text-purple-400" />
+              <span>Export to PDF...</span>
+            </button>
+          )}
+
+          <div className="h-[1px] bg-zinc-800 my-1" />
+
+          <button
+            onClick={e => {
+              handleStartRename(contextMenu.file, e);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Rename...</span>
+          </button>
+
+          <button
+            onClick={() => {
+              onDeleteFile(contextMenu.file.path);
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-rose-950/50 text-rose-400 text-left transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Move to .trash</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

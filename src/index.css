@@ -254,3 +254,62 @@
   background-color: rgba(139, 92, 246, 0.08);
 }
 .callout-quote .callout-title { color: #a78bfa; }
+
+/* Print / PDF Export Styles matching official Obsidian */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    user-select: text !important;
+  }
+
+  /* Hide app chrome during PDF export */
+  .status-bar,
+  .canvas-controls,
+  .canvas-card-menu,
+  .canvas-menu,
+  .editor-find-replace,
+  .tab-bar-container,
+  aside,
+  nav {
+    display: none !important;
+  }
+
+  .markdown-body {
+    background-color: transparent !important;
+    color: #111827 !important;
+    font-size: 12pt !important;
+    line-height: 1.6 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4 {
+    color: #000000 !important;
+    page-break-after: avoid;
+  }
+
+  .markdown-body a {
+    color: #4f46e5 !important;
+    text-decoration: underline !important;
+  }
+
+  .markdown-body pre,
+  .markdown-body code {
+    background-color: #f3f4f6 !important;
+    color: #1f2937 !important;
+    border: 1px solid #e5e7eb !important;
+    page-break-inside: avoid;
+  }
+
+  .callout {
+    page-break-inside: avoid;
+    background-color: #f9fafb !important;
+    border-left: 4px solid #6b7280 !important;
+    color: #111827 !important;
+  }
+}

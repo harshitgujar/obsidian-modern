@@ -1,0 +1,73 @@
+{
+  "leftSidebarOpen": true,
+  "rightSidebarOpen": true,
+  "activeLeftTab": "files",
+  "activeRightTab": "backlinks",
+  "splitDirection": null,
+  "panes": [
+    {
+      "id": "pane-main",
+      "tabs": [
+        {
+          "id": "tab-1792661914002-8hx",
+          "filePath": "wikilinks.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1792661937200-ft6",
+          "filePath": "Plugins make Obsidian special for you.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1792661940189-9hp",
+          "filePath": "202610221509 Zettelkasten Note.md",
+          "viewMode": "source"
+        },
+        {
+          "id": "tab-1792661945028-rk1",
+          "filePath": "Daily/2026-10-22.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1792661945708-dvk",
+          "filePath": "Untitled Canvas 15.canvas",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1792661962164-wcw",
+          "filePath": "Untitled Canvas 16.canvas",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1792662106563-x8r",
+          "filePath": "Untitled Canvas 17.canvas",
+          "viewMode": "live"
+        }
+      ],
+      "activeTabId": "tab-1792661945028-rk1"
+    }
+  ],
+  "activePaneId": "pane-main",
+  "lastOpenFiles": [
+    "Daily/2026-10-22.md",
+    "Untitled Canvas 17.canvas",
+    "202610221509 Zettelkasten Note.md",
+    "Untitled Canvas 16.canvas",
+    "Untitled Canvas 15.canvas",
+    "Plugins make Obsidian special for you.md",
+    "Projects/Review 1 Presentation — Obsidian.md",
+    "Formatting/Format your notes.md",
+    "202610161643 Zettelkasten Note.md",
+    "Adventurer/No prior experience.md",
+    "Formatting/Code block.md",
+    "wikilinks.md",
+    "Formatting/Comment.md",
+    "Guides/Link notes.md",
+    "Daily/2026-10-13.md",
+    "Formatting/Math.md",
+    "Formatting/Embeds.md",
+    "Formatting/Table.md",
+    "Guides/Create your first note.md",
+    "Daily/2026-10-16.md"
+  ]
+}

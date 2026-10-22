@@ -1,0 +1,18 @@
+{
+  "vimMode": false,
+  "showLineNumber": true,
+  "spellcheck": true,
+  "readableLineLength": true,
+  "strictLineBreaks": false,
+  "showFrontmatter": true,
+  "foldHeading": true,
+  "foldIndent": true,
+  "defaultViewMode": "live",
+  "livePreview": true,
+  "attachmentFolderPath": "Attachments",
+  "newFileLocation": "root",
+  "newFileFolderPath": "",
+  "alwaysUpdateLinks": true,
+  "trashOption": "local",
+  "promptDelete": false
+}

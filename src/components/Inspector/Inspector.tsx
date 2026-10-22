@@ -9,9 +9,8 @@ import {
   ExternalLink, 
   Plus, 
   ChevronRight, 
-  Clock, 
-  Tag as TagIcon,
-  ChevronDown
+  ChevronDown,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface InspectorProps {
@@ -20,8 +19,9 @@ interface InspectorProps {
   backlinks: BacklinkMention[];
   unlinkedMentions: BacklinkMention[];
   graphData: GraphData;
-  onNavigateFile: (fileId: string) => void;
-  onLinkMention: (sourceFileId: string, mentionKeyword: string) => void;
+  onNavigateFile: (filePath: string) => void;
+  onLinkMention: (sourceFilePath: string, mentionKeyword: string) => void;
+  corePluginsConfig?: Record<string, any>;
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -31,9 +31,16 @@ export const Inspector: React.FC<InspectorProps> = ({
   unlinkedMentions,
   graphData,
   onNavigateFile,
-  onLinkMention
+  onLinkMention,
+  corePluginsConfig = {}
 }) => {
-  const [activeTab, setActiveTab] = useState<InspectorTab>('backlinks');
+  const showBacklinks = corePluginsConfig['backlink'] !== false;
+  const showOutlinks = corePluginsConfig['outgoing-link'] !== false;
+  const showOutline = corePluginsConfig['outline'] !== false;
+  const showGraph = corePluginsConfig['graph'] !== false;
+
+  const defaultTab: InspectorTab = showBacklinks ? 'backlinks' : showOutlinks ? 'outgoing' : showOutline ? 'outline' : 'localGraph';
+  const [activeTab, setActiveTab] = useState<InspectorTab>(defaultTab);
   const [collapsedSections, setCollapsedSections] = useState<{ linked: boolean; unlinked: boolean }>({
     linked: false,
     unlinked: false
@@ -47,53 +54,81 @@ export const Inspector: React.FC<InspectorProps> = ({
     );
   }
 
+  const outlinks = metadata?.outlinks || [];
+
   return (
-    <div className="w-72 bg-[#141416] border-l border-zinc-800/80 flex flex-col h-full select-none shrink-0 text-xs">
+    <div className="w-80 bg-[#141416] border-l border-zinc-800/80 flex flex-col h-full select-none shrink-0 text-xs">
       {/* Top Tabs */}
-      <div className="flex items-center justify-around border-b border-zinc-800/80 bg-[#121214] py-1.5 px-2">
-        <button
-          onClick={() => setActiveTab('backlinks')}
-          title="Backlinks"
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            activeTab === 'backlinks'
-              ? 'bg-purple-600/20 text-purple-300 font-medium border border-purple-500/30'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-          }`}
-        >
-          <Link className="w-3.5 h-3.5" />
-          <span>Backlinks</span>
-          {backlinks.length > 0 && (
-            <span className="text-[10px] bg-purple-950 text-purple-400 px-1 rounded-full">
-              {backlinks.length}
-            </span>
-          )}
-        </button>
+      <div className="flex items-center gap-1 border-b border-zinc-800/80 bg-[#101012] p-1.5 shrink-0 overflow-x-auto">
+        {showBacklinks && (
+          <button
+            onClick={() => setActiveTab('backlinks')}
+            title="Backlinks"
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
+              activeTab === 'backlinks'
+                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <Link className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Links</span>
+            {backlinks.length > 0 && (
+              <span className="text-[9px] bg-purple-950 text-purple-400 px-1 rounded-full shrink-0">
+                {backlinks.length}
+              </span>
+            )}
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('outline')}
-          title="Document Outline"
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            activeTab === 'outline'
-              ? 'bg-purple-600/20 text-purple-300 font-medium border border-purple-500/30'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-          }`}
-        >
-          <ListTree className="w-3.5 h-3.5" />
-          <span>Outline</span>
-        </button>
+        {showOutlinks && (
+          <button
+            onClick={() => setActiveTab('outgoing')}
+            title="Outgoing Links"
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
+              activeTab === 'outgoing'
+                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Out</span>
+            {outlinks.length > 0 && (
+              <span className="text-[9px] bg-purple-950 text-purple-400 px-1 rounded-full shrink-0">
+                {outlinks.length}
+              </span>
+            )}
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('localGraph')}
-          title="Local Graph"
-          className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors ${
-            activeTab === 'localGraph'
-              ? 'bg-purple-600/20 text-purple-300 font-medium border border-purple-500/30'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-          }`}
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>Local</span>
-        </button>
+        {showOutline && (
+          <button
+            onClick={() => setActiveTab('outline')}
+            title="Document Outline"
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
+              activeTab === 'outline'
+                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <ListTree className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Outline</span>
+          </button>
+        )}
+
+        {showGraph && (
+          <button
+            onClick={() => setActiveTab('localGraph')}
+            title="Local Graph"
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
+              activeTab === 'localGraph'
+                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+            <span className="truncate">Graph</span>
+          </button>
+        )}
       </div>
 
       {/* Tab 1: Backlinks & Mentions */}
@@ -122,7 +157,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   backlinks.map((b, idx) => (
                     <div
                       key={idx}
-                      onClick={() => onNavigateFile(b.fileId)}
+                      onClick={() => onNavigateFile(b.filePath)}
                       className="p-2 rounded bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/70 cursor-pointer transition-colors group"
                     >
                       <div className="flex items-center gap-1.5 text-purple-400 font-medium">
@@ -168,13 +203,13 @@ export const Inspector: React.FC<InspectorProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          onClick={() => onNavigateFile(um.fileId)}
+                          onClick={() => onNavigateFile(um.filePath)}
                           className="font-medium text-zinc-300 hover:text-purple-300 cursor-pointer truncate"
                         >
                           {um.fileName.replace(/\.md$/, '')}
                         </span>
                         <button
-                          onClick={() => onLinkMention(um.fileId, activeFile.name.replace(/\.md$/, ''))}
+                          onClick={() => onLinkMention(um.filePath, activeFile.name.replace(/\.md$/, ''))}
                           className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-300 hover:bg-purple-600/40 border border-purple-500/30 text-[10px]"
                           title="Convert to [[Wikilink]]"
                         >
@@ -194,7 +229,33 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
       )}
 
-      {/* Tab 2: Document Outline */}
+      {/* Tab 2: Outgoing Links */}
+      {activeTab === 'outgoing' && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+            Links in this note ({outlinks.length})
+          </div>
+          {outlinks.length === 0 ? (
+            <div className="text-zinc-500 italic text-[11px]">No outgoing links found.<br />Type [[Note]] to link other notes!</div>
+          ) : (
+            outlinks.map((link, idx) => (
+              <div
+                key={idx}
+                onClick={() => onNavigateFile(link)}
+                className="p-2 rounded bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800/60 flex items-center justify-between cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-1.5 text-zinc-200">
+                  <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span className="truncate">{link}</span>
+                </div>
+                <ArrowUpRight className="w-3.5 h-3.5 text-zinc-500" />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Tab 3: Document Outline */}
       {activeTab === 'outline' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {(!metadata || metadata.headings.length === 0) ? (
@@ -216,7 +277,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
       )}
 
-      {/* Tab 3: Local Graph */}
+      {/* Tab 4: Local Graph */}
       {activeTab === 'localGraph' && (
         <div className="flex-1 p-2 flex flex-col">
           <div className="text-[11px] text-zinc-400 mb-2 font-medium">
@@ -225,7 +286,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <div className="flex-1 rounded-lg overflow-hidden border border-zinc-800">
             <GraphView
               data={graphData}
-              activeFileId={activeFile.id}
+              activeFileId={activeFile.path}
               onSelectNode={onNavigateFile}
               isMini={true}
             />

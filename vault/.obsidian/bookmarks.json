@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "type": "file",
+      "path": "Start here.md",
+      "title": "Start here"
+    },
+    {
+      "type": "file",
+      "path": "Obsidian Architecture.canvas",
+      "title": "Obsidian Architecture"
+    },
+    {
+      "type": "file",
+      "path": "Vault is just a local folder.md",
+      "title": "Vault is just a local folder"
+    }
+  ]
+}

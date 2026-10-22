@@ -1,0 +1,12 @@
+{
+  "baseFontSize": 16,
+  "theme": "obsidian",
+  "accentColor": "#8b5cf6",
+  "translucency": false,
+  "cssTheme": "",
+  "interfaceFontFamily": "",
+  "textFontFamily": "",
+  "monospaceFontFamily": "",
+  "showViewHeader": true,
+  "nativeMenus": false
+}

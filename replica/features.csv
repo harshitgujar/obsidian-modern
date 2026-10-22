@@ -1,0 +1,88 @@
+feature,area,priority,original,clone,notes
+Real disk vault loading & persistence,vault,must,yes,yes,No mock in-memory store; reads and writes real disk files
+Create new note (.md),files,must,yes,yes,Creates note file on disk in root or folder
+Create new folder,files,must,yes,yes,Creates directory recursively on disk
+Rename note with link refactoring,files,must,yes,yes,Refactors [[wikilinks]] across all md and canvas files in vault
+Delete note or folder to local .trash,files,must,yes,yes,Moves to .obsidian/../.trash directory safely
+Duplicate note,files,must,yes,yes,Creates copy with incremented title on disk
+Vault Switcher & Multi-vault manager,vault,must,yes,yes,Switch active vaults or reset sandbox vault
+Export vault as ZIP archive,vault,should,yes,yes,Full archive download of files and attachments
+Live Preview mode (WYSIWYG Markdown),editor,must,yes,yes,Interactive markdown preview with live editing
+Source mode (raw markdown with line numbers),editor,must,yes,yes,Raw textarea editor with line numbers strip
+Reading view mode,editor,must,yes,yes,Clean presentation view of rendered markdown
+Wikilink syntax [[Note Title]] linking,editor,must,yes,yes,Bi-directional linking between notes
+Wikilink autocomplete on [[ trigger,editor,must,yes,yes,Dropdown suggest filter on typing [[ with keyboard selection
+Frontmatter YAML properties editor,editor,must,yes,yes,Renders and edits YAML frontmatter properties block
+Callout boxes ([!note] [!tip] [!warning]),editor,must,yes,yes,Supports all Obsidian callout styles with icons
+Interactive task checklists (- [ ] / - [x]),editor,must,yes,yes,Toggling checkbox updates markdown on disk immediately
+Inline code and syntax code blocks with copy,editor,must,yes,yes,Copy code block button and syntax container
+Markdown tables,editor,must,yes,yes,Renders markdown tables with headers and alternating zebra rows
+Markdown formatting shortcuts (Ctrl+B Ctrl+I Ctrl+K),editor,should,yes,yes,Wraps selection with formatting symbols
+Hover preview on wikilinks,editor,should,yes,yes,Hover popover preview of linked notes
+Interactive 2D Canvas Graph View,graph,must,yes,yes,Barnes-Hut force-directed physics graph at 60 FPS
+Dynamic subpixel background dot grid,graph,should,yes,yes,Dot grid scales and moves with camera viewport
+Directed link arrows & color glow highlights,graph,must,yes,yes,Outgoing purple and incoming cyan edge highlights
+Graph filters (tags attachments unresolved orphans),graph,must,yes,yes,Toggle node categories in real time
+Graph color groups query engine (path tag file),graph,must,yes,yes,Color nodes matching queries with color swatches
+Graph physics force controls,graph,must,yes,yes,Sliders for center repel link force and distance
+Graph display controls,graph,must,yes,yes,Sliders for text fade node size line thickness arrows
+Interactive graph hover card tooltip,graph,should,yes,yes,Floating card with note path link count and tags
+Click vs drag disambiguation in graph,graph,must,yes,yes,Dragging node repositions it without opening note
+Local Graph view with depth selection,graph,must,yes,yes,1-hop 2-hop 3-hop depth focused on active note
+Real JSON Canvas 1.0 format (.canvas),canvas,must,yes,yes,Official JSON canvas spec with nodes and edges
+Canvas text cards file cards and link cards,canvas,must,yes,yes,Draggable resizable cards with markdown content
+Canvas directed edge connections & notations,canvas,must,yes,yes,Interactive connection handles on 4 sides of cards with live bezier wire, click/double-click to add and edit notations on lines, direction toggle and colors
+Canvas color presets (Red Orange Yellow Green Cyan Purple),canvas,should,yes,yes,6 Obsidian canvas color options
+Split panes right (Ctrl+\),workspace,must,yes,yes,Side-by-side vertical split panes
+Multi-tab support per pane,workspace,must,yes,yes,Multiple tabs per pane with active tab state
+Tab close (Ctrl+W) with pane auto-cleanup,workspace,must,yes,yes,Closes tab and cleans up pane when last tab closes
+Left sidebar with ribbon and tabs,workspace,must,yes,yes,Files search bookmarks tags and settings buttons
+Right inspector sidebar,workspace,must,yes,yes,Backlinks outgoing links outline and local graph
+Persist workspace layout to workspace.json,workspace,must,yes,yes,Saves open panes and sidebar state to .obsidian
+Daily Notes plugin with template expansion,plugins,must,yes,yes,Expands {{title}} {{date}} {{time}} into daily note
+Zettelkasten unique note prefixer,plugins,must,yes,yes,Creates 14-digit timestamp prefixed notes
+Templates modal picker (Ctrl+T),plugins,must,yes,yes,Inserts template content into active note
+Bookmarks manager (.obsidian/bookmarks.json),plugins,must,yes,yes,Pin notes and view in dedicated bookmarks tab
+File recovery snapshots (.obsidian/file-recovery),plugins,must,yes,yes,Periodic snapshot recovery modal to restore notes
+Audio recorder core plugin,plugins,should,yes,yes,Records real webm microphone audio and saves attachment
+Random note opener,plugins,could,yes,yes,Opens random note from vault
+Quick Switcher modal (Ctrl+O),navigation,must,yes,yes,Fuzzy search notes and recent files
+Command Palette modal (Ctrl+P),navigation,must,yes,yes,Search all registered commands with keyboard shortcuts
+Global vault search with filters,navigation,must,yes,yes,Search by path tag file and full text
+Tags explorer with frequency counts,navigation,should,yes,yes,Lists all tags in vault with note counts
+Dark (Obsidian) and Light (Moonstone) themes,appearance,must,yes,yes,Theme toggle persisted to appearance.json
+Base font size slider,appearance,should,yes,yes,Scales document base font size in pixels
+Fullslide presentation mode (Alt+P),presentation,should,yes,yes,Fullscreen slide deck presentation of markdown note
+Obsidian JSON config persistence (.obsidian/*.json),config,must,yes,yes,Reads and writes real config files
+Vite HMR watch exclusions to prevent reload flicker,platform,must,yes,yes,Ignores vault and config dirs in Vite watcher
+Canvas in Canvas nested board embeds,canvas,must,yes,yes,Embeds .canvas files within cards with live card/connection counts and 1-click open
+Canvas Group containers,canvas,must,yes,yes,Translucent containers behind cards with editable group title and dashed border
+Canvas interactive 8-directional card resizing,canvas,must,yes,yes,Smooth corner and edge resize handles with min dimension constraints
+Canvas Zoom to Fit,canvas,should,yes,yes,Auto-calculates bounding box and centers/zooms all canvas elements
+Native Obsidian Status Bar (.status-bar),workspace,must,yes,yes,Real-time word count char count backlinks count sync indicator and view mode cycler
+Canvas in Canvas Sub-Canvas Viewport,canvas,must,yes,yes,Live SVG preview of child nodes and edges inside canvas card with 1-click & double-click navigation
+Canvas Drag-and-Drop from Sidebar,canvas,must,yes,yes,Drag notes or canvas files from sidebar directly onto canvas to place new nodes
+Canvas in Markdown Embed,editor,must,yes,yes,Embeds ![[board.canvas]] as interactive preview card inside Live Preview notes
+Editor Find and Replace,editor,must,yes,yes,Floating in-note search and replace bar with match counter next/prev match case regex replace and replace all
+Editor Drag-and-Drop from Sidebar,editor,must,yes,yes,Drag files or images from sidebar into notes to auto-insert wikilinks and embeds
+Export to PDF,workspace,must,yes,yes,Export notes to clean PDF with custom print stylesheets via three-dot menu and Command Palette
+TabBar Three-Dot Menu,workspace,must,yes,yes,More options menu with Export to PDF Find & Replace Split right Toggle view mode and Close tab
+CodeMirror 6 Multi-Cursor editing,editor,must,yes,yes,Alt/Option+Click creates multiple active cursors for simultaneous editing
+PDF Embeds with Page Targeting,editor,must,yes,yes,Embeds ![[Doc.pdf#page=N]] with page indicator and inline document viewer
+Video File Embeds,editor,must,yes,yes,Embeds ![[video.mp4]] with native video controls and styling
+Audio File Embeds,editor,must,yes,yes,Embeds ![[audio.mp3]] with native audio controls
+Markdown Note Section Embeds,editor,must,yes,yes,Embeds ![[Note#Heading]] scoping only that specific section and heading
+Image Resizing Syntax,editor,must,yes,yes,Supports ![[image.png|100x145]] and ![[image.png|200]] width/height syntax
+Embedded Search Query Blocks,editor,must,yes,yes,Code block with ```query rendering live search results for file/tag/path queries
+Collapsible Callouts,editor,must,yes,yes,Supports >[!note]- (collapsed default) and >[!note]+ with animated chevron
+HTML and YouTube iframe Embeds,editor,must,yes,yes,Renders responsive iframe video and web widgets directly inside notes
+Document Bottom Backlinks Drawer,editor,must,yes,yes,Collapsible Backlinks drawer rendered at bottom of note with incoming snippets
+Real Backend ZIP Archive Streaming,vault,must,yes,yes,Streams full vault as ZIP via /api/vault/export-zip with all nested folders attachments and configs
+Desktop OS Drag-and-Drop to Vault,files,must,yes,yes,Drag external files from Finder or desktop into sidebar editor or canvas to auto-save to disk
+Sidebar Folder Management,files,must,yes,yes,Create notes/canvases in folder and move folder to .trash directly from sidebar tree
+Search Tab Snippet Previews,navigation,should,yes,yes,Displays line context snippets and occurrence indicators for each matched note
+Canvas 3-Dock Toolbar,canvas,must,yes,yes,Floating bottom dock matching Obsidian with Text Card Note from Vault and Media from Vault or Computer icons supporting click and drag
+Canvas Media and Document Cards,canvas,must,yes,yes,Add images PDFs audio and video from vault or computer with instant rendering and file dialog upload
+60 FPS Typing Optimization,performance,must,yes,yes,Eliminates localhost lag via optimistic in-memory updates and debounced disk auto-save and graph indexing
+Native Electron Desktop App,platform,must,yes,yes,Electron macOS app with hiddenInset traffic lights and real Obsidian IPC channels runnable via npm run desktop or npm run electron
+

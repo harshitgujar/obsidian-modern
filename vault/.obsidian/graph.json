@@ -1,0 +1,42 @@
+{
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "showArrow": true,
+  "textFadeMultiplier": 1.4,
+  "nodeSizeMultiplier": 1.2,
+  "lineSizeMultiplier": 1.7,
+  "centerStrength": 0.05,
+  "repelStrength": 500,
+  "linkStrength": 0.6,
+  "linkDistance": 260,
+  "colorGroups": [
+    {
+      "query": "path:Formatting",
+      "color": "#8b5cf6"
+    },
+    {
+      "query": "path:Guides",
+      "color": "#10b981"
+    },
+    {
+      "query": "path:Adventurer",
+      "color": "#f59e0b"
+    },
+    {
+      "query": "path:Templates",
+      "color": "#06b6d4"
+    },
+    {
+      "query": "path:Daily",
+      "color": "#ec4899"
+    }
+  ],
+  "localJumps": 1,
+  "collapse-filter": false,
+  "collapse-color-groups": false,
+  "collapse-display": false,
+  "collapse-forces": false
+}

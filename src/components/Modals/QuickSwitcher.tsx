@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { VaultFile } from '../../types';
-import { Search, FileText, Plus, CornerDownLeft, X } from 'lucide-react';
+import { Search, FileText, Plus, CornerDownLeft, X, LayoutGrid } from 'lucide-react';
 
 interface QuickSwitcherProps {
   isOpen: boolean;
   files: VaultFile[];
-  recentIds: string[];
+  recentPaths: string[];
   onClose: () => void;
-  onSelectFile: (fileId: string) => void;
+  onSelectFile: (filePath: string) => void;
+  onSplitFile?: (filePath: string) => void;
   onCreateFile: (title: string) => void;
 }
 
 export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
   isOpen,
   files,
-  recentIds,
+  recentPaths,
   onClose,
   onSelectFile,
+  onSplitFile,
   onCreateFile
 }) => {
   const [query, setQuery] = useState('');
@@ -31,27 +33,26 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
     }
   }, [isOpen]);
 
-  // Compute matched items
-  const matchedFiles = React.useMemo(() => {
+  const matchedFiles = useMemo(() => {
+    const mdAndCanvas = files.filter(f => !f.isBinary);
     if (!query.trim()) {
-      // Show recent files first, then the rest
-      const recentMap = new Map(recentIds.map((id, idx) => [id, idx]));
-      return [...files].sort((a, b) => {
-        const rA = recentMap.has(a.id) ? recentMap.get(a.id)! : 9999;
-        const rB = recentMap.has(b.id) ? recentMap.get(b.id)! : 9999;
+      const recentMap = new Map(recentPaths.map((p, idx) => [p, idx]));
+      return [...mdAndCanvas].sort((a, b) => {
+        const rA = recentMap.has(a.path) ? recentMap.get(a.path)! : 9999;
+        const rB = recentMap.has(b.path) ? recentMap.get(b.path)! : 9999;
         return rA - rB;
-      }).slice(0, 10);
+      }).slice(0, 12);
     }
 
     const q = query.toLowerCase();
-    return files
+    return mdAndCanvas
       .filter(f => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q))
-      .slice(0, 10);
-  }, [files, query, recentIds]);
+      .slice(0, 12);
+  }, [files, query, recentPaths]);
 
-  const exactMatchExists = React.useMemo(() => {
-    const qClean = query.trim().replace(/\.md$/, '').toLowerCase();
-    return files.some(f => f.name.replace(/\.md$/, '').toLowerCase() === qClean);
+  const exactMatchExists = useMemo(() => {
+    const qClean = query.trim().replace(/\.[^/.]+$/, '').toLowerCase();
+    return files.some(f => f.name.replace(/\.[^/.]+$/, '').toLowerCase() === qClean || f.path.toLowerCase() === qClean);
   }, [files, query]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,14 +65,19 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % totalCount);
+      setSelectedIndex(prev => (prev + 1) % Math.max(1, totalCount));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + totalCount) % totalCount);
+      setSelectedIndex(prev => (prev - 1 + totalCount) % Math.max(1, totalCount));
     } else if (e.key === 'Enter') {
       e.preventDefault();
+      const openSplit = e.ctrlKey || e.metaKey || e.shiftKey;
       if (selectedIndex < matchedFiles.length) {
-        onSelectFile(matchedFiles[selectedIndex].id);
+        if (openSplit && onSplitFile) {
+          onSplitFile(matchedFiles[selectedIndex].path);
+        } else {
+          onSelectFile(matchedFiles[selectedIndex].path);
+        }
         onClose();
       } else if (!exactMatchExists && query.trim()) {
         onCreateFile(query.trim());
@@ -103,7 +109,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Type note name to open or create..."
+            placeholder="Type note or canvas name to open or create..."
             className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 focus:outline-none text-base"
           />
           <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
@@ -113,32 +119,44 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
         {/* Results List */}
         <div className="max-h-80 overflow-y-auto p-1.5 space-y-0.5">
-          {matchedFiles.map((file, idx) => (
-            <div
-              key={file.id}
-              onClick={() => {
-                onSelectFile(file.id);
-                onClose();
-              }}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                idx === selectedIndex
-                  ? 'bg-purple-600/30 text-purple-200'
-                  : 'text-zinc-300 hover:bg-zinc-800/60'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                <FileText className="w-4 h-4 text-purple-400 shrink-0" />
-                <span className="font-medium truncate">{file.name.replace(/\.md$/, '')}</span>
-                {file.folder && (
-                  <span className="text-xs text-zinc-500 truncate">{file.folder}</span>
+          {matchedFiles.map((file, idx) => {
+            const isCanvas = file.extension === 'canvas';
+            return (
+              <div
+                key={file.path}
+                onClick={() => {
+                  onSelectFile(file.path);
+                  onClose();
+                }}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                  idx === selectedIndex
+                    ? 'bg-purple-600/30 text-purple-200'
+                    : 'text-zinc-300 hover:bg-zinc-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  {isCanvas ? (
+                    <LayoutGrid className="w-4 h-4 text-orange-400 shrink-0" />
+                  ) : (
+                    <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                  )}
+                  <span className="font-medium truncate">{file.name.replace(/\.md$/, '')}</span>
+                  {file.folder && (
+                    <span className="text-xs text-zinc-500 truncate">{file.folder}</span>
+                  )}
+                  {isCanvas && (
+                    <span className="text-[9px] px-1 rounded bg-orange-950/80 text-orange-300 border border-orange-700/40 font-mono uppercase">
+                      canvas
+                    </span>
+                  )}
+                </div>
+
+                {idx === selectedIndex && (
+                  <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                 )}
               </div>
-
-              {idx === selectedIndex && (
-                <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              )}
-            </div>
-          ))}
+            );
+          })}
 
           {/* Option to create note if doesn't exist */}
           {!exactMatchExists && query.trim() && (
@@ -165,11 +183,12 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
         {/* Footer shortcuts */}
         <div className="px-4 py-2 border-t border-zinc-800/80 bg-zinc-950/40 text-[11px] text-zinc-500 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span><strong>↑↓</strong> to navigate</span>
-            <span><strong>↵</strong> to open</span>
-            <span><strong>esc</strong> to close</span>
+            <span><strong>↑↓</strong> navigate</span>
+            <span><strong>↵</strong> open</span>
+            <span><strong>Shift+↵</strong> open to right</span>
+            <span><strong>esc</strong> close</span>
           </div>
-          <span>Quick Switcher</span>
+          <span>Quick Switcher (Ctrl+O)</span>
         </div>
       </div>
     </div>

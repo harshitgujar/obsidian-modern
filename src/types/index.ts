@@ -5,10 +5,12 @@ export interface VaultFile {
   name: string;
   path: string;
   folder: string;
+  extension: string;
   content: string;
+  size: number;
   updatedAt: number;
   createdAt: number;
-  isFolder?: boolean;
+  isBinary?: boolean;
 }
 
 export interface NoteHeading {
@@ -23,6 +25,12 @@ export interface NoteTask {
   line: number;
 }
 
+export interface NoteSection {
+  type: 'paragraph' | 'heading' | 'callout' | 'code' | 'table' | 'list' | 'blockquote' | 'math' | 'thematicBreak';
+  startLine: number;
+  endLine: number;
+}
+
 export interface NoteMetadata {
   path: string;
   title: string;
@@ -31,6 +39,8 @@ export interface NoteMetadata {
   tags: string[];
   headings: NoteHeading[];
   tasks: NoteTask[];
+  sections: NoteSection[];
+  blocks: Record<string, number>;
   wordCount: number;
   charCount: number;
 }
@@ -43,6 +53,7 @@ export interface GraphNode {
   color?: string;
   folder: string;
   tags: string[];
+  nodeType?: 'file' | 'tag' | 'attachment' | 'unresolved';
   x: number;
   y: number;
   vx: number;
@@ -70,13 +81,19 @@ export interface BacklinkMention {
 
 export interface TabItem {
   id: string;
-  fileId: string;
+  filePath: string;
   viewMode: EditorViewMode;
   isPinned?: boolean;
 }
 
-export type SidebarTab = 'files' | 'search' | 'graph' | 'tags' | 'bookmarks';
-export type InspectorTab = 'backlinks' | 'outline' | 'tags' | 'localGraph';
+export interface PaneItem {
+  id: string;
+  tabs: TabItem[];
+  activeTabId: string;
+}
+
+export type SidebarTab = 'files' | 'search' | 'bookmarks' | 'tags' | 'graph';
+export type InspectorTab = 'backlinks' | 'outgoing' | 'outline' | 'tags' | 'localGraph';
 
 export interface CommandItem {
   id: string;
@@ -84,4 +101,61 @@ export interface CommandItem {
   shortcut?: string;
   category?: string;
   action: () => void;
+}
+
+export interface BookmarkItem {
+  type: 'file' | 'folder' | 'search' | 'graph';
+  path: string;
+  title: string;
+  subpath?: string;
+  query?: string;
+}
+
+export interface CanvasNodeData {
+  id: string;
+  type: 'text' | 'file' | 'link' | 'group';
+  text?: string;
+  file?: string;
+  url?: string;
+  label?: string;
+  background?: string;
+  backgroundStyle?: 'cover' | 'ratio' | 'repeat';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color?: string;
+}
+
+export interface CanvasEdgeData {
+  id: string;
+  fromNode: string;
+  fromSide: 'top' | 'right' | 'bottom' | 'left';
+  toNode: string;
+  toSide: 'top' | 'right' | 'bottom' | 'left';
+  label?: string;
+  color?: string;
+  fromEnd?: 'arrow' | 'none';
+  toEnd?: 'arrow' | 'none';
+}
+
+export interface CanvasData {
+  nodes: CanvasNodeData[];
+  edges: CanvasEdgeData[];
+}
+
+export interface VaultInfo {
+  id: string;
+  name: string;
+  path: string;
+  ts: number;
+  open: boolean;
+}
+
+export interface RecoverySnapshot {
+  id: string;
+  path: string;
+  timestamp: number;
+  size: number;
+  content?: string;
 }
