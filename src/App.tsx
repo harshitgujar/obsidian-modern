@@ -1345,7 +1345,8 @@ export const App: React.FC = () => {
                         onContentChange={content => handleContentChange(paneFile.path, content)}
                         onNavigateLink={handleNavigateLink}
                         onTagClick={tag => {
-                          setActiveSidebarTab('tags');
+                          setSearchFilter(`tag:${tag}`);
+                          setActiveSidebarTab('search');
                           setIsSidebarOpen(true);
                         }}
                         onStartPresentation={() => setIsPresentationOpen(true)}

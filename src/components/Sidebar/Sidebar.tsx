@@ -131,6 +131,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (activeSidebarTab === 'tags') {
+      onSelectTab('files');
+    }
+  }, [activeSidebarTab, onSelectTab]);
+
   const toggleFolder = (folderName: string) => {
     setCollapsedFolders(prev => ({
       ...prev,
@@ -288,6 +294,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Files className="w-4 h-4" />
           </button>
 
+          <button
+            onClick={() => onSelectTab('search')}
+            title="Search Vault (Ctrl+Shift+F)"
+            className={`p-2 rounded-lg transition-colors ${
+              activeSidebarTab === 'search'
+                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            <Search className="w-4 h-4" />
+          </button>
 
           {corePluginsConfig['bookmarks'] !== false && (
             <button
@@ -300,20 +317,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Bookmark className="w-4 h-4" />
-            </button>
-          )}
-
-          {corePluginsConfig['tag-pane'] !== false && (
-            <button
-              onClick={() => onSelectTab('tags')}
-              title="Tags Pane"
-              className={`p-2 rounded-lg transition-colors ${
-                activeSidebarTab === 'tags'
-                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-              }`}
-            >
-              <TagIcon className="w-4 h-4" />
             </button>
           )}
 
