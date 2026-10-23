@@ -7,9 +7,46 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:server": "esbuild server/obsidianBackend.ts --bundle --platform=node --format=cjs --outfile=dist-electron/server.cjs",
+    "build:all": "npm run build && npm run build:server",
     "preview": "vite preview",
     "electron": "cross-env VITE_DEV_SERVER_URL=http://localhost:5175 electron electron/main.cjs",
-    "desktop": "concurrently -k \"vite\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5175 electron electron/main.cjs\""
+    "desktop": "concurrently -k \"vite\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5175 electron electron/main.cjs\"",
+    "package:appimage": "npm run build:all && electron-builder --linux AppImage --x64",
+    "package:appimage:arm64": "npm run build:all && electron-builder --linux AppImage --arm64",
+    "package:appimage:all": "npm run build:all && electron-builder --linux AppImage --x64 --arm64"
+  },
+  "description": "Modern Obsidian Desktop Application",
+  "author": "Obsidian Modern Team",
+  "build": {
+    "appId": "md.obsidian.modern",
+    "productName": "Obsidian",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/sandbox",
+        "to": "resources/sandbox",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "executableName": "obsidian",
+      "icon": "build/icon.png"
+    }
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -34,6 +71,7 @@
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "electron": "^41.2.0",
+    "electron-builder": "^26.15.3",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"

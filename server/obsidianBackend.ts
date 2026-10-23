@@ -33,10 +33,11 @@ export interface FileRecoverySnapshot {
   size: number;
 }
 
-const ROOT_DIR = process.cwd();
-const GLOBAL_CONFIG_PATH = path.join(ROOT_DIR, '.obsidian-global.json');
-const SANDBOX_TEMPLATE_DIR = path.join(ROOT_DIR, 'resources', 'sandbox');
-const DEFAULT_VAULT_DIR = path.join(ROOT_DIR, 'vault');
+export interface ObsidianServerOptions {
+  rootDir?: string;
+  defaultVaultDir?: string;
+  sandboxTemplateDir?: string;
+}
 
 const DEFAULT_CONFIGS: Record<string, any> = {
   'app': {
@@ -193,12 +194,22 @@ function copyDirectoryRecursive(src: string, dest: string) {
 }
 
 export class ObsidianVaultServer {
-  private activeVaultPath: string = DEFAULT_VAULT_DIR;
+  private rootDir: string;
+  private globalConfigPath: string;
+  private sandboxTemplateDir: string;
+  private defaultVaultDir: string;
+  private activeVaultPath: string;
   private watchers: Set<ServerResponse> = new Set();
   private fsWatcher: fs.FSWatcher | null = null;
   private suppressWatchUntil: number = 0;
 
-  constructor() {
+  constructor(options?: ObsidianServerOptions) {
+    this.rootDir = options?.rootDir || process.env.OBSIDIAN_ROOT_DIR || process.cwd();
+    this.globalConfigPath = path.join(this.rootDir, '.obsidian-global.json');
+    this.defaultVaultDir = options?.defaultVaultDir || process.env.OBSIDIAN_DEFAULT_VAULT_DIR || path.join(this.rootDir, 'vault');
+    this.sandboxTemplateDir = options?.sandboxTemplateDir || process.env.OBSIDIAN_SANDBOX_DIR || path.join(process.cwd(), 'resources', 'sandbox');
+    this.activeVaultPath = this.defaultVaultDir;
+
     this.initGlobalRegistry();
     this.ensureVaultInitialized(this.activeVaultPath);
     this.startWatchingVault();
@@ -206,9 +217,9 @@ export class ObsidianVaultServer {
 
   private initGlobalRegistry() {
     let globalData: { vaults: Record<string, { path: string; ts: number; open?: boolean }> } = { vaults: {} };
-    if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
+    if (fs.existsSync(this.globalConfigPath)) {
       try {
-        globalData = JSON.parse(fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8'));
+        globalData = JSON.parse(fs.readFileSync(this.globalConfigPath, 'utf8'));
       } catch {
         globalData = { vaults: {} };
       }
@@ -219,24 +230,24 @@ export class ObsidianVaultServer {
     if (openEntry) {
       this.activeVaultPath = openEntry[1].path;
     } else {
-      if (!fs.existsSync(DEFAULT_VAULT_DIR)) {
-        fs.mkdirSync(DEFAULT_VAULT_DIR, { recursive: true });
-        copyDirectoryRecursive(SANDBOX_TEMPLATE_DIR, DEFAULT_VAULT_DIR);
+      if (!fs.existsSync(this.defaultVaultDir)) {
+        fs.mkdirSync(this.defaultVaultDir, { recursive: true });
+        copyDirectoryRecursive(this.sandboxTemplateDir, this.defaultVaultDir);
       }
-      const id = crypto.createHash('md5').update(DEFAULT_VAULT_DIR).digest('hex').slice(0, 16);
+      const id = crypto.createHash('md5').update(this.defaultVaultDir).digest('hex').slice(0, 16);
       globalData.vaults[id] = {
-        path: DEFAULT_VAULT_DIR,
+        path: this.defaultVaultDir,
         ts: Date.now(),
         open: true
       };
-      this.activeVaultPath = DEFAULT_VAULT_DIR;
-      fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(globalData, null, 2));
+      this.activeVaultPath = this.defaultVaultDir;
+      fs.writeFileSync(this.globalConfigPath, JSON.stringify(globalData, null, 2));
     }
   }
 
   public getKnownVaults(): VaultEntry[] {
     try {
-      const raw = JSON.parse(fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8'));
+      const raw = JSON.parse(fs.readFileSync(this.globalConfigPath, 'utf8'));
       return Object.entries(raw.vaults || {}).map(([id, v]: [string, any]) => ({
         id,
         path: v.path,
@@ -260,7 +271,7 @@ export class ObsidianVaultServer {
     for (const v of vaults) {
       obj[v.id] = { path: v.path, ts: v.ts, open: v.path === this.activeVaultPath };
     }
-    fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify({ vaults: obj }, null, 2));
+    fs.writeFileSync(this.globalConfigPath, JSON.stringify({ vaults: obj }, null, 2));
   }
 
   public ensureVaultInitialized(vaultPath: string) {
@@ -722,7 +733,7 @@ export class ObsidianVaultServer {
     const resolved = path.resolve(targetVaultPath);
     fs.mkdirSync(resolved, { recursive: true });
     if (copySandbox) {
-      copyDirectoryRecursive(SANDBOX_TEMPLATE_DIR, resolved);
+      copyDirectoryRecursive(this.sandboxTemplateDir, resolved);
     }
     this.ensureVaultInitialized(resolved);
     this.activeVaultPath = resolved;
@@ -749,7 +760,7 @@ export class ObsidianVaultServer {
 
   public resetSandboxVault(): string {
     // Recreate sandbox files inside the current or default sandbox vault
-    copyDirectoryRecursive(SANDBOX_TEMPLATE_DIR, this.activeVaultPath);
+    copyDirectoryRecursive(this.sandboxTemplateDir, this.activeVaultPath);
     this.ensureVaultInitialized(this.activeVaultPath);
     return this.activeVaultPath;
   }

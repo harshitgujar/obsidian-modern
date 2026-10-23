@@ -114,14 +114,93 @@ function setupAppMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-function createWindow() {
+const http = require('http');
+let embeddedServer = null;
+
+function startEmbeddedServer(distDir, vaultServer) {
+  const mimeTypes = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.mjs': 'application/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.webp': 'image/webp',
+    '.webm': 'audio/webm',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.pdf': 'application/pdf',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf'
+  };
+
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      // 1. API calls routed to ObsidianVaultServer
+      if (req.url && req.url.startsWith('/api/vault')) {
+        return vaultServer.handleRequest(req, res, () => {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Endpoint not found' }));
+        });
+      }
+
+      // 2. Static Assets from dist/
+      try {
+        const parsedUrl = new URL(req.url, 'http://127.0.0.1');
+        let pathname = decodeURIComponent(parsedUrl.pathname);
+        if (pathname === '/') pathname = '/index.html';
+
+        const filePath = path.join(distDir, pathname);
+
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath).toLowerCase();
+          const contentType = mimeTypes[ext] || 'application/octet-stream';
+          res.writeHead(200, { 'Content-Type': contentType });
+          fs.createReadStream(filePath).pipe(res);
+          return;
+        }
+
+        // SPA fallback to index.html
+        const indexPath = path.join(distDir, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          fs.createReadStream(indexPath).pipe(res);
+          return;
+        }
+
+        res.writeHead(404);
+        res.end('Not found');
+      } catch (err) {
+        res.writeHead(500);
+        res.end(String(err));
+      }
+    });
+
+    server.listen(0, '127.0.0.1', () => {
+      embeddedServer = server;
+      const port = server.address().port;
+      resolve(`http://127.0.0.1:${port}`);
+    });
+    server.on('error', reject);
+  });
+}
+
+function createWindow(targetUrl) {
+  const iconPath = path.join(__dirname, '../build/icon.png');
   const win = new BrowserWindow({
     width: 1360,
     height: 860,
     minWidth: 800,
     minHeight: 500,
     backgroundColor: '#121214',
-    titleBarStyle: 'hiddenInset',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 14, y: 14 },
     webPreferences: {
       nodeIntegration: false,
@@ -129,7 +208,7 @@ function createWindow() {
     }
   });
 
-  const url = process.env.VITE_DEV_SERVER_URL || `file://${path.join(__dirname, '../dist/index.html')}`;
+  const url = targetUrl || process.env.VITE_DEV_SERVER_URL || `file://${path.join(__dirname, '../dist/index.html')}`;
   win.loadURL(url);
 }
 
@@ -175,16 +254,53 @@ function registerObsidianIpc() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   setupAppMenu();
   registerObsidianIpc();
-  createWindow();
+
+  let targetUrl = process.env.VITE_DEV_SERVER_URL;
+  if (!targetUrl) {
+    try {
+      const distDir = path.join(__dirname, '../dist');
+      
+      let sandboxDir = path.join(__dirname, '../resources/sandbox');
+      if (app.isPackaged) {
+        const packagedSandbox = path.join(process.resourcesPath, 'resources/sandbox');
+        const altPackagedSandbox = path.join(process.resourcesPath, 'sandbox');
+        if (fs.existsSync(packagedSandbox)) {
+          sandboxDir = packagedSandbox;
+        } else if (fs.existsSync(altPackagedSandbox)) {
+          sandboxDir = altPackagedSandbox;
+        }
+      }
+
+      const userDataDir = app.getPath('userData');
+      const defaultVaultDir = path.join(app.getPath('documents'), 'ObsidianVault');
+
+      const serverPath = path.join(__dirname, '../dist-electron/server.cjs');
+      const { ObsidianVaultServer } = require(serverPath);
+      const vaultServer = new ObsidianVaultServer({
+        rootDir: userDataDir,
+        defaultVaultDir: defaultVaultDir,
+        sandboxTemplateDir: sandboxDir
+      });
+
+      targetUrl = await startEmbeddedServer(distDir, vaultServer);
+    } catch (e) {
+      console.error('Failed to start embedded production server, falling back to file URL:', e);
+    }
+  }
+
+  createWindow(targetUrl);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(targetUrl);
   });
 });
 
 app.on('window-all-closed', () => {
+  if (embeddedServer) {
+    embeddedServer.close();
+  }
   if (process.platform !== 'darwin') app.quit();
 });
