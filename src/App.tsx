@@ -249,7 +249,7 @@ export const App: React.FC = () => {
         const initialTab: TabItem = {
           id: `tab-${Date.now()}`,
           filePath: startNote.path,
-          viewMode: 'live'
+          viewMode: vault.getConfig('app')?.defaultViewMode || 'live'
         };
         setPanes([{
           id: 'pane-main',
@@ -326,33 +326,52 @@ export const App: React.FC = () => {
     }
     if (appearanceConfig.accentColor) {
       document.documentElement.style.setProperty('--accent-color', appearanceConfig.accentColor);
+      document.documentElement.style.setProperty('--accent', appearanceConfig.accentColor);
+      document.documentElement.style.setProperty('--accent-hover', appearanceConfig.accentColor);
+      document.documentElement.style.setProperty('--accent-subtle', `${appearanceConfig.accentColor}26`);
+      document.documentElement.style.setProperty('--selection-bg', `${appearanceConfig.accentColor}4d`);
     }
     if (appearanceConfig.interfaceFontFamily) {
-      document.documentElement.style.setProperty('--font-interface', appearanceConfig.interfaceFontFamily);
+      document.documentElement.style.setProperty('--user-font-interface', appearanceConfig.interfaceFontFamily);
+    } else {
+      document.documentElement.style.removeProperty('--user-font-interface');
     }
     if (appearanceConfig.textFontFamily) {
-      document.documentElement.style.setProperty('--font-text', appearanceConfig.textFontFamily);
+      document.documentElement.style.setProperty('--user-font-text', appearanceConfig.textFontFamily);
+    } else {
+      document.documentElement.style.removeProperty('--user-font-text');
     }
     if (appearanceConfig.monospaceFontFamily) {
-      document.documentElement.style.setProperty('--font-monospace', appearanceConfig.monospaceFontFamily);
+      document.documentElement.style.setProperty('--user-font-monospace', appearanceConfig.monospaceFontFamily);
+    } else {
+      document.documentElement.style.removeProperty('--user-font-monospace');
     }
 
     // Dynamic CSS snippets injection
-    const enabledSnippets: string[] = appearanceConfig.enabledCssSnippets || [];
-    vault.getSnippets().then(allSnippets => {
-      const activeCss = allSnippets
-        .filter(s => enabledSnippets.includes(s.name))
-        .map(s => `/* Snippet: ${s.name} */\n${s.content}`)
-        .join('\n\n');
+    const refreshSnippets = () => {
+      const enabledSnippets: string[] = appearanceConfig.enabledCssSnippets || [];
+      vault.getSnippets().then(allSnippets => {
+        const activeCss = allSnippets
+          .filter(s => enabledSnippets.includes(s.name))
+          .map(s => `/* Snippet: ${s.name} */\n${s.content}`)
+          .join('\n\n');
 
-      let styleEl = document.getElementById('obsidian-custom-snippets') as HTMLStyleElement | null;
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'obsidian-custom-snippets';
-        document.head.appendChild(styleEl);
-      }
-      styleEl.textContent = activeCss;
-    });
+        let styleEl = document.getElementById('obsidian-custom-snippets') as HTMLStyleElement | null;
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'obsidian-custom-snippets';
+          document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = activeCss;
+      });
+    };
+
+    refreshSnippets();
+
+    window.addEventListener('obsidian:reload-snippets', refreshSnippets);
+    return () => {
+      window.removeEventListener('obsidian:reload-snippets', refreshSnippets);
+    };
   }, [isDarkTheme, appearanceConfig]);
 
   // Active Pane & Active File
@@ -502,6 +521,14 @@ export const App: React.FC = () => {
   }, [historyIndex, historyStack, handleSelectFile]);
 
   const handleCreateFile = useCallback(async (folder: string = '', ext: string = 'md', titleHint?: string) => {
+    let targetFolder = folder;
+    if (!targetFolder && appConfig.newFileLocation === 'current' && activeFilePath) {
+      const parts = activeFilePath.split('/');
+      if (parts.length > 1) {
+        targetFolder = parts.slice(0, -1).join('/');
+      }
+    }
+
     const prefix = ext === 'canvas' ? 'Untitled Canvas' : 'Untitled Note';
     let num = 1;
     let candidate = titleHint || `${prefix} ${num}`;
@@ -510,10 +537,10 @@ export const App: React.FC = () => {
       candidate = `${prefix} ${num}`;
     }
 
-    const newFile = await vault.createNote(candidate, folder, '', ext);
+    const newFile = await vault.createNote(candidate, targetFolder, '', ext);
     syncFromVaultManager();
     handleSelectFile(newFile.path);
-  }, [handleSelectFile, syncFromVaultManager]);
+  }, [handleSelectFile, syncFromVaultManager, appConfig.newFileLocation, activeFilePath]);
 
   const handleCreateFolder = useCallback(async (folderPath: string) => {
     await vault.createFolder(folderPath);
@@ -532,7 +559,7 @@ export const App: React.FC = () => {
           const fallbackTab: TabItem = {
             id: `tab-${Date.now()}`,
             filePath: updatedFiles[0].path,
-            viewMode: 'live'
+            viewMode: appConfig.defaultViewMode || 'live'
           };
           return { ...pane, tabs: [fallbackTab], activeTabId: fallbackTab.id };
         }
@@ -798,7 +825,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: fileToOpen,
-      viewMode: 'live'
+      viewMode: appConfig.defaultViewMode || 'live'
     };
     const newPane: PaneItem = {
       id: `pane-${Date.now()}`,
@@ -853,7 +880,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: defaultFile,
-      viewMode: 'live'
+      viewMode: appConfig.defaultViewMode || 'live'
     };
     setPanes(prev =>
       prev.map(p => (p.id === paneId ? { ...p, tabs: [...p.tabs, newTab], activeTabId: newTab.id } : p))
@@ -1632,6 +1659,8 @@ export const App: React.FC = () => {
                         backlinks={paneBacklinks}
                         viewMode={currentPaneTab?.viewMode || 'live'}
                         showLineNumbers={appConfig.showLineNumber !== false}
+                        readableLineLength={appConfig.readableLineLength !== false}
+                        strictLineBreaks={Boolean(appConfig.strictLineBreaks)}
                         showFrontmatter={appConfig.showFrontmatter !== false}
                         foldHeading={appConfig.foldHeading !== false}
                         findReplaceOpen={findReplacePaneId === pane.id}

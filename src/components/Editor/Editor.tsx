@@ -28,6 +28,8 @@ interface EditorProps {
   backlinks?: BacklinkMention[];
   viewMode: EditorViewMode;
   showLineNumbers?: boolean;
+  readableLineLength?: boolean;
+  strictLineBreaks?: boolean;
   showFrontmatter?: boolean;
   foldHeading?: boolean;
   findReplaceOpen?: boolean;
@@ -49,6 +51,8 @@ export const Editor: React.FC<EditorProps> = ({
   backlinks = [],
   viewMode,
   showLineNumbers = true,
+  readableLineLength = true,
+  strictLineBreaks = false,
   showFrontmatter = true,
   foldHeading = true,
   findReplaceOpen,
@@ -558,7 +562,7 @@ export const Editor: React.FC<EditorProps> = ({
                   </button>
                 </div>
 
-                <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+                <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
                   <LivePreview
                     file={file}
                     allFiles={allFiles}
@@ -585,6 +589,7 @@ export const Editor: React.FC<EditorProps> = ({
                   value={file.content}
                   onChange={onContentChange}
                   showLineNumbers={false}
+                  readableLineLength={readableLineLength}
                   allFiles={allFiles}
                   onNavigateLink={onNavigateLink}
                   placeholder="Start typing your note... Use [[wikilinks]], #tags, and markdown."
@@ -613,7 +618,8 @@ export const Editor: React.FC<EditorProps> = ({
                 <CodeMirrorEditor
                   value={file.content}
                   onChange={onContentChange}
-                  showLineNumbers={true}
+                  showLineNumbers={showLineNumbers}
+                  readableLineLength={readableLineLength}
                   allFiles={allFiles}
                   onNavigateLink={onNavigateLink}
                 />

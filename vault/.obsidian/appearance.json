@@ -1,12 +1,8 @@
 {
-  "baseFontSize": 16,
   "theme": "obsidian",
   "accentColor": "#8b5cf6",
-  "translucency": false,
-  "cssTheme": "",
-  "interfaceFontFamily": "",
-  "textFontFamily": "",
-  "monospaceFontFamily": "",
-  "showViewHeader": true,
-  "nativeMenus": false
+  "baseFontSize": 16,
+  "enabledCssSnippets": [
+    "custom-cards.css"
+  ]
 }

@@ -42,44 +42,42 @@ const obsidianHighlightStyle = HighlightStyle.define([
 
 const obsidianEditorTheme = EditorView.theme({
   '&': {
-    color: '#e4e4e7',
+    color: 'var(--text-primary, #e4e4e7)',
     backgroundColor: 'transparent',
-    fontSize: '15px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontSize: 'inherit',
+    fontFamily: 'var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
     height: '100%',
   },
   '.cm-scroller': {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontFamily: 'var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
     lineHeight: '1.75',
     overflow: 'auto',
   },
   '.cm-content': {
     padding: '24px 0',
-    caretColor: '#c084fc',
-    maxWidth: '820px',
-    margin: '0 auto',
+    caretColor: 'var(--accent, #c084fc)',
     minHeight: '100%',
   },
   '.cm-line': {
     padding: '0 4px',
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: '#c084fc',
+    borderLeftColor: 'var(--accent, #c084fc)',
     borderLeftWidth: '2px',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: 'rgba(168, 85, 247, 0.28) !important',
+    backgroundColor: 'var(--selection-bg, rgba(168, 85, 247, 0.28)) !important',
   },
   '.cm-activeLine': {
     backgroundColor: 'rgba(255, 255, 255, 0.025)',
     borderRadius: '4px',
   },
   '.cm-selectionMatch': {
-    backgroundColor: 'rgba(168, 85, 247, 0.2)',
+    backgroundColor: 'var(--accent-subtle, rgba(168, 85, 247, 0.2))',
   },
   '&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket': {
-    backgroundColor: 'rgba(168, 85, 247, 0.25)',
-    outline: '1px solid #a855f7',
+    backgroundColor: 'var(--accent-subtle, rgba(168, 85, 247, 0.25))',
+    outline: '1px solid var(--accent, #a855f7)',
   },
   '.cm-gutters': {
     backgroundColor: 'transparent',
@@ -95,14 +93,14 @@ const obsidianEditorTheme = EditorView.theme({
   },
   '.cm-lineNumbers .cm-gutterElement': {
     fontSize: '12px',
-    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+    fontFamily: 'var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace)',
     padding: '0 8px 0 16px',
     minWidth: '36px',
     textAlign: 'right',
   },
   '.cm-tooltip-autocomplete': {
-    backgroundColor: '#18181b !important',
-    border: '1px solid #3f3f46 !important',
+    backgroundColor: 'var(--bg-primary, #18181b) !important',
+    border: '1px solid var(--border-color, #3f3f46) !important',
     borderRadius: '8px !important',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important',
     overflow: 'hidden !important',
@@ -111,12 +109,12 @@ const obsidianEditorTheme = EditorView.theme({
   '.cm-tooltip-autocomplete > ul > li': {
     padding: '6px 10px !important',
     borderRadius: '6px !important',
-    color: '#d4d4d8 !important',
+    color: 'var(--text-primary, #d4d4d8) !important',
     fontSize: '13px !important',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
+    fontFamily: 'var(--font-interface, sans-serif) !important',
   },
   '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    backgroundColor: 'rgba(168, 85, 247, 0.25) !important',
+    backgroundColor: 'var(--accent-subtle, rgba(168, 85, 247, 0.25)) !important',
     color: '#ffffff !important',
   },
 });
@@ -125,6 +123,7 @@ interface CodeMirrorEditorProps {
   value: string;
   onChange: (value: string) => void;
   showLineNumbers?: boolean;
+  readableLineLength?: boolean;
   allFiles?: VaultFile[];
   onNavigateLink?: (targetTitle: string) => void;
   placeholder?: string;
@@ -135,6 +134,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   value,
   onChange,
   showLineNumbers = true,
+  readableLineLength = true,
   allFiles = [],
   onNavigateLink,
   className = ''
@@ -212,8 +212,18 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       }
     ]);
 
+    const layoutTheme = EditorView.theme({
+      '.cm-content': {
+        maxWidth: readableLineLength ? '820px' : 'none',
+        margin: readableLineLength ? '0 auto' : '0',
+        paddingLeft: readableLineLength ? '0' : '28px',
+        paddingRight: readableLineLength ? '0' : '28px'
+      }
+    });
+
     const extensions: Extension[] = [
       obsidianEditorTheme,
+      layoutTheme,
       EditorState.allowMultipleSelections.of(true),
       highlightActiveLine(),
       drawSelection(),
@@ -262,7 +272,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       view.destroy();
       viewRef.current = null;
     };
-  }, [showLineNumbers, wikilinkCompletion]);
+  }, [showLineNumbers, readableLineLength, wikilinkCompletion]);
 
   // Sync external changes
   useEffect(() => {

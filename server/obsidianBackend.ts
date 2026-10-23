@@ -646,9 +646,17 @@ export class ObsidianVaultServer {
   public revealInSystemExplorer(relPath?: string) {
     const absPath = relPath ? this.safeJoinVault(relPath) : this.activeVaultPath;
     if (process.platform === 'darwin') {
-      exec(`open -R "${absPath.replace(/"/g, '\\"')}"`);
+      if (fs.existsSync(absPath) && fs.statSync(absPath).isDirectory()) {
+        exec(`open "${absPath.replace(/"/g, '\\"')}"`);
+      } else {
+        exec(`open -R "${absPath.replace(/"/g, '\\"')}"`);
+      }
     } else if (process.platform === 'win32') {
-      exec(`explorer /select,"${absPath.replace(/"/g, '\\"')}"`);
+      if (fs.existsSync(absPath) && fs.statSync(absPath).isDirectory()) {
+        exec(`explorer "${absPath.replace(/"/g, '\\"')}"`);
+      } else {
+        exec(`explorer /select,"${absPath.replace(/"/g, '\\"')}"`);
+      }
     } else {
       const dir = fs.existsSync(absPath) && fs.statSync(absPath).isDirectory() ? absPath : path.dirname(absPath);
       exec(`xdg-open "${dir.replace(/"/g, '\\"')}"`);
