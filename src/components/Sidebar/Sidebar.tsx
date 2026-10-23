@@ -54,6 +54,8 @@ interface SidebarProps {
   isDarkTheme: boolean;
   vaultName: string;
   isRecordingAudio?: boolean;
+  isGraphViewActive?: boolean;
+  activeFileExtension?: string;
   onSelectTab: (tab: SidebarTab) => void;
   onSelectFile: (filePath: string) => void;
   onSplitFile?: (filePath: string) => void;
@@ -88,6 +90,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDarkTheme,
   vaultName,
   isRecordingAudio = false,
+  isGraphViewActive = false,
+  activeFileExtension,
   onSelectTab,
   onSelectFile,
   onSplitFile,
@@ -416,24 +420,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="w-11 bg-[#0e0e10] border-r border-zinc-800/60 flex flex-col items-center py-2.5 justify-between shrink-0">
         <div className="flex flex-col items-center gap-1.5">
           <button
-            onClick={() => onSelectTab('files')}
+            onClick={() => {
+              if (isGraphViewActive) {
+                onToggleGraphView();
+              }
+              onSelectTab('files');
+            }}
             title="File Explorer (Ctrl+Shift+E)"
             className={`p-2 rounded-lg transition-colors ${
-              activeSidebarTab === 'files'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              !isGraphViewActive && activeFileExtension !== 'canvas' && activeSidebarTab === 'files'
+                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
             }`}
           >
             <Files className="w-4 h-4" />
           </button>
 
           <button
-            onClick={() => onSelectTab('search')}
+            onClick={() => {
+              if (isGraphViewActive) {
+                onToggleGraphView();
+              }
+              onSelectTab('search');
+            }}
             title="Search Vault (Ctrl+Shift+F)"
             className={`p-2 rounded-lg transition-colors ${
-              activeSidebarTab === 'search'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              !isGraphViewActive && activeSidebarTab === 'search'
+                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
             }`}
           >
             <Search className="w-4 h-4" />
@@ -441,12 +455,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {corePluginsConfig['bookmarks'] !== false && (
             <button
-              onClick={() => onSelectTab('bookmarks')}
+              onClick={() => {
+                if (isGraphViewActive) {
+                  onToggleGraphView();
+                }
+                onSelectTab('bookmarks');
+              }}
               title="Bookmarks (.obsidian/bookmarks.json)"
               className={`p-2 rounded-lg transition-colors ${
-                activeSidebarTab === 'bookmarks'
-                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                !isGraphViewActive && activeSidebarTab === 'bookmarks'
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
               }`}
             >
               <Bookmark className="w-4 h-4" />
@@ -459,8 +478,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {corePluginsConfig['graph'] !== false && (
             <button
               onClick={onToggleGraphView}
-              title="Open Graph View (Ctrl+G)"
-              className="p-2 rounded-lg text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 transition-colors"
+              title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
+              className={`p-2 rounded-lg transition-colors ${
+                isGraphViewActive
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
+                  : 'text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 border border-transparent'
+              }`}
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -468,9 +491,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {corePluginsConfig['canvas'] !== false && (
             <button
-              onClick={() => onCreateFile('', 'canvas')}
-              title="Create New Canvas (.canvas)"
-              className="p-2 rounded-lg text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 transition-colors"
+              onClick={() => {
+                if (isGraphViewActive) {
+                  onToggleGraphView();
+                }
+                onCreateFile('', 'canvas');
+              }}
+              title="Canvas (.canvas)"
+              className={`p-2 rounded-lg transition-colors ${
+                !isGraphViewActive && activeFileExtension === 'canvas'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 shadow-sm'
+                  : 'text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 border border-transparent'
+              }`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>

@@ -1352,18 +1352,55 @@ export const App: React.FC = () => {
           vaultName={vaultName}
           isRecordingAudio={isRecordingAudio}
           corePluginsConfig={corePluginsConfig}
-          onSelectTab={setActiveSidebarTab}
-          onSelectFile={handleSelectFile}
-          onSplitFile={filePath => handleSplitPaneRight(filePath)}
-          onCreateFile={handleCreateFile}
+          isGraphViewActive={isGraphViewActive}
+          activeFileExtension={activeFile?.extension}
+          onSelectTab={tab => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            setActiveSidebarTab(tab);
+          }}
+          onSelectFile={filePath => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleSelectFile(filePath);
+          }}
+          onSplitFile={filePath => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleSplitPaneRight(filePath);
+          }}
+          onCreateFile={(folder, ext) => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleCreateFile(folder, ext);
+          }}
           onCreateFolder={handleCreateFolder}
           onDeleteFile={handleDeleteFile}
           onRenameFile={handleRenameFile}
           onDuplicateFile={handleDuplicateFile}
           onToggleBookmark={handleToggleBookmark}
-          onOpenDailyNote={handleOpenDailyNote}
-          onOpenRandomNote={handleOpenRandomNote}
-          onCreateZkNote={handleCreateZkNote}
+          onOpenDailyNote={() => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleOpenDailyNote();
+          }}
+          onOpenRandomNote={() => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleOpenRandomNote();
+          }}
+          onCreateZkNote={() => {
+            if (isGraphViewActive) {
+              setIsGraphViewActive(false);
+            }
+            handleCreateZkNote();
+          }}
           onToggleAudioRecording={handleToggleAudioRecording}
           onOpenVaultManager={() => setIsVaultModalOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
