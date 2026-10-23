@@ -55,6 +55,9 @@ interface SidebarProps {
   vaultName: string;
   isRecordingAudio?: boolean;
   isGraphViewActive?: boolean;
+  activeRibbonTab?: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas';
+  onOpenCanvasView?: () => void;
+  onOpenFilesView?: () => void;
   onSelectTab: (tab: SidebarTab) => void;
   onSelectFile: (filePath: string) => void;
   onSplitFile?: (filePath: string) => void;
@@ -90,6 +93,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   vaultName,
   isRecordingAudio = false,
   isGraphViewActive = false,
+  activeRibbonTab,
+  onOpenCanvasView,
+  onOpenFilesView,
   onSelectTab,
   onSelectFile,
   onSplitFile,
@@ -412,6 +418,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   };
 
+  const currentRibbonPill: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas' =
+    activeRibbonTab ||
+    (isGraphViewActive
+      ? 'graph'
+      : activeSidebarTab === 'search'
+      ? 'search'
+      : activeSidebarTab === 'bookmarks'
+      ? 'bookmarks'
+      : activeFilePath?.endsWith('.canvas')
+      ? 'canvas'
+      : 'files');
+
   return (
     <div className="flex h-full bg-[#121214] border-r border-zinc-800/80 select-none shrink-0 relative">
       {/* 1. Left Vertical Ribbon */}
@@ -419,14 +437,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex flex-col items-center gap-1.5">
           <button
             onClick={() => {
-              if (isGraphViewActive) {
-                onToggleGraphView();
+              if (onOpenFilesView) {
+                onOpenFilesView();
+              } else {
+                if (isGraphViewActive) onToggleGraphView();
+                onSelectTab('files');
               }
-              onSelectTab('files');
             }}
             title="File Explorer (Ctrl+Shift+E)"
             className={`p-2 rounded-lg transition-colors ${
-              !isGraphViewActive && activeSidebarTab === 'files'
+              currentRibbonPill === 'files'
                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
             }`}
@@ -443,7 +463,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
             title="Search Vault (Ctrl+Shift+F)"
             className={`p-2 rounded-lg transition-colors ${
-              !isGraphViewActive && activeSidebarTab === 'search'
+              currentRibbonPill === 'search'
                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
             }`}
@@ -461,7 +481,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               title="Bookmarks (.obsidian/bookmarks.json)"
               className={`p-2 rounded-lg transition-colors ${
-                !isGraphViewActive && activeSidebarTab === 'bookmarks'
+                currentRibbonPill === 'bookmarks'
                   ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
               }`}
@@ -478,7 +498,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={onToggleGraphView}
               title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
               className={`p-2 rounded-lg transition-colors ${
-                isGraphViewActive
+                currentRibbonPill === 'graph'
                   ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
                   : 'text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 border border-transparent'
               }`}
@@ -490,13 +510,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {corePluginsConfig['canvas'] !== false && (
             <button
               onClick={() => {
-                if (isGraphViewActive) {
-                  onToggleGraphView();
+                if (onOpenCanvasView) {
+                  onOpenCanvasView();
+                } else {
+                  if (isGraphViewActive) onToggleGraphView();
+                  onCreateFile('', 'canvas');
                 }
-                onCreateFile('', 'canvas');
               }}
-              title="Create New Canvas (.canvas)"
-              className="p-2 rounded-lg text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 transition-colors border border-transparent"
+              title="Canvas Board (.canvas)"
+              className={`p-2 rounded-lg transition-colors ${
+                currentRibbonPill === 'canvas'
+                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 shadow-sm'
+                  : 'text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 border border-transparent'
+              }`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>

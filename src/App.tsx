@@ -405,6 +405,15 @@ export const App: React.FC = () => {
     }
   }, [activeFile]);
 
+  // Primary active ribbon screen (strictly one active pill at any time)
+  const activeRibbonTab: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas' = useMemo(() => {
+    if (isGraphViewActive) return 'graph';
+    if (activeSidebarTab === 'search') return 'search';
+    if (activeSidebarTab === 'bookmarks') return 'bookmarks';
+    if (activeFile?.extension === 'canvas') return 'canvas';
+    return 'files';
+  }, [isGraphViewActive, activeSidebarTab, activeFile]);
+
   // Reactive Graph Index with 500ms debounce (prevents typing stutter & CPU lockup)
   const [graphData, setGraphData] = useState<GraphData>(() =>
     graphIndexer.indexVault(files, graphConfig.colorGroups)
@@ -851,6 +860,65 @@ export const App: React.FC = () => {
     );
     setActivePaneId(paneId);
   };
+
+  const handleOpenCanvasView = useCallback(() => {
+    if (isGraphViewActive) {
+      setIsGraphViewActive(false);
+    }
+    setActiveSidebarTab('files');
+
+    // 1. If currently viewing a canvas file, do nothing
+    if (activeFile && activeFile.extension === 'canvas') {
+      return;
+    }
+
+    // 2. Look for any existing canvas tab in panes
+    for (const pane of panes) {
+      const canvasTab = pane.tabs.find(t => {
+        const f = files.find(file => file.path === t.filePath);
+        return f?.extension === 'canvas';
+      });
+      if (canvasTab) {
+        handleSelectTabInPane(pane.id, canvasTab.id);
+        return;
+      }
+    }
+
+    // 3. Look for any existing canvas file in the vault
+    const existingCanvas = files.find(f => f.extension === 'canvas');
+    if (existingCanvas) {
+      handleSelectFile(existingCanvas.path);
+      return;
+    }
+
+    // 4. Otherwise create a new canvas file
+    handleCreateFile('', 'canvas');
+  }, [isGraphViewActive, activeFile, panes, files, handleSelectFile, handleCreateFile]);
+
+  const handleOpenFilesView = useCallback(() => {
+    if (isGraphViewActive) {
+      setIsGraphViewActive(false);
+    }
+    setActiveSidebarTab('files');
+
+    // If current file is a canvas, switch to the first or active markdown note
+    if (activeFile && activeFile.extension === 'canvas') {
+      if (activePane) {
+        const mdTab = activePane.tabs.find(t => {
+          const f = files.find(file => file.path === t.filePath);
+          return f?.extension === 'md';
+        });
+        if (mdTab) {
+          handleSelectTabInPane(activePane.id, mdTab.id);
+          return;
+        }
+      }
+      const firstMd = files.find(f => f.extension === 'md');
+      if (firstMd) {
+        handleSelectFile(firstMd.path);
+      }
+    }
+  }, [isGraphViewActive, activeFile, activePane, files, handleSelectFile]);
 
   const handleViewModeChangeInPane = (paneId: string, mode: EditorViewMode) => {
     setPanes(prev =>
@@ -1353,6 +1421,9 @@ export const App: React.FC = () => {
           isRecordingAudio={isRecordingAudio}
           corePluginsConfig={corePluginsConfig}
           isGraphViewActive={isGraphViewActive}
+          activeRibbonTab={activeRibbonTab}
+          onOpenCanvasView={handleOpenCanvasView}
+          onOpenFilesView={handleOpenFilesView}
           onSelectTab={tab => {
             if (isGraphViewActive) {
               setIsGraphViewActive(false);
