@@ -121,7 +121,7 @@ const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFil
 
   return (
     <div 
-      className="h-full flex flex-col justify-between p-2 bg-[#121216]/95 rounded-xl border border-orange-500/30 group hover:border-orange-500/60 transition-all cursor-pointer overflow-hidden"
+      className="h-full flex flex-col justify-between p-2 bg-[#121216]/95 rounded-xl border border-orange-500/30 group hover:border-orange-500/60 transition-colors cursor-pointer overflow-hidden"
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();
@@ -273,6 +273,37 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
   // Connecting nodes
   const [connectingState, setConnectingState] = useState<ConnectingState | null>(null);
+
+  // Real-time synchronization refs to guarantee 0ms latency and prevent closure staleness
+  const canvasDataRef = useRef(canvasData);
+  canvasDataRef.current = canvasData;
+
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
+
+  const draggingNodeIdRef = useRef(draggingNodeId);
+  draggingNodeIdRef.current = draggingNodeId;
+
+  const dragOffsetRef = useRef(dragOffset);
+  dragOffsetRef.current = dragOffset;
+
+  const isPanningRef = useRef(isPanning);
+  isPanningRef.current = isPanning;
+
+  const panStartRef = useRef(panStart);
+  panStartRef.current = panStart;
+
+  const resizingStateRef = useRef(resizingState);
+  resizingStateRef.current = resizingState;
+
+  const connectingStateRef = useRef(connectingState);
+  connectingStateRef.current = connectingState;
+
+  const hoveredPortRef = useRef(hoveredPort);
+  hoveredPortRef.current = hoveredPort;
+
+  const rafIdRef = useRef<number | null>(null);
+  const pendingMousePosRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   // Notation editing
   const [editingEdgeLabelId, setEditingEdgeLabelId] = useState<string | null>(null);
@@ -530,21 +561,30 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     setEditingEdgeLabelId(null);
     setShowFileSuggestPopover(false);
     setIsPanning(true);
-    setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
+    isPanningRef.current = true;
+    const pStart = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+    panStartRef.current = pStart;
+    setPanStart(pStart);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
+  const processMouseMove = useCallback((clientX: number, clientY: number) => {
+    const curTransform = transformRef.current;
+    const curDraggingId = draggingNodeIdRef.current;
+    const curResizing = resizingStateRef.current;
+    const curPanning = isPanningRef.current;
+    const curConnecting = connectingStateRef.current;
+
+    if (curPanning) {
       setTransform(prev => ({
         ...prev,
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y
+        x: clientX - panStartRef.current.x,
+        y: clientY - panStartRef.current.y
       }));
-    } else if (resizingState) {
-      const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
-      const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
-      const dx = mouseCanvasX - resizingState.startMouseX;
-      const dy = mouseCanvasY - resizingState.startMouseY;
+    } else if (curResizing) {
+      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
+      const dx = mouseCanvasX - curResizing.startMouseX;
+      const dy = mouseCanvasY - curResizing.startMouseY;
 
       const minW = 180;
       const minH = 120;
@@ -552,36 +592,36 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       setCanvasData(prev => ({
         ...prev,
         nodes: prev.nodes.map(n => {
-          if (n.id !== resizingState.nodeId) return n;
-          let newX = resizingState.initialX;
-          let newY = resizingState.initialY;
-          let newW = resizingState.initialWidth;
-          let newH = resizingState.initialHeight;
+          if (n.id !== curResizing.nodeId) return n;
+          let newX = curResizing.initialX;
+          let newY = curResizing.initialY;
+          let newW = curResizing.initialWidth;
+          let newH = curResizing.initialHeight;
 
-          if (resizingState.direction.includes('right')) {
-            newW = Math.max(minW, resizingState.initialWidth + dx);
+          if (curResizing.direction.includes('right')) {
+            newW = Math.max(minW, curResizing.initialWidth + dx);
           }
-          if (resizingState.direction.includes('bottom')) {
-            newH = Math.max(minH, resizingState.initialHeight + dy);
+          if (curResizing.direction.includes('bottom')) {
+            newH = Math.max(minH, curResizing.initialHeight + dy);
           }
-          if (resizingState.direction.includes('left')) {
-            const potentialW = resizingState.initialWidth - dx;
+          if (curResizing.direction.includes('left')) {
+            const potentialW = curResizing.initialWidth - dx;
             if (potentialW >= minW) {
               newW = potentialW;
-              newX = resizingState.initialX + dx;
+              newX = curResizing.initialX + dx;
             } else {
               newW = minW;
-              newX = resizingState.initialX + (resizingState.initialWidth - minW);
+              newX = curResizing.initialX + (curResizing.initialWidth - minW);
             }
           }
-          if (resizingState.direction.includes('top')) {
-            const potentialH = resizingState.initialHeight - dy;
+          if (curResizing.direction.includes('top')) {
+            const potentialH = curResizing.initialHeight - dy;
             if (potentialH >= minH) {
               newH = potentialH;
-              newY = resizingState.initialY + dy;
+              newY = curResizing.initialY + dy;
             } else {
               newH = minH;
-              newY = resizingState.initialY + (resizingState.initialHeight - minH);
+              newY = curResizing.initialY + (curResizing.initialHeight - minH);
             }
           }
 
@@ -594,60 +634,99 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           };
         })
       }));
-    } else if (draggingNodeId) {
-      const node = canvasData.nodes.find(n => n.id === draggingNodeId);
-      if (node) {
-        const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
-        const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
-        const newX = Math.round(mouseCanvasX - dragOffset.x);
-        const newY = Math.round(mouseCanvasY - dragOffset.y);
+    } else if (curDraggingId) {
+      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
+      const newX = Math.round(mouseCanvasX - dragOffsetRef.current.x);
+      const newY = Math.round(mouseCanvasY - dragOffsetRef.current.y);
 
-        setCanvasData(prev => ({
-          ...prev,
-          nodes: prev.nodes.map(n => n.id === draggingNodeId ? { ...n, x: newX, y: newY } : n)
-        }));
-      }
-    } else if (connectingState) {
-      const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
-      const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
+      setCanvasData(prev => ({
+        ...prev,
+        nodes: prev.nodes.map(n => n.id === curDraggingId ? { ...n, x: newX, y: newY } : n)
+      }));
+    } else if (curConnecting) {
+      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
       setConnectingState(prev => prev ? ({
         ...prev,
         currentX: mouseCanvasX,
         currentY: mouseCanvasY
       }) : null);
     }
-  };
+  }, []);
 
-  const handleMouseUp = () => {
-    if (isPanning) setIsPanning(false);
+  const handleMouseMove = useCallback((e: MouseEvent | React.MouseEvent) => {
+    pendingMousePosRef.current = { clientX: e.clientX, clientY: e.clientY };
 
-    if (resizingState) {
+    if (rafIdRef.current === null) {
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        if (pendingMousePosRef.current) {
+          processMouseMove(pendingMousePosRef.current.clientX, pendingMousePosRef.current.clientY);
+        }
+      });
+    }
+  }, [processMouseMove]);
+
+  const handleMouseUp = useCallback((e?: MouseEvent | React.MouseEvent) => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+
+    if (isPanningRef.current) {
+      setIsPanning(false);
+      isPanningRef.current = false;
+    }
+
+    if (resizingStateRef.current) {
       setResizingState(null);
-      persistCanvas(canvasData);
+      resizingStateRef.current = null;
+      persistCanvas(canvasDataRef.current);
     }
 
-    if (draggingNodeId) {
+    if (draggingNodeIdRef.current) {
+      const draggedId = draggingNodeIdRef.current;
       setDraggingNodeId(null);
-      persistCanvas(canvasData);
+      draggingNodeIdRef.current = null;
+
+      const finalPos = e && 'clientX' in e ? { clientX: e.clientX, clientY: e.clientY } : pendingMousePosRef.current;
+      if (finalPos) {
+        const curTransform = transformRef.current;
+        const mouseCanvasX = (finalPos.clientX - curTransform.x) / curTransform.scale;
+        const mouseCanvasY = (finalPos.clientY - curTransform.y) / curTransform.scale;
+        const newX = Math.round(mouseCanvasX - dragOffsetRef.current.x);
+        const newY = Math.round(mouseCanvasY - dragOffsetRef.current.y);
+
+        const updatedData: CanvasData = {
+          ...canvasDataRef.current,
+          nodes: canvasDataRef.current.nodes.map(n => n.id === draggedId ? { ...n, x: newX, y: newY } : n)
+        };
+        persistCanvas(updatedData);
+      } else {
+        persistCanvas(canvasDataRef.current);
+      }
     }
 
-    if (connectingState) {
-      if (hoveredPort && hoveredPort.nodeId !== connectingState.fromNodeId) {
+    if (connectingStateRef.current) {
+      const conn = connectingStateRef.current;
+      const hPort = hoveredPortRef.current;
+      if (hPort && hPort.nodeId !== conn.fromNodeId) {
         const newEdgeId = `edge-${Date.now()}`;
         const newEdge: CanvasEdgeData = {
           id: newEdgeId,
-          fromNode: connectingState.fromNodeId,
-          fromSide: connectingState.fromSide,
-          toNode: hoveredPort.nodeId,
-          toSide: hoveredPort.side,
+          fromNode: conn.fromNodeId,
+          fromSide: conn.fromSide,
+          toNode: hPort.nodeId,
+          toSide: hPort.side,
           label: '',
           color: '6',
           toEnd: 'arrow'
         };
 
         const updatedData: CanvasData = {
-          ...canvasData,
-          edges: [...canvasData.edges, newEdge]
+          ...canvasDataRef.current,
+          edges: [...canvasDataRef.current.edges, newEdge]
         };
 
         persistCanvas(updatedData);
@@ -658,9 +737,37 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       }
 
       setConnectingState(null);
+      connectingStateRef.current = null;
       setHoveredPort(null);
+      hoveredPortRef.current = null;
     }
-  };
+  }, [persistCanvas]);
+
+  // Window-level listeners to prevent stuck drag states and guarantee silky smooth movement
+  useEffect(() => {
+    const isInteracting = draggingNodeId !== null || isPanning || resizingState !== null || connectingState !== null;
+    if (!isInteracting) return;
+
+    const onGlobalMouseMove = (e: MouseEvent) => {
+      handleMouseMove(e);
+    };
+
+    const onGlobalMouseUp = (e: MouseEvent) => {
+      handleMouseUp(e);
+    };
+
+    window.addEventListener('mousemove', onGlobalMouseMove, { passive: true });
+    window.addEventListener('mouseup', onGlobalMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', onGlobalMouseMove);
+      window.removeEventListener('mouseup', onGlobalMouseUp);
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [draggingNodeId, isPanning, resizingState, connectingState, handleMouseMove, handleMouseUp]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -677,12 +784,15 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     setSelectedNodeId(node.id);
     setSelectedEdgeId(null);
     setDraggingNodeId(node.id);
+    draggingNodeIdRef.current = node.id;
     const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
     const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
-    setDragOffset({
+    const offset = {
       x: mouseCanvasX - node.x,
       y: mouseCanvasY - node.y
-    });
+    };
+    dragOffsetRef.current = offset;
+    setDragOffset(offset);
   };
 
   // Resizing trigger
@@ -691,7 +801,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     e.preventDefault();
     const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
     const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
-    setResizingState({
+    const rState: ResizingState = {
       nodeId: node.id,
       direction,
       startMouseX: mouseCanvasX,
@@ -700,7 +810,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       initialY: node.y,
       initialWidth: node.width,
       initialHeight: node.height
-    });
+    };
+    resizingStateRef.current = rState;
+    setResizingState(rState);
   };
 
   // Start connecting from a node's port handle
@@ -710,14 +822,16 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     const node = nodeDict.get(nodeId);
     if (!node) return;
     const pos = getPortPos(node, side);
-    setConnectingState({
+    const cState: ConnectingState = {
       fromNodeId: nodeId,
       fromSide: side,
       startX: pos.x,
       startY: pos.y,
       currentX: pos.x,
       currentY: pos.y
-    });
+    };
+    connectingStateRef.current = cState;
+    setConnectingState(cState);
   };
 
   // Save edge notation label
@@ -1694,7 +1808,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                   markerStart={edge.fromEnd === 'arrow' ? `url(#arrow-start-${markerSuffix})` : undefined}
                   markerEnd={edge.toEnd !== 'none' ? `url(#arrow-end-${markerSuffix})` : undefined}
                   opacity={isSelected ? '1' : '0.8'}
-                  className="pointer-events-none transition-all"
+                  className="pointer-events-none"
                 />
               </g>
             );
@@ -1818,7 +1932,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 title="Double-click to edit notation"
               >
                 <div
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-lg backdrop-blur-md transition-all ${
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-lg backdrop-blur-md transition-colors duration-150 ${
                     isSelected
                       ? 'bg-purple-950/95 text-purple-200 border-purple-400 ring-2 ring-purple-500/50'
                       : 'bg-[#18181c]/95 text-zinc-200 border-zinc-700/80 hover:border-zinc-500 hover:text-white'
@@ -1910,7 +2024,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 setSelectedEdgeId(null);
               }}
               onMouseDown={e => startDragNode(node, e)}
-              className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-all select-none ${
+              className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-colors duration-150 select-none ${
                 isGroup
                   ? `${colorStyle.groupBg} ${colorStyle.border} border-dashed border-2 rounded-2xl z-0 p-3`
                   : isSelected
