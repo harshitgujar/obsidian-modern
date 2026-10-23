@@ -1353,7 +1353,6 @@ export const App: React.FC = () => {
           isRecordingAudio={isRecordingAudio}
           corePluginsConfig={corePluginsConfig}
           isGraphViewActive={isGraphViewActive}
-          activeFileExtension={activeFile?.extension}
           onSelectTab={tab => {
             if (isGraphViewActive) {
               setIsGraphViewActive(false);

@@ -55,7 +55,6 @@ interface SidebarProps {
   vaultName: string;
   isRecordingAudio?: boolean;
   isGraphViewActive?: boolean;
-  activeFileExtension?: string;
   onSelectTab: (tab: SidebarTab) => void;
   onSelectFile: (filePath: string) => void;
   onSplitFile?: (filePath: string) => void;
@@ -91,7 +90,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   vaultName,
   isRecordingAudio = false,
   isGraphViewActive = false,
-  activeFileExtension,
   onSelectTab,
   onSelectFile,
   onSplitFile,
@@ -428,7 +426,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
             title="File Explorer (Ctrl+Shift+E)"
             className={`p-2 rounded-lg transition-colors ${
-              !isGraphViewActive && activeFileExtension !== 'canvas' && activeSidebarTab === 'files'
+              !isGraphViewActive && activeSidebarTab === 'files'
                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
             }`}
@@ -497,12 +495,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
                 onCreateFile('', 'canvas');
               }}
-              title="Canvas (.canvas)"
-              className={`p-2 rounded-lg transition-colors ${
-                !isGraphViewActive && activeFileExtension === 'canvas'
-                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 shadow-sm'
-                  : 'text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 border border-transparent'
-              }`}
+              title="Create New Canvas (.canvas)"
+              className="p-2 rounded-lg text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 transition-colors border border-transparent"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
