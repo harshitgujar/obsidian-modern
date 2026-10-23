@@ -318,61 +318,19 @@ export const App: React.FC = () => {
     isVaultLoaded
   ]);
 
-  // Theme, Fonts & Custom CSS Snippets synchronization
+  // Theme & Base font size synchronization
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
     if (appearanceConfig.baseFontSize) {
       document.documentElement.style.fontSize = `${appearanceConfig.baseFontSize}px`;
     }
-    if (appearanceConfig.accentColor) {
-      document.documentElement.style.setProperty('--accent-color', appearanceConfig.accentColor);
-      document.documentElement.style.setProperty('--accent', appearanceConfig.accentColor);
-      document.documentElement.style.setProperty('--accent-hover', appearanceConfig.accentColor);
-      document.documentElement.style.setProperty('--accent-subtle', `${appearanceConfig.accentColor}26`);
-      document.documentElement.style.setProperty('--selection-bg', `${appearanceConfig.accentColor}4d`);
-    }
-    if (appearanceConfig.interfaceFontFamily) {
-      document.documentElement.style.setProperty('--user-font-interface', appearanceConfig.interfaceFontFamily);
-    } else {
-      document.documentElement.style.removeProperty('--user-font-interface');
-    }
-    if (appearanceConfig.textFontFamily) {
-      document.documentElement.style.setProperty('--user-font-text', appearanceConfig.textFontFamily);
-    } else {
-      document.documentElement.style.removeProperty('--user-font-text');
-    }
-    if (appearanceConfig.monospaceFontFamily) {
-      document.documentElement.style.setProperty('--user-font-monospace', appearanceConfig.monospaceFontFamily);
-    } else {
-      document.documentElement.style.removeProperty('--user-font-monospace');
-    }
 
-    // Dynamic CSS snippets injection
-    const refreshSnippets = () => {
-      const enabledSnippets: string[] = appearanceConfig.enabledCssSnippets || [];
-      vault.getSnippets().then(allSnippets => {
-        const activeCss = allSnippets
-          .filter(s => enabledSnippets.includes(s.name))
-          .map(s => `/* Snippet: ${s.name} */\n${s.content}`)
-          .join('\n\n');
-
-        let styleEl = document.getElementById('obsidian-custom-snippets') as HTMLStyleElement | null;
-        if (!styleEl) {
-          styleEl = document.createElement('style');
-          styleEl.id = 'obsidian-custom-snippets';
-          document.head.appendChild(styleEl);
-        }
-        styleEl.textContent = activeCss;
-      });
-    };
-
-    refreshSnippets();
-
-    window.addEventListener('obsidian:reload-snippets', refreshSnippets);
-    return () => {
-      window.removeEventListener('obsidian:reload-snippets', refreshSnippets);
-    };
-  }, [isDarkTheme, appearanceConfig]);
+    // Clean up any custom snippet style tag
+    const styleEl = document.getElementById('obsidian-custom-snippets');
+    if (styleEl) {
+      styleEl.remove();
+    }
+  }, [isDarkTheme, appearanceConfig.baseFontSize]);
 
   // Active Pane & Active File
   const activePane = useMemo(() => {

@@ -11,15 +11,13 @@ import {
   X,
   RotateCcw,
   Trash2,
-  FolderOpen,
   Plus,
   Search,
   Calendar,
   Clock,
   History,
   Layout,
-  Sliders,
-  Type
+  Sliders
 } from 'lucide-react';
 import { VaultFile, CommandItem } from '../../types';
 import { vault } from '../../services/vault';
@@ -76,14 +74,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('editor');
 
-  // CSS Snippets state
-  const [snippets, setSnippets] = useState<Array<{ name: string; content: string }>>([]);
-  const [newSnippetName, setNewSnippetName] = useState('');
-  const [isCreatingSnippet, setIsCreatingSnippet] = useState(false);
-  const [editingSnippetName, setEditingSnippetName] = useState<string | null>(null);
-  const [editingSnippetContent, setEditingSnippetContent] = useState<string>('');
-  const [isSavingSnippet, setIsSavingSnippet] = useState(false);
-
   // Hotkeys state
   const [hotkeySearch, setHotkeySearch] = useState('');
   const [recordingCommandId, setRecordingCommandId] = useState<string | null>(null);
@@ -96,10 +86,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [workspacesConfig, setWorkspacesConfig] = useState<Record<string, any>>(() => vault.getConfig('workspaces') || {});
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
-  // Load CSS snippets on open or section switch
+  // Load configs on open or section switch
   useEffect(() => {
     if (isOpen) {
-      vault.getSnippets().then(setSnippets);
       setDailyConfig(vault.getConfig('daily-notes') || { folder: 'Daily', format: 'YYYY-MM-DD', template: 'Templates/Daily Note Template.md' });
       setTemplatesConfig(vault.getConfig('templates') || { folder: 'Templates', dateFormat: 'YYYY-MM-DD', timeFormat: 'HH:mm' });
       setZkConfig(vault.getConfig('zk-prefixer') || { folder: '', format: 'YYYYMMDDHHmm', template: 'Templates/Zettelkasten Note.md' });
@@ -146,67 +135,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [recordingCommandId, hotkeysConfig, onSaveHotkeysConfig]);
-
-  // Snippet toggle
-  const handleToggleSnippet = (snippetName: string) => {
-    const currentList: string[] = appearanceConfig.enabledCssSnippets || [];
-    const nextList = currentList.includes(snippetName)
-      ? currentList.filter(s => s !== snippetName)
-      : [...currentList, snippetName];
-
-    onSaveAppearanceConfig({
-      ...appearanceConfig,
-      enabledCssSnippets: nextList
-    });
-    window.dispatchEvent(new CustomEvent('obsidian:reload-snippets'));
-  };
-
-  const handleCreateSnippet = async () => {
-    if (!newSnippetName.trim()) return;
-    const clean = newSnippetName.trim().endsWith('.css') ? newSnippetName.trim() : `${newSnippetName.trim()}.css`;
-    const defaultCss = `/* Custom CSS Snippet: ${clean} */\n/* Example: */\n/* .markdown-body h1 { color: #f43f5e; } */\n`;
-    const updated = await vault.saveSnippet(clean, defaultCss);
-    setSnippets(updated);
-    window.dispatchEvent(new CustomEvent('obsidian:reload-snippets'));
-    // Auto-enable
-    const currentList: string[] = appearanceConfig.enabledCssSnippets || [];
-    if (!currentList.includes(clean)) {
-      onSaveAppearanceConfig({
-        ...appearanceConfig,
-        enabledCssSnippets: [...currentList, clean]
-      });
-    }
-    setNewSnippetName('');
-    setIsCreatingSnippet(false);
-    setEditingSnippetName(clean);
-    setEditingSnippetContent(defaultCss);
-  };
-
-  const handleDeleteSnippet = async (name: string) => {
-    const updated = await vault.deleteSnippet(name);
-    setSnippets(updated);
-    if (editingSnippetName === name) {
-      setEditingSnippetName(null);
-    }
-    window.dispatchEvent(new CustomEvent('obsidian:reload-snippets'));
-    const currentList: string[] = appearanceConfig.enabledCssSnippets || [];
-    if (currentList.includes(name)) {
-      onSaveAppearanceConfig({
-        ...appearanceConfig,
-        enabledCssSnippets: currentList.filter(s => s !== name)
-      });
-    }
-  };
-
-  const handleSaveSnippetContent = async () => {
-    if (!editingSnippetName) return;
-    setIsSavingSnippet(true);
-    const updated = await vault.saveSnippet(editingSnippetName, editingSnippetContent);
-    setSnippets(updated);
-    window.dispatchEvent(new CustomEvent('obsidian:reload-snippets'));
-    setIsSavingSnippet(false);
-    setEditingSnippetName(null);
-  };
 
   const handleSaveDailyConfig = (cfg: Record<string, any>) => {
     setDailyConfig(cfg);
@@ -582,7 +510,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 3: Appearance */}
             {activeSection === 'appearance' && (
               <div className="space-y-6">
-                {/* Theme & Accent */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                     <div>
@@ -617,37 +544,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                     <div>
-                      <div className="font-medium text-zinc-200">Accent color</div>
-                      <div className="text-zinc-500 text-[11px]">Custom highlight color throughout Obsidian</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'].map(c => (
-                        <button
-                          key={c}
-                          onClick={() => onSaveAppearanceConfig({ ...appearanceConfig, accentColor: c })}
-                          className={`w-6 h-6 rounded-full border-2 transition-transform ${
-                            appearanceConfig.accentColor === c ? 'scale-125 border-white shadow-md' : 'border-transparent'
-                          }`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                      <label className="relative flex items-center cursor-pointer ml-1" title="Pick custom color">
-                        <input
-                          type="color"
-                          value={appearanceConfig.accentColor || '#8b5cf6'}
-                          onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, accentColor: e.target.value })}
-                          className="w-6 h-6 rounded-full cursor-pointer bg-transparent border-0 p-0 opacity-0 absolute inset-0"
-                        />
-                        <div
-                          className="w-6 h-6 rounded-full border-2 border-dashed border-zinc-500 flex items-center justify-center hover:border-zinc-300"
-                          style={{ backgroundColor: appearanceConfig.accentColor || '#8b5cf6' }}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                    <div>
                       <div className="font-medium text-zinc-200">Base font size</div>
                       <div className="text-zinc-500 text-[11px]">{appearanceConfig.baseFontSize || 16}px</div>
                     </div>
@@ -659,196 +555,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, baseFontSize: Number(e.target.value) })}
                       className="accent-purple-500 w-36"
                     />
-                  </div>
-                </div>
-
-                {/* Font Customization */}
-                <div className="space-y-3 pt-2 border-t border-zinc-800/80">
-                  <div className="font-semibold text-zinc-200 flex items-center gap-1.5 text-xs">
-                    <Type className="w-4 h-4 text-purple-400" />
-                    <span>Font Families</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400">Interface font</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Inter, system-ui"
-                        value={appearanceConfig.interfaceFontFamily || ''}
-                        onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, interfaceFontFamily: e.target.value })}
-                        className="w-full bg-zinc-900 border border-zinc-700/80 rounded px-2.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400">Text font</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Georgia, serif"
-                        value={appearanceConfig.textFontFamily || ''}
-                        onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, textFontFamily: e.target.value })}
-                        className="w-full bg-zinc-900 border border-zinc-700/80 rounded px-2.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-zinc-400">Monospace font</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. JetBrains Mono, monospace"
-                        value={appearanceConfig.monospaceFontFamily || ''}
-                        onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, monospaceFontFamily: e.target.value })}
-                        className="w-full bg-zinc-900 border border-zinc-700/80 rounded px-2.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-600"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* CSS Snippets */}
-                <div className="space-y-3 pt-2 border-t border-zinc-800/80">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-zinc-200">CSS snippets</div>
-                      <div className="text-zinc-500 text-[11px]">Custom CSS rules saved in .obsidian/snippets/</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={async () => {
-                          const updated = await vault.getSnippets();
-                          setSnippets(updated);
-                          window.dispatchEvent(new CustomEvent('obsidian:reload-snippets'));
-                        }}
-                        title="Reload snippets from disk"
-                        className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => vault.openSnippetsFolder()}
-                        title="Open snippets folder in system file manager"
-                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-750 text-zinc-300 text-xs border border-zinc-700/60"
-                      >
-                        <FolderOpen className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Open folder</span>
-                      </button>
-                      <button
-                        onClick={() => setIsCreatingSnippet(true)}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>New snippet</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {isCreatingSnippet && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-900 border border-purple-500/50">
-                      <input
-                        type="text"
-                        placeholder="Snippet name (e.g. custom-cards.css)"
-                        value={newSnippetName}
-                        onChange={e => setNewSnippetName(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') handleCreateSnippet();
-                          if (e.key === 'Escape') setIsCreatingSnippet(false);
-                        }}
-                        autoFocus
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 focus:outline-none"
-                      />
-                      <button
-                        onClick={handleCreateSnippet}
-                        className="px-3 py-1 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-500"
-                      >
-                        Create
-                      </button>
-                      <button
-                        onClick={() => setIsCreatingSnippet(false)}
-                        className="px-2 py-1 text-zinc-400 hover:text-zinc-200 text-xs"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    {snippets.length === 0 ? (
-                      <div className="p-3 text-center text-zinc-500 bg-zinc-900/40 rounded-lg border border-zinc-800/60 text-[11px]">
-                        No CSS snippets found in .obsidian/snippets/
-                      </div>
-                    ) : (
-                      snippets.map(s => {
-                        const isEnabled = (appearanceConfig.enabledCssSnippets || []).includes(s.name);
-                        const isEditing = editingSnippetName === s.name;
-                        return (
-                          <div
-                            key={s.name}
-                            className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/70 space-y-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono text-zinc-300 text-xs font-medium">{s.name}</span>
-                              <div className="flex items-center gap-2.5">
-                                <button
-                                  onClick={() => {
-                                    if (isEditing) {
-                                      setEditingSnippetName(null);
-                                    } else {
-                                      setEditingSnippetName(s.name);
-                                      setEditingSnippetContent(s.content);
-                                    }
-                                  }}
-                                  className="text-zinc-400 hover:text-purple-300 text-[11px] px-2 py-0.5 rounded bg-zinc-800/60 border border-zinc-700/50 transition-colors"
-                                  title={isEditing ? 'Close snippet editor' : 'Edit CSS rules'}
-                                >
-                                  {isEditing ? 'Close' : 'Edit CSS'}
-                                </button>
-                                <input
-                                  type="checkbox"
-                                  checked={isEnabled}
-                                  onChange={() => handleToggleSnippet(s.name)}
-                                  className="accent-purple-500 w-4 h-4 cursor-pointer"
-                                  title={isEnabled ? 'Disable snippet' : 'Enable snippet'}
-                                />
-                                <button
-                                  onClick={() => handleDeleteSnippet(s.name)}
-                                  title="Delete snippet"
-                                  className="text-zinc-500 hover:text-rose-400 p-1"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {isEditing && (
-                              <div className="pt-2 border-t border-zinc-800/60 space-y-2">
-                                <textarea
-                                  value={editingSnippetContent}
-                                  onChange={e => setEditingSnippetContent(e.target.value)}
-                                  rows={6}
-                                  className="w-full bg-[#121214] border border-zinc-700 rounded-lg p-2.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-purple-500/60 resize-y leading-relaxed"
-                                  placeholder="/* Add custom CSS rules here... */"
-                                />
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={() => setEditingSnippetName(null)}
-                                    className="px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200"
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    onClick={handleSaveSnippetContent}
-                                    disabled={isSavingSnippet}
-                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-medium"
-                                  >
-                                    {isSavingSnippet ? 'Saving...' : 'Save & Apply'}
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
                   </div>
                 </div>
               </div>

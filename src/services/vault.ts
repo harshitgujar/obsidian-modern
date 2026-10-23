@@ -493,53 +493,6 @@ export class VaultManager {
     URL.revokeObjectURL(url);
   }
 
-  async getSnippets(): Promise<Array<{ name: string; content: string }>> {
-    try {
-      const res = await fetch('/api/vault/snippets');
-      if (res.ok) {
-        const data = await res.json();
-        return data.snippets || [];
-      }
-    } catch {}
-    return [];
-  }
-
-  async saveSnippet(name: string, content: string): Promise<Array<{ name: string; content: string }>> {
-    try {
-      const res = await fetch('/api/vault/snippets/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, content })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.snippets || [];
-      }
-    } catch {}
-    return this.getSnippets();
-  }
-
-  async deleteSnippet(name: string): Promise<Array<{ name: string; content: string }>> {
-    try {
-      const res = await fetch('/api/vault/snippets/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.snippets || [];
-      }
-    } catch {}
-    return this.getSnippets();
-  }
-
-  async openSnippetsFolder(): Promise<void> {
-    try {
-      await fetch('/api/vault/snippets/open-folder', { method: 'POST' });
-    } catch {}
-  }
-
   async clearRecoveryHistory(): Promise<boolean> {
     try {
       const res = await fetch('/api/vault/recovery/clear', { method: 'POST' });

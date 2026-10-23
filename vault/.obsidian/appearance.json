@@ -1,8 +1,4 @@
 {
-  "theme": "obsidian",
-  "accentColor": "#8b5cf6",
   "baseFontSize": 16,
-  "enabledCssSnippets": [
-    "custom-cards.css"
-  ]
+  "theme": "obsidian"
 }

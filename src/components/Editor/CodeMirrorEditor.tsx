@@ -45,11 +45,11 @@ const obsidianEditorTheme = EditorView.theme({
     color: 'var(--text-primary, #e4e4e7)',
     backgroundColor: 'transparent',
     fontSize: 'inherit',
-    fontFamily: 'var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     height: '100%',
   },
   '.cm-scroller': {
-    fontFamily: 'var(--font-text, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     lineHeight: '1.75',
     overflow: 'auto',
   },
@@ -93,7 +93,7 @@ const obsidianEditorTheme = EditorView.theme({
   },
   '.cm-lineNumbers .cm-gutterElement': {
     fontSize: '12px',
-    fontFamily: 'var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace)',
+    fontFamily: 'JetBrains Mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
     padding: '0 8px 0 16px',
     minWidth: '36px',
     textAlign: 'right',
@@ -111,7 +111,7 @@ const obsidianEditorTheme = EditorView.theme({
     borderRadius: '6px !important',
     color: 'var(--text-primary, #d4d4d8) !important',
     fontSize: '13px !important',
-    fontFamily: 'var(--font-interface, sans-serif) !important',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
   },
   '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     backgroundColor: 'var(--accent-subtle, rgba(168, 85, 247, 0.25)) !important',

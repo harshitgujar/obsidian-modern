@@ -60,12 +60,8 @@ const DEFAULT_CONFIGS: Record<string, any> = {
   'appearance': {
     baseFontSize: 16,
     theme: 'obsidian',
-    accentColor: '#8b5cf6',
     translucency: false,
     cssTheme: '',
-    interfaceFontFamily: '',
-    textFontFamily: '',
-    monospaceFontFamily: '',
     showViewHeader: true,
     nativeMenus: false
   },
@@ -272,7 +268,6 @@ export class ObsidianVaultServer {
     const obsidianDir = path.join(vaultPath, '.obsidian');
     fs.mkdirSync(obsidianDir, { recursive: true });
     fs.mkdirSync(path.join(obsidianDir, 'file-recovery'), { recursive: true });
-    fs.mkdirSync(path.join(obsidianDir, 'snippets'), { recursive: true });
 
     for (const [configName, defaultVal] of Object.entries(DEFAULT_CONFIGS)) {
       const cfgPath = path.join(obsidianDir, `${configName}.json`);
@@ -605,42 +600,6 @@ export class ObsidianVaultServer {
     } catch {
       return false;
     }
-  }
-
-  public getSnippets(): Array<{ name: string; content: string }> {
-    const snippetsDir = path.join(this.activeVaultPath, '.obsidian', 'snippets');
-    if (!fs.existsSync(snippetsDir)) return [];
-    try {
-      const files = fs.readdirSync(snippetsDir);
-      return files
-        .filter(f => f.endsWith('.css'))
-        .map(f => {
-          const content = fs.readFileSync(path.join(snippetsDir, f), 'utf8');
-          return { name: f, content };
-        });
-    } catch {
-      return [];
-    }
-  }
-
-  public saveSnippet(name: string, content: string): boolean {
-    const snippetsDir = path.join(this.activeVaultPath, '.obsidian', 'snippets');
-    fs.mkdirSync(snippetsDir, { recursive: true });
-    const cleanName = name.endsWith('.css') ? name : `${name}.css`;
-    const safeName = cleanName.replace(/[^a-zA-Z0-9_.-]/g, '');
-    fs.writeFileSync(path.join(snippetsDir, safeName), content, 'utf8');
-    return true;
-  }
-
-  public deleteSnippet(name: string): boolean {
-    const snippetsDir = path.join(this.activeVaultPath, '.obsidian', 'snippets');
-    const cleanName = name.endsWith('.css') ? name : `${name}.css`;
-    const filePath = path.join(snippetsDir, cleanName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      return true;
-    }
-    return false;
   }
 
   public revealInSystemExplorer(relPath?: string) {
@@ -1022,34 +981,6 @@ export class ObsidianVaultServer {
         if (pathname === '/api/vault/recovery/clear' && req.method === 'POST') {
           const cleared = this.clearRecoverySnapshots();
           return sendJson(200, { ok: cleared });
-        }
-
-        if (pathname === '/api/vault/snippets' && req.method === 'GET') {
-          const snippets = this.getSnippets();
-          return sendJson(200, { snippets });
-        }
-
-        if (pathname === '/api/vault/snippets/save' && req.method === 'POST') {
-          const body = await readJsonBody();
-          if (!body.name || typeof body.content !== 'string') {
-            return sendJson(400, { error: 'Missing snippet name or content' });
-          }
-          this.saveSnippet(body.name, body.content);
-          return sendJson(200, { ok: true, snippets: this.getSnippets() });
-        }
-
-        if (pathname === '/api/vault/snippets/delete' && req.method === 'POST') {
-          const body = await readJsonBody();
-          if (!body.name) return sendJson(400, { error: 'Missing snippet name' });
-          this.deleteSnippet(body.name);
-          return sendJson(200, { ok: true, snippets: this.getSnippets() });
-        }
-
-        if (pathname === '/api/vault/snippets/open-folder' && req.method === 'POST') {
-          const snippetsDir = path.join(this.activeVaultPath, '.obsidian', 'snippets');
-          fs.mkdirSync(snippetsDir, { recursive: true });
-          this.revealInSystemExplorer('.obsidian/snippets');
-          return sendJson(200, { ok: true });
         }
 
         if (pathname === '/api/vault/system/reveal' && req.method === 'POST') {
