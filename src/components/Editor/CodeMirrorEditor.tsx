@@ -18,26 +18,26 @@ import { VaultFile } from '../../types';
 
 // Obsidian Dark Syntax Theme
 const obsidianHighlightStyle = HighlightStyle.define([
-  { tag: t.heading1, fontSize: '1.75em', fontWeight: 'bold', color: '#f4f4f5' },
-  { tag: t.heading2, fontSize: '1.4em', fontWeight: '600', color: '#f4f4f5' },
-  { tag: t.heading3, fontSize: '1.2em', fontWeight: '600', color: '#e4e4e7' },
-  { tag: t.heading4, fontSize: '1.05em', fontWeight: '600', color: '#e4e4e7' },
-  { tag: t.strong, fontWeight: 'bold', color: '#ffffff' },
-  { tag: t.emphasis, fontStyle: 'italic', color: '#e4e4e7' },
-  { tag: t.strikethrough, textDecoration: 'line-through', color: '#71717a' },
-  { tag: t.link, color: '#c084fc', textDecoration: 'underline' },
-  { tag: t.url, color: '#a855f7' },
-  { tag: t.monospace, color: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.08)', borderRadius: '3px' },
-  { tag: t.comment, color: '#71717a', fontStyle: 'italic' },
-  { tag: t.meta, color: '#94a3b8' },
-  { tag: t.processingInstruction, color: '#a855f7' },
-  { tag: t.keyword, color: '#c084fc' },
-  { tag: t.atom, color: '#f59e0b' },
-  { tag: t.number, color: '#10b981' },
-  { tag: t.definition(t.variableName), color: '#38bdf8' },
-  { tag: t.variableName, color: '#e4e4e7' },
-  { tag: t.quote, color: '#a1a1aa', fontStyle: 'italic' },
-  { tag: t.list, color: '#a855f7' }
+  { tag: t.heading1, fontSize: '1.75em', fontWeight: 'bold', color: 'var(--cm-heading, #f4f4f5)' },
+  { tag: t.heading2, fontSize: '1.4em', fontWeight: '600', color: 'var(--cm-heading, #f4f4f5)' },
+  { tag: t.heading3, fontSize: '1.2em', fontWeight: '600', color: 'var(--cm-heading, #e4e4e7)' },
+  { tag: t.heading4, fontSize: '1.05em', fontWeight: '600', color: 'var(--cm-heading, #e4e4e7)' },
+  { tag: t.strong, fontWeight: 'bold', color: 'var(--cm-strong, #ffffff)' },
+  { tag: t.emphasis, fontStyle: 'italic', color: 'var(--cm-emphasis, #e4e4e7)' },
+  { tag: t.strikethrough, textDecoration: 'line-through', color: 'var(--cm-strikethrough, #71717a)' },
+  { tag: t.link, color: 'var(--cm-link, #c084fc)', textDecoration: 'underline' },
+  { tag: t.url, color: 'var(--cm-url, #a855f7)' },
+  { tag: t.monospace, color: 'var(--cm-code, #f43f5e)', backgroundColor: 'var(--cm-code-bg, rgba(244, 63, 94, 0.08))', borderRadius: '3px' },
+  { tag: t.comment, color: 'var(--cm-comment, #71717a)', fontStyle: 'italic' },
+  { tag: t.meta, color: 'var(--cm-meta, #94a3b8)' },
+  { tag: t.processingInstruction, color: 'var(--cm-link, #a855f7)' },
+  { tag: t.keyword, color: 'var(--cm-keyword, #c084fc)' },
+  { tag: t.atom, color: 'var(--cm-atom, #f59e0b)' },
+  { tag: t.number, color: 'var(--cm-number, #10b981)' },
+  { tag: t.definition(t.variableName), color: 'var(--cm-variable, #38bdf8)' },
+  { tag: t.variableName, color: 'var(--cm-variable, #e4e4e7)' },
+  { tag: t.quote, color: 'var(--cm-quote, #a1a1aa)', fontStyle: 'italic' },
+  { tag: t.list, color: 'var(--accent, #a855f7)' }
 ]);
 
 const obsidianEditorTheme = EditorView.theme({
@@ -69,7 +69,7 @@ const obsidianEditorTheme = EditorView.theme({
     backgroundColor: 'var(--selection-bg, rgba(168, 85, 247, 0.28)) !important',
   },
   '.cm-activeLine': {
-    backgroundColor: 'rgba(255, 255, 255, 0.025)',
+    backgroundColor: 'var(--cm-active-line, rgba(255, 255, 255, 0.025))',
     borderRadius: '4px',
   },
   '.cm-selectionMatch': {
@@ -81,14 +81,14 @@ const obsidianEditorTheme = EditorView.theme({
   },
   '.cm-gutters': {
     backgroundColor: 'transparent',
-    color: '#52525b',
+    color: 'var(--text-muted, #52525b)',
     border: 'none',
     paddingRight: '12px',
     userSelect: 'none',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'transparent',
-    color: '#a1a1aa',
+    color: 'var(--text-primary, #a1a1aa)',
     fontWeight: '600',
   },
   '.cm-lineNumbers .cm-gutterElement': {
@@ -99,7 +99,7 @@ const obsidianEditorTheme = EditorView.theme({
     textAlign: 'right',
   },
   '.cm-tooltip-autocomplete': {
-    backgroundColor: 'var(--bg-primary, #18181b) !important',
+    backgroundColor: 'var(--bg-elevated, #18181b) !important',
     border: '1px solid var(--border-color, #3f3f46) !important',
     borderRadius: '8px !important',
     boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important',

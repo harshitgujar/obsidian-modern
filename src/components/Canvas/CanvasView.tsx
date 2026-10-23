@@ -1189,7 +1189,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       }}
       className="relative w-full h-full bg-[#141416] overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans"
       style={{
-        backgroundImage: 'radial-gradient(circle, #2d2d34 1.2px, transparent 1.2px)',
+        backgroundImage: 'radial-gradient(circle, var(--canvas-dot-color, #2d2d34) 1.2px, transparent 1.2px)',
         backgroundSize: `${28 * transform.scale}px ${28 * transform.scale}px`,
         backgroundPosition: `${transform.x}px ${transform.y}px`
       }}

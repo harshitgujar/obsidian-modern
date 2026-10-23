@@ -488,6 +488,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       ctx.scale(transform.k, transform.k);
 
       // 1. Draw subtle Obsidian Dot Grid
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       if (!isMini) {
         const gridSize = 40;
         const left = (-width / 2 - transform.x) / transform.k;
@@ -500,7 +501,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const startY = Math.floor(top / gridSize) * gridSize;
         const endY = Math.ceil(bottom / gridSize) * gridSize;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.035)';
         const dotRadius = Math.max(0.6, 1.2 / transform.k);
         for (let gx = startX; gx <= endX; gx += gridSize) {
           for (let gy = startY; gy <= endY; gy += gridSize) {
@@ -600,15 +601,15 @@ export const GraphView: React.FC<GraphViewProps> = ({
           ctx.stroke();
         } else if (activeOrHovered) {
           // Dimmed non-connected edge
-          ctx.strokeStyle = '#3f3f46';
+          ctx.strokeStyle = isLight ? '#d4d4d8' : '#3f3f46';
           ctx.lineWidth = baseEdgeWidth * 0.5;
           ctx.globalAlpha = 0.05;
           ctx.stroke();
         } else {
           // Resting state edge
-          ctx.strokeStyle = '#71717a';
+          ctx.strokeStyle = isLight ? '#a1a1aa' : '#71717a';
           ctx.lineWidth = baseEdgeWidth;
-          ctx.globalAlpha = 0.22;
+          ctx.globalAlpha = isLight ? 0.35 : 0.22;
           ctx.stroke();
         }
 
@@ -636,7 +637,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
               ay - arrowLen * Math.sin(angle + Math.PI / 6)
             );
             ctx.closePath();
-            ctx.fillStyle = isSourceOfHovered ? '#a855f7' : (isTargetOfHovered ? '#38bdf8' : (activeOrHovered ? 'rgba(113, 113, 122, 0.1)' : 'rgba(161, 161, 170, 0.45)'));
+            ctx.fillStyle = isSourceOfHovered
+              ? '#a855f7'
+              : isTargetOfHovered
+              ? '#38bdf8'
+              : activeOrHovered
+              ? (isLight ? 'rgba(200, 200, 210, 0.2)' : 'rgba(113, 113, 122, 0.1)')
+              : (isLight ? 'rgba(100, 100, 115, 0.4)' : 'rgba(161, 161, 170, 0.45)');
             ctx.fill();
           }
         }
@@ -757,17 +764,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
         // Translucent Pill Background
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-        ctx.fillStyle = isTarget ? 'rgba(15, 15, 20, 0.95)' : 'rgba(24, 24, 28, 0.88)';
+        ctx.fillStyle = isLight
+          ? (isTarget ? 'rgba(255, 255, 255, 0.98)' : 'rgba(240, 240, 243, 0.92)')
+          : (isTarget ? 'rgba(15, 15, 20, 0.95)' : 'rgba(24, 24, 28, 0.88)');
         ctx.fill();
 
         if (isTarget) {
-          ctx.strokeStyle = 'rgba(168, 85, 247, 0.6)';
+          ctx.strokeStyle = isLight ? 'rgba(124, 58, 237, 0.5)' : 'rgba(168, 85, 247, 0.6)';
           ctx.lineWidth = 1 / transform.k;
           ctx.stroke();
         }
 
         // Label Text
-        ctx.fillStyle = isTarget ? '#ffffff' : (isDimmed ? '#71717a' : '#e4e4e7');
+        ctx.fillStyle = isLight
+          ? (isTarget ? '#09090b' : (isDimmed ? '#a1a1aa' : '#18181b'))
+          : (isTarget ? '#ffffff' : (isDimmed ? '#71717a' : '#e4e4e7'));
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, node.x, pillY + pillH / 2);
