@@ -21,6 +21,7 @@ import {
 interface FloatingFormatToolbarProps {
   containerRef: React.RefObject<HTMLElement>;
   onFormat: (before: string, after: string, fallback?: string) => void;
+  onHeading?: (level: number) => void;
   onInsertBlock: (block: string) => void;
   onFindSelection?: (text: string) => void;
 }
@@ -28,6 +29,7 @@ interface FloatingFormatToolbarProps {
 export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
   containerRef,
   onFormat,
+  onHeading,
   onInsertBlock,
   onFindSelection
 }) => {
@@ -145,7 +147,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             <button
               onClick={e =>
                 handleAction(e, () => {
-                  onFormat('# ', '', selectedText || 'Heading 1');
+                  if (onHeading) onHeading(1);
+                  else onFormat('# ', '', selectedText || 'Heading 1');
                   setShowHeadingMenu(false);
                 })
               }
@@ -157,7 +160,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             <button
               onClick={e =>
                 handleAction(e, () => {
-                  onFormat('## ', '', selectedText || 'Heading 2');
+                  if (onHeading) onHeading(2);
+                  else onFormat('## ', '', selectedText || 'Heading 2');
                   setShowHeadingMenu(false);
                 })
               }
@@ -169,7 +173,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             <button
               onClick={e =>
                 handleAction(e, () => {
-                  onFormat('### ', '', selectedText || 'Heading 3');
+                  if (onHeading) onHeading(3);
+                  else onFormat('### ', '', selectedText || 'Heading 3');
                   setShowHeadingMenu(false);
                 })
               }

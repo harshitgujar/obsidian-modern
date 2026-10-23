@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { VaultFile, NoteMetadata, EditorViewMode, BacklinkMention } from '../../types';
 import { vault } from '../../services/vault';
 import { LivePreview } from './LivePreview';
-import { CodeMirrorEditor } from './CodeMirrorEditor';
+import { CodeMirrorEditor, CodeMirrorEditorRef } from './CodeMirrorEditor';
 import { FloatingFormatToolbar } from './FloatingFormatToolbar';
 import { EditorContextMenu, ContextMenuPosition } from './EditorContextMenu';
 import { 
@@ -18,7 +18,8 @@ import {
   Clock,
   Edit3,
   Code,
-  Eye
+  Eye,
+  Check
 } from 'lucide-react';
 
 interface EditorProps {
@@ -67,6 +68,13 @@ export const Editor: React.FC<EditorProps> = ({
   onCopyNoteLink
 }) => {
   const editorContainerRef = useRef<HTMLDivElement | null>(null);
+  const editorRef = useRef<CodeMirrorEditorRef | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2000);
+  }, []);
 
   // Find & Replace State
   const [showFindReplace, setShowFindReplace] = useState(findReplaceOpen || false);
@@ -148,12 +156,22 @@ export const Editor: React.FC<EditorProps> = ({
 
   const handleNextMatch = () => {
     if (!matches.length) return;
-    setCurrentMatchIndex(i => (i + 1) % matches.length);
+    const nextIdx = (currentMatchIndex + 1) % matches.length;
+    setCurrentMatchIndex(nextIdx);
+    const m = matches[nextIdx];
+    if (m && editorRef.current) {
+      editorRef.current.selectRange(m.index, m.index + m.length);
+    }
   };
 
   const handlePrevMatch = () => {
     if (!matches.length) return;
-    setCurrentMatchIndex(i => (i - 1 + matches.length) % matches.length);
+    const prevIdx = (currentMatchIndex - 1 + matches.length) % matches.length;
+    setCurrentMatchIndex(prevIdx);
+    const m = matches[prevIdx];
+    if (m && editorRef.current) {
+      editorRef.current.selectRange(m.index, m.index + m.length);
+    }
   };
 
   const handleReplaceCurrent = () => {
@@ -196,6 +214,15 @@ export const Editor: React.FC<EditorProps> = ({
   // Contextual Selection Formatting
   const handleFormatSelection = useCallback(
     (before: string, after: string = before, fallback: string = 'text') => {
+      if (viewMode === 'reading') {
+        onViewModeChange('live');
+      }
+
+      if (editorRef.current) {
+        editorRef.current.formatSelection(before, after, fallback);
+        return;
+      }
+
       const selection = window.getSelection();
       const selText = selection ? selection.toString() : '';
 
@@ -215,19 +242,78 @@ export const Editor: React.FC<EditorProps> = ({
 
       // Fallback: append snippet cleanly
       const current = file.content;
-      const snippet = `\n${before}${fallback}${after}\n`;
+      const snippet = `\n${before}${fallback || selText}${after}\n`;
       onContentChange(current + snippet);
     },
-    [file.content, onContentChange]
+    [viewMode, onViewModeChange, file.content, onContentChange]
   );
 
   const handleInsertBlock = useCallback(
     (block: string) => {
+      if (viewMode === 'reading') {
+        onViewModeChange('live');
+      }
+
+      if (editorRef.current) {
+        editorRef.current.insertBlock(block);
+        return;
+      }
+
       const current = file.content;
       onContentChange(current + `\n${block}\n`);
     },
-    [file.content, onContentChange]
+    [viewMode, onViewModeChange, file.content, onContentChange]
   );
+
+  const handleInsertHeading = useCallback(
+    (level: number) => {
+      if (viewMode === 'reading') {
+        onViewModeChange('live');
+      }
+
+      if (editorRef.current) {
+        editorRef.current.insertHeading(level);
+        return;
+      }
+
+      const prefix = '#'.repeat(level) + ' ';
+      onContentChange(file.content + `\n${prefix}Heading\n`);
+    },
+    [viewMode, onViewModeChange, file.content, onContentChange]
+  );
+
+  const handleDeleteSelection = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.deleteSelection();
+      return;
+    }
+
+    const selection = window.getSelection();
+    const selText = selection ? selection.toString() : '';
+    if (selText && file.content.includes(selText)) {
+      const idx = file.content.indexOf(selText);
+      if (idx !== -1) {
+        onContentChange(file.content.slice(0, idx) + file.content.slice(idx + selText.length));
+      }
+    }
+  }, [file.content, onContentChange]);
+
+  const handleCopyNoteLinkAction = useCallback(() => {
+    if (onCopyNoteLink) {
+      onCopyNoteLink();
+      showToast(`Copied [[${file.name.replace(/\.md$/, '')}]] to clipboard`);
+    } else {
+      navigator.clipboard.writeText(`[[${file.name.replace(/\.md$/, '')}]]`);
+      showToast(`Copied [[${file.name.replace(/\.md$/, '')}]] to clipboard`);
+    }
+  }, [onCopyNoteLink, file.name, showToast]);
+
+  const handleToggleBookmarkAction = useCallback(() => {
+    if (onToggleBookmark) {
+      onToggleBookmark();
+      showToast(isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks');
+    }
+  }, [onToggleBookmark, isBookmarked, showToast]);
 
   const insertSuggestion = (noteTitle: string) => {
     const text = file.content;
@@ -274,8 +360,11 @@ export const Editor: React.FC<EditorProps> = ({
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (editorRef.current) {
+      editorRef.current.setCursorPos({ x: e.clientX, y: e.clientY });
+    }
     const selection = window.getSelection();
-    const selectedText = selection ? selection.toString() : '';
+    const selectedText = (editorRef.current ? editorRef.current.getSelection() : '') || (selection ? selection.toString() : '');
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
@@ -345,6 +434,7 @@ export const Editor: React.FC<EditorProps> = ({
       <FloatingFormatToolbar
         containerRef={editorContainerRef}
         onFormat={handleFormatSelection}
+        onHeading={handleInsertHeading}
         onInsertBlock={handleInsertBlock}
         onFindSelection={text => {
           setFindText(text);
@@ -359,12 +449,13 @@ export const Editor: React.FC<EditorProps> = ({
           onClose={() => setContextMenu(null)}
           onFormat={handleFormatSelection}
           onInsertBlock={handleInsertBlock}
+          onCut={handleDeleteSelection}
           onFind={text => {
             if (text) setFindText(text);
             setShowFindReplace(true);
           }}
-          onCopyNoteLink={onCopyNoteLink}
-          onToggleBookmark={onToggleBookmark}
+          onCopyNoteLink={handleCopyNoteLinkAction}
+          onToggleBookmark={handleToggleBookmarkAction}
           isBookmarked={isBookmarked}
         />
       )}
@@ -586,6 +677,7 @@ export const Editor: React.FC<EditorProps> = ({
               /* Live Preview Mode (Interactive WYSIWYG Editing) */
               <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
                 <CodeMirrorEditor
+                  ref={editorRef}
                   value={file.content}
                   onChange={onContentChange}
                   showLineNumbers={false}
@@ -616,6 +708,7 @@ export const Editor: React.FC<EditorProps> = ({
               </div>
               <div className="flex-1 overflow-hidden">
                 <CodeMirrorEditor
+                  ref={editorRef}
                   value={file.content}
                   onChange={onContentChange}
                   showLineNumbers={showLineNumbers}
@@ -657,6 +750,14 @@ export const Editor: React.FC<EditorProps> = ({
           </div>
         )}
       </div>
+
+      {/* Quick Action Toast Feedback */}
+      {toastMessage && (
+        <div className="absolute bottom-6 right-6 z-50 bg-[#1e1e24]/95 text-zinc-100 text-xs px-3.5 py-2 rounded-xl border border-purple-500/40 shadow-2xl backdrop-blur-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="font-medium">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

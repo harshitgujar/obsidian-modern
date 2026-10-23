@@ -33,6 +33,7 @@ interface EditorContextMenuProps {
   onClose: () => void;
   onFormat: (before: string, after: string, fallback?: string) => void;
   onInsertBlock: (block: string) => void;
+  onCut?: () => void;
   onFind?: (text: string) => void;
   onCopyNoteLink?: () => void;
   onToggleBookmark?: () => void;
@@ -44,6 +45,7 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({
   onClose,
   onFormat,
   onInsertBlock,
+  onCut,
   onFind,
   onCopyNoteLink,
   onToggleBookmark,
@@ -103,7 +105,8 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({
             runAndClose(() => {
               if (sel) {
                 navigator.clipboard.writeText(sel);
-                onFormat('', '', '');
+                if (onCut) onCut();
+                else onFormat('', '', '');
               }
             })
           }

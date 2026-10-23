@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useImperativeHandle } from 'react';
 import { EditorState, Extension } from '@codemirror/state';
 import { 
   EditorView, 
@@ -119,6 +119,17 @@ const obsidianEditorTheme = EditorView.theme({
   },
 });
 
+export interface CodeMirrorEditorRef {
+  formatSelection: (before: string, after: string, fallback?: string) => void;
+  insertBlock: (block: string) => void;
+  insertHeading: (level: number) => void;
+  deleteSelection: () => void;
+  getSelection: () => string;
+  selectRange: (from: number, to: number) => void;
+  setCursorPos: (coords: { x: number; y: number }) => void;
+  focus: () => void;
+}
+
 interface CodeMirrorEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -130,18 +141,136 @@ interface CodeMirrorEditorProps {
   className?: string;
 }
 
-export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
+export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirrorEditorProps>(({
   value,
   onChange,
   showLineNumbers = true,
   readableLineLength = true,
   allFiles = [],
   onNavigateLink,
+  placeholder,
   className = ''
-}) => {
+}, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const isUpdatingRef = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    formatSelection: (before: string, after: string, fallback: string = '') => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const textToWrap = selected || fallback;
+      const newText = `${before}${textToWrap}${after}`;
+
+      view.dispatch({
+        changes: { from, to, insert: newText },
+        selection: selected
+          ? { anchor: from, head: from + newText.length }
+          : { anchor: from + before.length, head: from + before.length + textToWrap.length }
+      });
+      view.focus();
+    },
+
+    insertBlock: (block: string) => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { from, to } = view.state.selection.main;
+      const line = view.state.doc.lineAt(from);
+      const isLineEmpty = line.text.trim().length === 0;
+
+      if (from !== to) {
+        // Replace current selection
+        view.dispatch({
+          changes: { from, to, insert: block },
+          selection: { anchor: from + block.length }
+        });
+      } else if (isLineEmpty) {
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: block },
+          selection: { anchor: line.from + block.length }
+        });
+      } else {
+        const textToInsert = `\n${block}`;
+        view.dispatch({
+          changes: { from: to, to, insert: textToInsert },
+          selection: { anchor: to + textToInsert.length }
+        });
+      }
+      view.focus();
+    },
+
+    insertHeading: (level: number) => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { from } = view.state.selection.main;
+      const line = view.state.doc.lineAt(from);
+      const prefix = '#'.repeat(level) + ' ';
+
+      const match = line.text.match(/^#{1,6}\s+/);
+      if (match) {
+        view.dispatch({
+          changes: { from: line.from, to: line.from + match[0].length, insert: prefix },
+          selection: { anchor: line.from + prefix.length + (line.text.length - match[0].length) }
+        });
+      } else {
+        view.dispatch({
+          changes: { from: line.from, to: line.from, insert: prefix },
+          selection: { anchor: line.from + prefix.length + line.text.length }
+        });
+      }
+      view.focus();
+    },
+
+    deleteSelection: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { from, to } = view.state.selection.main;
+      if (from !== to) {
+        view.dispatch({
+          changes: { from, to, insert: '' },
+          selection: { anchor: from }
+        });
+      }
+      view.focus();
+    },
+
+    getSelection: () => {
+      const view = viewRef.current;
+      if (!view) return '';
+      const { from, to } = view.state.selection.main;
+      return view.state.sliceDoc(from, to);
+    },
+
+    selectRange: (from: number, to: number) => {
+      const view = viewRef.current;
+      if (!view) return;
+      view.dispatch({
+        selection: { anchor: from, head: to },
+        scrollIntoView: true
+      });
+      view.focus();
+    },
+
+    setCursorPos: (coords: { x: number; y: number }) => {
+      const view = viewRef.current;
+      if (!view) return;
+      const pos = view.posAtCoords(coords);
+      if (pos !== null) {
+        const { from, to } = view.state.selection.main;
+        if (from === to) {
+          view.dispatch({
+            selection: { anchor: pos }
+          });
+        }
+      }
+    },
+
+    focus: () => {
+      viewRef.current?.focus();
+    }
+  }));
 
   // Wikilink Autocomplete completion source
   const wikilinkCompletion = useCallback((context: CompletionContext) => {
@@ -291,4 +420,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       className={`w-full h-full overflow-hidden select-text cursor-text ${className}`} 
     />
   );
-};
+});
+
+CodeMirrorEditor.displayName = 'CodeMirrorEditor';
