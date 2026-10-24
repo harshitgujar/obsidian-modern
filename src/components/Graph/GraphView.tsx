@@ -995,7 +995,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
               value={settings.search}
               onChange={e => updateSetting('search', e.target.value)}
               placeholder="Search graph..."
-              className="bg-zinc-900/90 text-xs text-zinc-200 pl-8 pr-6 py-1.5 rounded-lg border border-zinc-700/60 focus:border-purple-500 focus:outline-none w-48 backdrop-blur-md shadow-lg"
+              className="graph-control-input bg-zinc-900/90 text-xs text-zinc-200 pl-8 pr-6 py-1.5 rounded-lg border border-zinc-700/60 focus:border-purple-500 focus:outline-none w-48 backdrop-blur-md shadow-lg"
             />
             {settings.search && (
               <button
@@ -1011,7 +1011,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={handleToggleTimelapse}
             title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md shadow-lg transition-all ${
+            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md shadow-lg transition-all ${
               isTimelapseRunning
                 ? 'bg-purple-950/80 border-purple-500/70 text-purple-200 hover:bg-purple-900/80'
                 : 'bg-zinc-900/85 hover:bg-zinc-800 text-zinc-300 hover:text-white border-zinc-700/60 hover:border-purple-500/40'
@@ -1040,7 +1040,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={handleResetTimelapse}
               title="Show Full Graph"
-              className="p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
+              className="graph-control-btn p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
@@ -1050,7 +1050,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={handleReheatSimulation}
             title="Reheat Simulation Forces"
-            className="p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
+            className="graph-control-btn p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
           >
             <RotateCw className="w-3.5 h-3.5" />
           </button>
@@ -1064,7 +1064,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={() => onSplitRight()}
               title="Open Note to the Right (Split)"
-              className="p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
+              className="graph-control-btn p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
             >
               <Columns className="w-4 h-4" />
             </button>
@@ -1073,7 +1073,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={() => setShowControls(prev => !prev)}
             title="Graph Settings"
-            className={`p-2 rounded-lg border backdrop-blur-md shadow-xl transition-all ${
+            className={`graph-control-btn p-2 rounded-lg border backdrop-blur-md shadow-xl transition-all ${
               showControls
                 ? 'bg-purple-600/30 text-purple-200 border-purple-500/60'
                 : 'bg-zinc-900/85 text-zinc-400 border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800'
@@ -1086,7 +1086,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={onClose}
               title="Close Graph (Esc)"
-              className="p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
+              className="graph-control-btn p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1096,7 +1096,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
       {/* Real Obsidian .graph-controls Floating Drawer */}
       {showControls && !isMini && (
-        <div className="absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/80 rounded-2xl shadow-2xl p-3.5 text-xs text-zinc-200 space-y-3">
+        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/80 rounded-2xl shadow-2xl p-3.5 text-xs text-zinc-200 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-800 font-semibold text-zinc-100">
             <span>Graph Settings</span>
             <span className="text-[10px] text-zinc-500 font-normal">
@@ -1447,24 +1447,24 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Floating Zoom & Camera Controls */}
-      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-700/60 rounded-lg p-1 shadow-lg">
+      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1.5 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-700/60 rounded-lg p-1 shadow-lg">
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
-          className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.max(0.15, t.k * 0.8) }))}
-          className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleResetView}
-          className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
           title="Reset Camera"
         >
           <RotateCcw className="w-3.5 h-3.5" />

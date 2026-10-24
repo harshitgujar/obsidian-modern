@@ -315,8 +315,11 @@
 
 /* 6. Zinc Backgrounds & Hover States */
 [data-theme="light"] .bg-zinc-950,
+[data-theme="light"] .bg-zinc-950\/95,
 [data-theme="light"] .bg-zinc-950\/90,
+[data-theme="light"] .bg-zinc-950\/85,
 [data-theme="light"] .bg-zinc-950\/80,
+[data-theme="light"] .bg-zinc-950\/70,
 [data-theme="light"] .bg-zinc-950\/60,
 [data-theme="light"] .bg-zinc-950\/50,
 [data-theme="light"] .bg-zinc-950\/40 {
@@ -328,6 +331,8 @@
 [data-theme="light"] .bg-zinc-900\/95,
 [data-theme="light"] .bg-zinc-900\/90,
 [data-theme="light"] .bg-zinc-900\/80,
+[data-theme="light"] .bg-zinc-900\/75,
+[data-theme="light"] .bg-zinc-900\/70,
 [data-theme="light"] .bg-zinc-900\/60,
 [data-theme="light"] .bg-zinc-900\/50,
 [data-theme="light"] .bg-zinc-900\/40 {
@@ -335,22 +340,85 @@
   color: #18181b !important;
 }
 
+/* Floating elevated cards & buttons in Light Mode (e.g. Graph controls) */
+[data-theme="light"] .bg-zinc-900\/85,
+[data-theme="light"] button.bg-zinc-900\/85,
+[data-theme="light"] .graph-control-btn,
+[data-theme="light"] .graph-zoom-bar,
+[data-theme="light"] .graph-control-input,
+[data-theme="light"] .graph-settings-drawer {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .graph-control-btn:hover {
+  background-color: #f4f4f6 !important;
+  border-color: #d4d4d8 !important;
+  color: #09090b !important;
+}
+
+[data-theme="light"] .graph-control-btn svg {
+  color: #3f3f46 !important;
+}
+
+[data-theme="light"] .graph-control-btn:hover svg {
+  color: #09090b !important;
+}
+
+[data-theme="light"] .graph-zoom-bar button {
+  background-color: transparent !important;
+  color: #3f3f46 !important;
+}
+
+[data-theme="light"] .graph-zoom-bar button:hover {
+  background-color: #f4f4f6 !important;
+  color: #09090b !important;
+}
+
+[data-theme="light"] .graph-zoom-bar button svg {
+  color: #3f3f46 !important;
+}
+
+[data-theme="light"] .graph-zoom-bar button:hover svg {
+  color: #09090b !important;
+}
+
+[data-theme="light"] .graph-control-input {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .graph-control-input::placeholder {
+  color: #a1a1aa !important;
+}
+
+[data-theme="light"] .graph-settings-drawer {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+
 [data-theme="light"] .bg-zinc-800,
+[data-theme="light"] .bg-zinc-800\/90,
 [data-theme="light"] .bg-zinc-800\/80,
 [data-theme="light"] .bg-zinc-800\/70,
 [data-theme="light"] .bg-zinc-800\/60,
 [data-theme="light"] .bg-zinc-800\/50,
-[data-theme="light"] .bg-zinc-800\/40 {
+[data-theme="light"] .bg-zinc-800\/40,
+[data-theme="light"] .bg-zinc-800\/30 {
   background-color: #e4e4e7 !important;
   color: #18181b !important;
 }
 
 [data-theme="light"] .hover\:bg-zinc-800:hover,
+[data-theme="light"] .hover\:bg-zinc-800\/90:hover,
 [data-theme="light"] .hover\:bg-zinc-800\/80:hover,
 [data-theme="light"] .hover\:bg-zinc-800\/70:hover,
 [data-theme="light"] .hover\:bg-zinc-800\/60:hover,
 [data-theme="light"] .hover\:bg-zinc-800\/50:hover,
-[data-theme="light"] .hover\:bg-zinc-800\/40:hover {
+[data-theme="light"] .hover\:bg-zinc-800\/40:hover,
+[data-theme="light"] .hover\:bg-zinc-800\/30:hover {
   background-color: #e4e4e7 !important;
   color: #18181b !important;
 }
@@ -364,11 +432,47 @@
 /* 7. Purple Accent Tones Inversion */
 [data-theme="light"] .bg-purple-950,
 [data-theme="light"] .bg-purple-950\/95,
+[data-theme="light"] .bg-purple-950\/90,
+[data-theme="light"] .bg-purple-950\/80,
+[data-theme="light"] .bg-purple-950\/70,
 [data-theme="light"] .bg-purple-950\/60,
-[data-theme="light"] .bg-purple-950\/40 {
+[data-theme="light"] .bg-purple-950\/40,
+[data-theme="light"] .bg-purple-950\/25,
+[data-theme="light"] .bg-purple-950\/20 {
   background-color: rgba(124, 58, 237, 0.1) !important;
   color: #6d28d9 !important;
   border-color: rgba(124, 58, 237, 0.25) !important;
+}
+
+[data-theme="light"] .bg-purple-900,
+[data-theme="light"] .bg-purple-900\/90,
+[data-theme="light"] .bg-purple-900\/80,
+[data-theme="light"] .bg-purple-900\/60,
+[data-theme="light"] .bg-purple-900\/50,
+[data-theme="light"] .bg-purple-900\/40,
+[data-theme="light"] .hover\:bg-purple-900\/80:hover,
+[data-theme="light"] .hover\:bg-purple-900\/60:hover,
+[data-theme="light"] .hover\:bg-purple-900\/50:hover {
+  background-color: rgba(124, 58, 237, 0.18) !important;
+  color: #5b21b6 !important;
+}
+
+[data-theme="light"] .fill-purple-400,
+[data-theme="light"] .fill-purple-300 {
+  fill: #7c3aed !important;
+}
+
+[data-theme="light"] .graph-control-btn.bg-purple-950\/80,
+[data-theme="light"] .graph-control-btn.bg-purple-600\/30 {
+  background-color: #f5f3ff !important;
+  border-color: #c4b5fd !important;
+  color: #6d28d9 !important;
+}
+
+[data-theme="light"] .graph-control-btn.bg-purple-950\/80 svg,
+[data-theme="light"] .graph-control-btn.bg-purple-600\/30 svg {
+  color: #7c3aed !important;
+  fill: #7c3aed !important;
 }
 
 [data-theme="light"] .text-purple-200,
