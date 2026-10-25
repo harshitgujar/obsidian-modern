@@ -13,6 +13,7 @@ import { VaultFile } from '../../types';
 export interface LivePreviewOptions {
   onNavigateLink?: (targetTitle: string) => void;
   allFiles?: VaultFile[];
+  getAllFiles?: () => VaultFile[];
   onMediaContextMenu?: (e: React.MouseEvent | MouseEvent, targetFile: VaultFile | undefined, rawText: string) => void;
 }
 
@@ -116,7 +117,8 @@ class ImageEmbedWidget extends WidgetType {
     readonly alt: string,
     readonly rawText: string,
     readonly onContextMenu?: (e: MouseEvent, file: VaultFile | undefined, rawText: string) => void,
-    readonly allFiles?: VaultFile[]
+    readonly allFiles?: VaultFile[],
+    readonly getAllFiles?: () => VaultFile[]
   ) {
     super();
   }
@@ -152,7 +154,8 @@ class ImageEmbedWidget extends WidgetType {
       e.preventDefault();
       e.stopPropagation();
       const cleanPath = this.rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim();
-      const targetFile = this.allFiles?.find(
+      const files = this.getAllFiles ? this.getAllFiles() : (this.allFiles || []);
+      const targetFile = files.find(
         f => f.path === cleanPath || f.name === cleanPath || f.name.replace(/\.[^/.]+$/, '') === cleanPath
       );
       this.onContextMenu?.(e, targetFile, this.rawText);
@@ -288,7 +291,7 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
       }
 
       return Decoration.replace({
-        widget: new ImageEmbedWidget(src, alt, match[0], options.onMediaContextMenu, options.allFiles)
+        widget: new ImageEmbedWidget(src, alt, match[0], options.onMediaContextMenu, options.allFiles, options.getAllFiles)
       });
     }
   });

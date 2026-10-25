@@ -160,21 +160,56 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
   const viewRef = useRef<EditorView | null>(null);
   const isUpdatingRef = useRef(false);
 
+  // Stable references for data and callbacks to prevent tearing down EditorView on keystrokes
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const allFilesRef = useRef(allFiles);
+  allFilesRef.current = allFiles;
+
+  const onNavigateLinkRef = useRef(onNavigateLink);
+  onNavigateLinkRef.current = onNavigateLink;
+
+  const onMediaContextMenuRef = useRef(onMediaContextMenu);
+  onMediaContextMenuRef.current = onMediaContextMenu;
+
   useImperativeHandle(ref, () => ({
     formatSelection: (before: string, after: string, fallback: string = '') => {
       const view = viewRef.current;
       if (!view) return;
       const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const textToWrap = selected || fallback;
-      const newText = `${before}${textToWrap}${after}`;
 
-      view.dispatch({
-        changes: { from, to, insert: newText },
-        selection: selected
-          ? { anchor: from, head: from + newText.length }
-          : { anchor: from + before.length, head: from + before.length + textToWrap.length }
-      });
+      if (from !== to) {
+        const selected = view.state.sliceDoc(from, to);
+        // Check if already formatted to toggle off
+        if (
+          before &&
+          after &&
+          selected.startsWith(before) &&
+          selected.endsWith(after) &&
+          selected.length >= before.length + after.length
+        ) {
+          const unwrapped = selected.slice(before.length, selected.length - after.length);
+          view.dispatch({
+            changes: { from, to, insert: unwrapped },
+            selection: { anchor: from, head: from + unwrapped.length }
+          });
+        } else {
+          const formatted = `${before}${selected}${after}`;
+          view.dispatch({
+            changes: { from, to, insert: formatted },
+            selection: { anchor: from, head: from + formatted.length }
+          });
+        }
+      } else {
+        // No selection: insert placeholder at cursor and select placeholder
+        const placeholder = fallback && fallback.length < 50 ? fallback : 'bold text';
+        const formatted = `${before}${placeholder}${after}`;
+        view.dispatch({
+          changes: { from, to, insert: formatted },
+          selection: { anchor: from + before.length, head: from + before.length + placeholder.length }
+        });
+      }
       view.focus();
     },
 
@@ -283,7 +318,8 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
     if (!word) return null;
 
     const query = word.text.slice(2).toLowerCase();
-    const options = allFiles
+    const files = allFilesRef.current || [];
+    const options = files
       .filter(f => f.name.replace(/\.[^/.]+$/, '').toLowerCase().includes(query))
       .slice(0, 10)
       .map(f => {
@@ -300,7 +336,7 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
       from: word.from + 2,
       options
     };
-  }, [allFiles]);
+  }, []);
 
   // Setup CodeMirror View
   useEffect(() => {
@@ -312,11 +348,26 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
         key: 'Mod-b',
         run: (view) => {
           const { from, to } = view.state.selection.main;
-          const selected = view.state.sliceDoc(from, to) || 'bold text';
-          view.dispatch({
-            changes: { from, to, insert: `**${selected}**` },
-            selection: { anchor: from + 2, head: from + 2 + selected.length }
-          });
+          if (from !== to) {
+            const selected = view.state.sliceDoc(from, to);
+            if (selected.startsWith('**') && selected.endsWith('**') && selected.length >= 4) {
+              const unwrapped = selected.slice(2, selected.length - 2);
+              view.dispatch({
+                changes: { from, to, insert: unwrapped },
+                selection: { anchor: from, head: from + unwrapped.length }
+              });
+            } else {
+              view.dispatch({
+                changes: { from, to, insert: `**${selected}**` },
+                selection: { anchor: from, head: from + 4 + selected.length }
+              });
+            }
+          } else {
+            view.dispatch({
+              changes: { from, to, insert: '**bold text**' },
+              selection: { anchor: from + 2, head: from + 11 }
+            });
+          }
           return true;
         }
       },
@@ -324,11 +375,26 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
         key: 'Mod-i',
         run: (view) => {
           const { from, to } = view.state.selection.main;
-          const selected = view.state.sliceDoc(from, to) || 'italic text';
-          view.dispatch({
-            changes: { from, to, insert: `*${selected}*` },
-            selection: { anchor: from + 1, head: from + 1 + selected.length }
-          });
+          if (from !== to) {
+            const selected = view.state.sliceDoc(from, to);
+            if (selected.startsWith('*') && selected.endsWith('*') && selected.length >= 2) {
+              const unwrapped = selected.slice(1, selected.length - 1);
+              view.dispatch({
+                changes: { from, to, insert: unwrapped },
+                selection: { anchor: from, head: from + unwrapped.length }
+              });
+            } else {
+              view.dispatch({
+                changes: { from, to, insert: `*${selected}*` },
+                selection: { anchor: from, head: from + 2 + selected.length }
+              });
+            }
+          } else {
+            view.dispatch({
+              changes: { from, to, insert: '*italic text*' },
+              selection: { anchor: from + 1, head: from + 12 }
+            });
+          }
           return true;
         }
       },
@@ -377,10 +443,10 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           isUpdatingRef.current = true;
-          onChange(update.state.doc.toString());
+          onChangeRef.current?.(update.state.doc.toString());
           setTimeout(() => {
             isUpdatingRef.current = false;
-          }, 0);
+          }, 150);
         }
       }),
       EditorView.lineWrapping
@@ -389,9 +455,9 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
     if (livePreview) {
       extensions.push(
         createLivePreviewPlugin({
-          onNavigateLink,
-          allFiles,
-          onMediaContextMenu
+          onNavigateLink: (t) => onNavigateLinkRef.current?.(t),
+          getAllFiles: () => allFilesRef.current || [],
+          onMediaContextMenu: (e, file, text) => onMediaContextMenuRef.current?.(e, file, text)
         })
       );
     }
@@ -416,15 +482,20 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
       view.destroy();
       viewRef.current = null;
     };
-  }, [showLineNumbers, readableLineLength, livePreview, wikilinkCompletion, onNavigateLink, allFiles, onMediaContextMenu]);
+  }, [showLineNumbers, readableLineLength, livePreview]);
 
   // Sync external changes
   useEffect(() => {
     if (isUpdatingRef.current || !viewRef.current) return;
     const currentDoc = viewRef.current.state.doc.toString();
     if (value !== currentDoc) {
+      const sel = viewRef.current.state.selection;
       viewRef.current.dispatch({
-        changes: { from: 0, to: currentDoc.length, insert: value }
+        changes: { from: 0, to: currentDoc.length, insert: value },
+        selection: {
+          anchor: Math.min(sel.main.anchor, value.length),
+          head: Math.min(sel.main.head, value.length)
+        }
       });
     }
   }, [value]);

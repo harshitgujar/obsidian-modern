@@ -262,36 +262,45 @@ export const Editor: React.FC<EditorProps> = ({
     (before: string, after: string = before, fallback: string = 'text') => {
       if (viewMode === 'reading') {
         onViewModeChange('live');
+        setTimeout(() => {
+          editorRef.current?.formatSelection(before, after, fallback);
+        }, 50);
+        return;
       }
 
       if (editorRef.current) {
         editorRef.current.formatSelection(before, after, fallback);
-        return;
       }
-
-      const selection = window.getSelection();
-      const selText = selection ? selection.toString() : '';
-
-      if (selText && file.content.includes(selText)) {
-        const idx = file.content.indexOf(selText);
-        if (idx !== -1) {
-          const newContent =
-            file.content.slice(0, idx) +
-            before +
-            selText +
-            after +
-            file.content.slice(idx + selText.length);
-          onContentChange(newContent);
-          return;
-        }
-      }
-
-      // Fallback: append snippet cleanly
-      const current = file.content;
-      const snippet = `\n${before}${fallback || selText}${after}\n`;
-      onContentChange(current + snippet);
     },
-    [viewMode, onViewModeChange, file.content, onContentChange]
+    [viewMode, onViewModeChange]
+  );
+
+  const handleMediaContextMenu = useCallback(
+    (e: MouseEvent | any, targetFile: VaultFile | undefined, rawText: string) => {
+      setActiveFileContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        file: targetFile || {
+          id: `file-${Date.now()}`,
+          name: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim().split('/').pop() || 'media',
+          path: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim(),
+          folder: '',
+          extension: rawText.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || '',
+          content: '',
+          size: 0,
+          updatedAt: Date.now(),
+          createdAt: Date.now()
+        },
+        embedContext: {
+          rawEmbedText: rawText,
+          onRemoveEmbed: () => {
+            const newContent = file.content.replace(rawText, '').replace(/\n\n\n+/g, '\n\n');
+            onContentChange(newContent);
+          }
+        }
+      });
+    },
+    [file.content, onContentChange]
   );
 
   const handleInsertBlock = useCallback(
@@ -810,30 +819,7 @@ export const Editor: React.FC<EditorProps> = ({
                       readableLineLength={false}
                       allFiles={allFiles}
                       onNavigateLink={onNavigateLink}
-                      onMediaContextMenu={(e, targetFile, rawText) => {
-                        setActiveFileContextMenu({
-                          x: e.clientX,
-                          y: e.clientY,
-                          file: targetFile || {
-                            id: `file-${Date.now()}`,
-                            name: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim().split('/').pop() || 'media',
-                            path: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim(),
-                            folder: '',
-                            extension: rawText.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || '',
-                            content: '',
-                            size: 0,
-                            updatedAt: Date.now(),
-                            createdAt: Date.now()
-                          },
-                          embedContext: {
-                            rawEmbedText: rawText,
-                            onRemoveEmbed: () => {
-                              const newContent = file.content.replace(rawText, '').replace(/\n\n\n+/g, '\n\n');
-                              onContentChange(newContent);
-                            }
-                          }
-                        });
-                      }}
+                      onMediaContextMenu={handleMediaContextMenu}
                       className="w-full h-full"
                     />
                   </div>

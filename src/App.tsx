@@ -561,7 +561,7 @@ export const App: React.FC = () => {
     pendingContentRef.current.set(filePath, newContent);
     setHasUnsavedChanges(true);
 
-    // 4. Debounced save to disk (350ms)
+    // 4. Debounced save to disk (800ms)
     const existing = saveTimersRef.current.get(filePath);
     if (existing) clearTimeout(existing);
 
@@ -569,13 +569,15 @@ export const App: React.FC = () => {
       saveTimersRef.current.delete(filePath);
       const latest = pendingContentRef.current.get(filePath);
       if (latest !== undefined) {
+        setIsSaving(true);
         pendingContentRef.current.delete(filePath);
         await vault.saveNote(filePath, latest);
+        setIsSaving(false);
         if (pendingContentRef.current.size === 0) {
           setHasUnsavedChanges(false);
         }
       }
-    }, 350);
+    }, 800);
 
     saveTimersRef.current.set(filePath, timer);
   }, []);
