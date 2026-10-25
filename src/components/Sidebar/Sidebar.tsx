@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { VaultFile, SidebarTab, BookmarkItem } from '../../types';
 import { vault } from '../../services/vault';
+import { FileContextMenu } from '../Common/FileContextMenu';
 import { 
   Files, 
   Search, 
@@ -1195,135 +1196,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Obsidian File Context Menu */}
       {contextMenu && (
-        <div
-          className="fixed z-50 w-52 bg-zinc-900/95 border border-zinc-700/80 rounded-xl shadow-2xl p-1.5 text-xs text-zinc-200 backdrop-blur-xl animate-in fade-in duration-75 space-y-0.5"
-          style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="px-2.5 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider truncate border-b border-zinc-800 mb-1">
-            {contextMenu.file.name}
-          </div>
-
-          <button
-            onClick={() => {
-              onSelectFile(contextMenu.file.path);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5 text-purple-400" />
-            <span>Open</span>
-          </button>
-
-          {onSplitFile && (
-            <button
-              onClick={() => {
-                onSplitFile(contextMenu.file.path);
-                setContextMenu(null);
-              }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-            >
-              <Columns className="w-3.5 h-3.5 text-purple-400" />
-              <span>Open to the right (Split)</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              const clean = contextMenu.file.name.replace(/\.[^/.]+$/, '');
-              navigator.clipboard.writeText(`[[${clean}]]`);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <LinkIcon className="w-3.5 h-3.5 text-sky-400" />
-            <span>Copy [[wikilink]]</span>
-          </button>
-
-          <button
-            onClick={() => {
-              const clean = contextMenu.file.name.replace(/\.[^/.]+$/, '');
-              onToggleBookmark(contextMenu.file.path, clean);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <Bookmark className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isBookmarked(contextMenu.file.path) ? 'Remove Bookmark' : 'Bookmark'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              onDuplicateFile(contextMenu.file.path);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <Copy className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Make a copy</span>
-          </button>
-
-          <div className="h-[1px] bg-zinc-800 my-1" />
-
-          <button
-            onClick={() => {
-              vault.revealInSystemExplorer(contextMenu.file.path);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <FolderOpen className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Show in system explorer</span>
-          </button>
-
-          <button
-            onClick={() => {
-              vault.openInDefaultApp(contextMenu.file.path);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Open in default app</span>
-          </button>
-
-          {onExportPdf && contextMenu.file.extension === 'md' && (
-            <button
-              onClick={() => {
-                onExportPdf(contextMenu.file.path);
-                setContextMenu(null);
-              }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-            >
-              <Printer className="w-3.5 h-3.5 text-purple-400" />
-              <span>Export to PDF...</span>
-            </button>
-          )}
-
-          <div className="h-[1px] bg-zinc-800 my-1" />
-
-          <button
-            onClick={e => {
-              handleStartRename(contextMenu.file, e);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-zinc-800 text-left transition-colors"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Rename...</span>
-          </button>
-
-          <button
-            onClick={() => {
-              onDeleteFile(contextMenu.file.path);
-              setContextMenu(null);
-            }}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-rose-950/50 text-rose-400 text-left transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Move to .trash</span>
-          </button>
-        </div>
+        <FileContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          file={contextMenu.file}
+          onClose={() => setContextMenu(null)}
+          onOpenFile={path => {
+            onSelectFile(path);
+            setContextMenu(null);
+          }}
+          onOpenSplit={path => {
+            onSplitFile?.(path);
+            setContextMenu(null);
+          }}
+          onRenameFile={(f, newName) => {
+            onRenameFile(f.path, newName);
+            setContextMenu(null);
+          }}
+          onDeleteFile={path => {
+            onDeleteFile(path);
+            setContextMenu(null);
+          }}
+          onBookmarkFile={(path, title) => {
+            onToggleBookmark(path, title || path);
+            setContextMenu(null);
+          }}
+          isBookmarked={isBookmarked(contextMenu.file.path)}
+          onDuplicateFile={path => {
+            onDuplicateFile(path);
+            setContextMenu(null);
+          }}
+          onRevealInNavigation={path => {
+            setContextMenu(null);
+          }}
+          onOpenLocalGraph={path => {
+            onToggleGraphView();
+            setContextMenu(null);
+          }}
+          onExportPdf={path => {
+            onExportPdf?.(path);
+            setContextMenu(null);
+          }}
+          allFiles={files}
+          folders={folders}
+        />
       )}
     </div>
   );

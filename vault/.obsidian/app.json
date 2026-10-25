@@ -7,7 +7,7 @@
   "showFrontmatter": true,
   "foldHeading": true,
   "foldIndent": true,
-  "defaultViewMode": "live",
+  "defaultViewMode": "reading",
   "livePreview": true,
   "attachmentFolderPath": "Attachments",
   "newFileLocation": "root",

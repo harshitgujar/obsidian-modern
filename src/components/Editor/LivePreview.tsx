@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { VaultFile, NoteMetadata, BacklinkMention } from '../../types';
+import { FileContextMenu } from '../Common/FileContextMenu';
 import { 
   FileText, 
   ExternalLink, 
@@ -23,7 +24,17 @@ import {
   Film,
   FileCode,
   Search,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Table as TableIcon,
+  Code as CodeIcon,
+  Sparkles,
+  Edit2,
+  X
 } from 'lucide-react';
 
 interface CollapsibleCalloutProps {
@@ -162,6 +173,19 @@ interface LivePreviewProps {
   onToggleTask: (lineIndex: number) => void;
   onAddProperty?: (key: string, value: string) => void;
   onEnterEditMode?: () => void;
+  isEditable?: boolean;
+  onContentChange?: (content: string) => void;
+  onRenameFile?: (file: VaultFile, newName: string) => void;
+  onOpenFile?: (path: string) => void;
+  onOpenSplit?: (path: string) => void;
+  onDeleteFile?: (path: string) => void;
+  onBookmarkFile?: (path: string, title?: string) => void;
+  isBookmarked?: boolean;
+  onDuplicateFile?: (path: string) => void;
+  onRevealInNavigation?: (path: string) => void;
+  onOpenLocalGraph?: (path: string) => void;
+  onExportPdf?: (path: string) => void;
+  folders?: string[];
 }
 
 export const LivePreview: React.FC<LivePreviewProps> = ({
@@ -175,7 +199,20 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   onTagClick,
   onToggleTask,
   onAddProperty,
-  onEnterEditMode
+  onEnterEditMode,
+  isEditable = false,
+  onContentChange,
+  onRenameFile,
+  onOpenFile,
+  onOpenSplit,
+  onDeleteFile,
+  onBookmarkFile,
+  isBookmarked = false,
+  onDuplicateFile,
+  onRevealInNavigation,
+  onOpenLocalGraph,
+  onExportPdf,
+  folders = []
 }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [foldedHeadings, setFoldedHeadings] = useState<Record<number, boolean>>({});
@@ -189,10 +226,98 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   const [newPropKey, setNewPropKey] = useState('');
   const [newPropVal, setNewPropVal] = useState('');
 
+  // Notion-style inline title editing
+  const [inlineTitle, setInlineTitle] = useState(file.name.replace(/\.md$/, ''));
+  useEffect(() => {
+    setInlineTitle(file.name.replace(/\.md$/, ''));
+  }, [file.name]);
+
+  // Notion-style block editing
+  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
+  const [editingBlockText, setEditingBlockText] = useState('');
+
+  // Notion-style block insertion menu
+  const [showBlockMenu, setShowBlockMenu] = useState(false);
+  const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
+
+  // File Context Menu for media embeds & wikilinks
+  const [activeFileContextMenu, setActiveFileContextMenu] = useState<{
+    x: number;
+    y: number;
+    file: VaultFile;
+    embedContext?: any;
+  } | null>(null);
+
   const handleCopyCode = (code: string, idx: number) => {
     navigator.clipboard.writeText(code);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleMediaContextMenu = (
+    e: React.MouseEvent,
+    targetFile: VaultFile | undefined,
+    rawEmbedText: string,
+    aliasOrSize?: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const fallbackFile: VaultFile = targetFile || {
+      id: `file-${Date.now()}`,
+      name: rawEmbedText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim().split('/').pop() || 'media',
+      path: rawEmbedText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim(),
+      folder: '',
+      extension: rawEmbedText.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || '',
+      content: '',
+      size: 0,
+      updatedAt: Date.now(),
+      createdAt: Date.now()
+    };
+
+    setActiveFileContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      file: fallbackFile,
+      embedContext: {
+        rawEmbedText,
+        onRemoveEmbed: () => {
+          const newContent = file.content.replace(rawEmbedText, '').replace(/\n\n\n+/g, '\n\n');
+          onContentChange?.(newContent);
+        },
+        onResetSize: () => {
+          const rawTarget = rawEmbedText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim();
+          const newContent = file.content.replace(rawEmbedText, `![[${rawTarget}]]`);
+          onContentChange?.(newContent);
+        },
+        onSwapFile: (newFilePath: string) => {
+          const newEmbed = rawEmbedText.startsWith('![[')
+            ? `![[${newFilePath}]]`
+            : `![${newFilePath}](${newFilePath})`;
+          const newContent = file.content.replace(rawEmbedText, newEmbed);
+          onContentChange?.(newContent);
+        }
+      }
+    });
+  };
+
+  const commitBlockEdit = (realLineIndex: number, newText: string) => {
+    const lines = file.content.split('\n');
+    if (realLineIndex >= 0 && realLineIndex < lines.length) {
+      lines[realLineIndex] = newText;
+      onContentChange?.(lines.join('\n'));
+    }
+    setEditingBlockIndex(null);
+  };
+
+  const insertNewBlock = (blockTemplate: string, afterIndex?: number | null) => {
+    const lines = file.content.split('\n');
+    const targetIdx = afterIndex !== undefined && afterIndex !== null ? afterIndex + 1 : lines.length;
+    lines.splice(targetIdx, 0, blockTemplate);
+    const newContent = lines.join('\n');
+    onContentChange?.(newContent);
+    setShowBlockMenu(false);
+    setInsertAfterIndex(null);
   };
 
   // Strip %%...%% Obsidian comments for reading/preview display
@@ -284,7 +409,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         if (rawTarget.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
           const audioPath = embeddedFile ? embeddedFile.path : targetPath;
           parts.push(
-            <div key={`audio-${match.index}`} className="my-3 p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center gap-3">
+            <div
+              key={`audio-${match.index}`}
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
+              className="my-3 p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center gap-3 cursor-context-menu hover:border-purple-500/40 transition-colors"
+            >
               <Volume2 className="w-4 h-4 text-purple-400 shrink-0" />
               <span className="text-xs text-zinc-300 font-mono truncate">{targetPath}</span>
               <audio controls src={`/api/vault/raw?path=${encodeURIComponent(audioPath)}`} className="h-8 flex-1" />
@@ -295,7 +424,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         else if (rawTarget.match(/\.(mp4|webm|mov|mkv)$/i)) {
           const videoPath = embeddedFile ? embeddedFile.path : targetPath;
           parts.push(
-            <div key={`video-${match.index}`} className="my-3 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-xl">
+            <div
+              key={`video-${match.index}`}
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
+              className="my-3 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-xl cursor-context-menu hover:border-purple-500/40 transition-colors"
+            >
               <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-xs text-zinc-400">
                 <span className="flex items-center gap-1.5 font-mono text-[11px] truncate">
                   <Film className="w-3.5 h-3.5 text-purple-400" />
@@ -313,7 +446,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           const pageNumber = pageMatch ? parseInt(pageMatch[1], 10) : undefined;
           const pageHash = pageNumber ? `#page=${pageNumber}` : '';
           parts.push(
-            <div key={`pdf-${match.index}`} className="my-4 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-2xl">
+            <div
+              key={`pdf-${match.index}`}
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
+              className="my-4 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-2xl cursor-context-menu hover:border-purple-500/40 transition-colors"
+            >
               <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-900 border-b border-zinc-800 text-xs text-zinc-300">
                 <div className="flex items-center gap-2 truncate">
                   <FileCode className="w-4 h-4 text-rose-400 shrink-0" />
@@ -350,7 +487,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           const customWidth = sizeMatch ? parseInt(sizeMatch[1], 10) : undefined;
           const customHeight = sizeMatch && sizeMatch[2] ? parseInt(sizeMatch[2], 10) : undefined;
           parts.push(
-            <div key={`embed-img-${match.index}`} className="my-3">
+            <div
+              key={`embed-img-${match.index}`}
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch, alias)}
+              className="my-3 inline-block cursor-context-menu group/img"
+            >
               <img
                 src={`/api/vault/raw?path=${encodeURIComponent(imgPath)}`}
                 alt={(!sizeMatch && alias) || targetPath}
@@ -359,7 +500,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
                   height: customHeight ? `${customHeight}px` : undefined,
                   maxWidth: '100%'
                 }}
-                className="max-h-[75vh] rounded-lg border border-zinc-800 object-contain"
+                className="max-h-[75vh] rounded-lg border border-zinc-800 object-contain group-hover/img:border-purple-500/60 transition-colors shadow-md"
               />
             </div>
           );
@@ -379,6 +520,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           parts.push(
             <div
               key={`embed-canvas-${match.index}`}
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
               className="my-3 rounded-xl border border-orange-500/40 bg-[#16161c] overflow-hidden shadow-lg hover:border-orange-500/70 transition-all cursor-pointer group"
               onClick={() => {
                 if (embeddedFile) onNavigateLink(embeddedFile.path);
@@ -457,7 +599,8 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           parts.push(
             <div
               key={`embed-note-${match.index}`}
-              className="my-3 pl-4 pr-3 py-3 rounded-r-lg border-l-4 border-purple-500 bg-zinc-900/60 border border-zinc-800/80 space-y-1.5"
+              onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
+              className="my-3 pl-4 pr-3 py-3 rounded-r-lg border-l-4 border-purple-500 bg-zinc-900/60 border border-zinc-800/80 space-y-1.5 cursor-context-menu"
             >
               <div className="flex items-center justify-between text-xs font-semibold text-purple-300">
                 <span className="flex items-center gap-1.5 truncate">
@@ -505,6 +648,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               e.stopPropagation();
               onNavigateLink(target);
             }}
+            onContextMenu={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleMediaContextMenu(e, targetFile, fullMatch);
+            }}
             onMouseEnter={e => {
               if (targetFile) {
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -516,8 +664,8 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               }
             }}
             onMouseLeave={() => setHoverPreview(null)}
-            className="wikilink"
-            title={targetFile ? `Open note: ${targetFile.path}` : `Create note: ${target}`}
+            className="wikilink cursor-pointer hover:underline text-purple-400 font-medium inline-flex items-center gap-1"
+            title={targetFile ? `Open note: ${targetFile.path} (Right-click for options)` : `Create note: ${target}`}
           >
             <FileText className="w-3 h-3 inline-block opacity-70" />
             <span>{display}</span>
@@ -1034,9 +1182,36 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       title="Double-click anywhere to edit in Source mode"
     >
       {/* Obsidian Inline Title */}
-      <h1 className="inline-title font-bold text-3xl text-zinc-100 tracking-tight mb-5 pb-2 border-b border-zinc-800/50">
-        {file.name.replace(/\.md$/, '')}
-      </h1>
+      {isEditable ? (
+        <div className="group relative flex items-center mb-5 pb-2 border-b border-zinc-800/50">
+          <input
+            type="text"
+            value={inlineTitle}
+            onChange={e => setInlineTitle(e.target.value)}
+            onBlur={() => {
+              const trimmed = inlineTitle.trim();
+              const currentBase = file.name.replace(/\.md$/, '');
+              if (trimmed && trimmed !== currentBase && onRenameFile) {
+                onRenameFile(file, `${trimmed}.md`);
+              }
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            placeholder="Untitled Note"
+            className="inline-title font-bold text-3xl text-zinc-100 tracking-tight bg-transparent w-full focus:outline-none focus:border-b focus:border-purple-500"
+          />
+          <span className="opacity-0 group-hover:opacity-100 text-[10px] text-zinc-500 font-mono ml-2 shrink-0">
+            Click to rename
+          </span>
+        </div>
+      ) : (
+        <h1 className="inline-title font-bold text-3xl text-zinc-100 tracking-tight mb-5 pb-2 border-b border-zinc-800/50">
+          {file.name.replace(/\.md$/, '')}
+        </h1>
+      )}
 
       {/* Obsidian Properties Card (Frontmatter) */}
       {showFrontmatter && (Object.keys(frontmatter).length > 0 || isAddingProp) && (
@@ -1119,6 +1294,22 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         {renderedBlocks}
       </div>
 
+      {/* Notion-Style Quick Inserter Button */}
+      {isEditable && (
+        <div className="mt-8 pt-4 border-t border-dashed border-zinc-800/80">
+          <button
+            onClick={() => {
+              setInsertAfterIndex(bodyLines.length - 1);
+              setShowBlockMenu(true);
+            }}
+            className="flex items-center gap-2 text-zinc-500 hover:text-purple-400 text-xs py-2 px-3 rounded-lg hover:bg-zinc-800/40 transition-colors w-full text-left group"
+          >
+            <Plus className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 transition-colors" />
+            <span className="font-medium">Add block (Heading, Checklist, Table, Callout, Media...)</span>
+          </button>
+        </div>
+      )}
+
       {/* Bottom Backlinks Section (Obsidian core feature: backlinks at bottom of note) */}
       <div className="mt-12 pt-6 border-t border-zinc-800/80">
         <button
@@ -1185,6 +1376,84 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             {hoverPreview.targetFile.content.replace(/^---[\s\S]*?---/, '').trim().slice(0, 350)}
           </div>
         </div>
+      )}
+
+      {/* Notion Block Insertion Modal */}
+      {showBlockMenu && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowBlockMenu(false)}
+        >
+          <div
+            className="w-80 max-h-[80vh] overflow-y-auto bg-[#18181e]/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-2 text-xs text-zinc-200 animate-in fade-in zoom-in-95 duration-100 space-y-1"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-3 py-2 border-b border-zinc-800 font-semibold text-zinc-100 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>Insert Notion Block</span>
+              </span>
+              <button onClick={() => setShowBlockMenu(false)} className="text-zinc-500 hover:text-zinc-200 p-0.5">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            <div className="p-1 space-y-0.5">
+              {[
+                { label: 'Text', desc: 'Just start writing plain text', icon: <FileText className="w-4 h-4 text-zinc-400" />, template: '\nNew paragraph...\n' },
+                { label: 'Heading 1', desc: 'Large section heading', icon: <Heading1 className="w-4 h-4 text-purple-400" />, template: '\n# New Section\n' },
+                { label: 'Heading 2', desc: 'Medium section heading', icon: <Heading2 className="w-4 h-4 text-purple-400" />, template: '\n## New Sub-section\n' },
+                { label: 'Heading 3', desc: 'Small section heading', icon: <Heading3 className="w-4 h-4 text-purple-400" />, template: '\n### Subsection Title\n' },
+                { label: 'To-do List', desc: 'Track tasks with an interactive checklist', icon: <CheckSquare className="w-4 h-4 text-emerald-400" />, template: '\n- [ ] New to-do item\n' },
+                { label: 'Bulleted List', desc: 'Create a simple bulleted list', icon: <List className="w-4 h-4 text-sky-400" />, template: '\n- List item 1\n- List item 2\n' },
+                { label: 'Numbered List', desc: 'Create a list with numbering', icon: <ListOrdered className="w-4 h-4 text-amber-400" />, template: '\n1. First step\n2. Second step\n' },
+                { label: 'Callout Box', desc: 'Make writing stand out with an icon', icon: <Info className="w-4 h-4 text-blue-400" />, template: '\n> [!note]\n> Important highlight or insight goes here.\n' },
+                { label: 'Table', desc: 'Add a clean markdown table', icon: <TableIcon className="w-4 h-4 text-orange-400" />, template: '\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n' },
+                { label: 'Code Block', desc: 'Capture code snippet with syntax highlighting', icon: <CodeIcon className="w-4 h-4 text-pink-400" />, template: '\n```typescript\n// Write code here\nconsole.log("Hello Notion");\n```\n' },
+                { label: 'Quote', desc: 'Capture a quotation', icon: <Quote className="w-4 h-4 text-purple-400" />, template: '\n> "The best way to predict the future is to invent it."\n' },
+                { label: 'Divider', desc: 'Visually divide blocks with a line', icon: <div className="w-4 h-0.5 bg-zinc-500 rounded my-1.5" />, template: '\n---\n' },
+                { label: 'Link to Note', desc: 'Add a wikilink to another note', icon: <LinkIcon className="w-4 h-4 text-purple-400" />, template: ' [[Note Title]] ' }
+              ].map(item => (
+                <button
+                  key={item.label}
+                  onClick={() => insertNewBlock(item.template, insertAfterIndex)}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/80 text-left transition-colors group"
+                >
+                  <div className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300 group-hover:text-purple-300">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-zinc-200 group-hover:text-purple-300">{item.label}</div>
+                    <div className="text-[11px] text-zinc-500">{item.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Embedded File & Wikilink Context Menu */}
+      {activeFileContextMenu && (
+        <FileContextMenu
+          x={activeFileContextMenu.x}
+          y={activeFileContextMenu.y}
+          file={activeFileContextMenu.file}
+          embedContext={activeFileContextMenu.embedContext}
+          onClose={() => setActiveFileContextMenu(null)}
+          onOpenFile={onOpenFile || (path => onNavigateLink(path))}
+          onOpenSplit={onOpenSplit}
+          onRenameFile={onRenameFile}
+          onDeleteFile={onDeleteFile}
+          onBookmarkFile={onBookmarkFile}
+          isBookmarked={isBookmarked}
+          onDuplicateFile={onDuplicateFile}
+          onRevealInNavigation={onRevealInNavigation}
+          onOpenLocalGraph={onOpenLocalGraph}
+          onExportPdf={onExportPdf}
+          allFiles={allFiles}
+          folders={folders}
+        />
       )}
     </div>
   );

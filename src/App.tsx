@@ -249,7 +249,7 @@ export const App: React.FC = () => {
         const initialTab: TabItem = {
           id: `tab-${Date.now()}`,
           filePath: startNote.path,
-          viewMode: vault.getConfig('app')?.defaultViewMode || 'live'
+          viewMode: vault.getConfig('app')?.defaultViewMode || 'reading'
         };
         setPanes([{
           id: 'pane-main',
@@ -437,7 +437,7 @@ export const App: React.FC = () => {
         if (existingTab) {
           return { ...pane, activeTabId: existingTab.id };
         }
-        const defaultMode: EditorViewMode = appConfig.defaultViewMode || 'live';
+        const defaultMode: EditorViewMode = appConfig.defaultViewMode || 'reading';
         const newTab: TabItem = {
           id: `tab-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
           filePath: file.path,
@@ -517,7 +517,7 @@ export const App: React.FC = () => {
           const fallbackTab: TabItem = {
             id: `tab-${Date.now()}`,
             filePath: updatedFiles[0].path,
-            viewMode: appConfig.defaultViewMode || 'live'
+            viewMode: appConfig.defaultViewMode || 'reading'
           };
           return { ...pane, tabs: [fallbackTab], activeTabId: fallbackTab.id };
         }
@@ -591,6 +591,12 @@ export const App: React.FC = () => {
       handleSelectFile(newNote.path);
     }
   }, [handleSelectFile, syncFromVaultManager]);
+
+  const handleRevealInNavigation = useCallback((filePath: string) => {
+    setIsSidebarOpen(true);
+    setActiveSidebarTab('files');
+    handleSelectFile(filePath);
+  }, [handleSelectFile]);
 
   // Convert unlinked mention to [[Wikilink]]
   const handleLinkMention = useCallback(async (sourceFilePath: string, keyword: string) => {
@@ -783,7 +789,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: fileToOpen,
-      viewMode: appConfig.defaultViewMode || 'live'
+      viewMode: appConfig.defaultViewMode || 'reading'
     };
     const newPane: PaneItem = {
       id: `pane-${Date.now()}`,
@@ -838,7 +844,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: defaultFile,
-      viewMode: appConfig.defaultViewMode || 'live'
+      viewMode: appConfig.defaultViewMode || 'reading'
     };
     setPanes(prev =>
       prev.map(p => (p.id === paneId ? { ...p, tabs: [...p.tabs, newTab], activeTabId: newTab.id } : p))
@@ -1556,7 +1562,7 @@ export const App: React.FC = () => {
                     isSidebarOpen={isSidebarOpen}
                     isInspectorOpen={isInspectorOpen}
                     isZenMode={isZenMode}
-                    activeViewMode={currentPaneTab?.viewMode || 'live'}
+                    activeViewMode={currentPaneTab?.viewMode || 'reading'}
                     canGoBack={canGoBack}
                     canGoForward={canGoForward}
                     isBookmarked={paneFile ? bookmarks.some(b => b.path === paneFile.path) : false}
@@ -1615,7 +1621,7 @@ export const App: React.FC = () => {
                         allFiles={files}
                         metadata={paneMeta}
                         backlinks={paneBacklinks}
-                        viewMode={currentPaneTab?.viewMode || 'live'}
+                        viewMode={currentPaneTab?.viewMode || 'reading'}
                         showLineNumbers={appConfig.showLineNumber !== false}
                         readableLineLength={appConfig.readableLineLength !== false}
                         strictLineBreaks={Boolean(appConfig.strictLineBreaks)}
@@ -1637,6 +1643,20 @@ export const App: React.FC = () => {
                         onCopyNoteLink={() => {
                           navigator.clipboard.writeText(`[[${paneFile.name.replace(/\.md$/, '')}]]`);
                         }}
+                        onOpenFile={handleSelectFile}
+                        onOpenSplit={path => handleSplitPaneRight(path)}
+                        onRenameFile={(f, newName) => handleRenameFile(f.path, newName)}
+                        onDeleteFile={handleDeleteFile}
+                        onDuplicateFile={handleDuplicateFile}
+                        onRevealInNavigation={handleRevealInNavigation}
+                        onOpenLocalGraph={path => setIsGraphViewActive(true)}
+                        onExportPdf={() => {
+                          if (paneFile) {
+                            setPdfTargetFile(paneFile);
+                            setIsPdfModalOpen(true);
+                          }
+                        }}
+                        folders={folders}
                       />
                     )}
                   </div>
@@ -1670,7 +1690,7 @@ export const App: React.FC = () => {
         totalNotesCount={files.filter(f => f.extension === 'md').length}
         totalCanvasesCount={files.filter(f => f.extension === 'canvas').length}
         activeFile={activeFile}
-        activeViewMode={activeTab?.viewMode || 'live'}
+        activeViewMode={activeTab?.viewMode || 'reading'}
         backlinksCount={activeBacklinks.length}
         isGraphActive={isGraphViewActive}
         graphStats={{ nodesCount: graphData.nodes.length, edgesCount: graphData.edges.length }}

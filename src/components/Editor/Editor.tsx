@@ -19,7 +19,8 @@ import {
   Edit3,
   Code,
   Eye,
-  Check
+  Check,
+  Sparkles
 } from 'lucide-react';
 
 interface EditorProps {
@@ -43,6 +44,15 @@ interface EditorProps {
   onStartPresentation?: () => void;
   onToggleBookmark?: () => void;
   onCopyNoteLink?: () => void;
+  onOpenFile?: (path: string) => void;
+  onOpenSplit?: (path: string) => void;
+  onRenameFile?: (file: VaultFile, newName: string) => void;
+  onDeleteFile?: (path: string) => void;
+  onDuplicateFile?: (path: string) => void;
+  onRevealInNavigation?: (path: string) => void;
+  onOpenLocalGraph?: (path: string) => void;
+  onExportPdf?: (path: string) => void;
+  folders?: string[];
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -65,7 +75,16 @@ export const Editor: React.FC<EditorProps> = ({
   onTagClick,
   onStartPresentation,
   onToggleBookmark,
-  onCopyNoteLink
+  onCopyNoteLink,
+  onOpenFile,
+  onOpenSplit,
+  onRenameFile,
+  onDeleteFile,
+  onDuplicateFile,
+  onRevealInNavigation,
+  onOpenLocalGraph,
+  onExportPdf,
+  folders = []
 }) => {
   const editorContainerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<CodeMirrorEditorRef | null>(null);
@@ -666,6 +685,19 @@ export const Editor: React.FC<EditorProps> = ({
                     onToggleTask={handleToggleTask}
                     onAddProperty={handleAddProperty}
                     onEnterEditMode={() => onViewModeChange('live')}
+                    isEditable={false}
+                    onContentChange={onContentChange}
+                    onOpenFile={onOpenFile}
+                    onOpenSplit={onOpenSplit}
+                    onRenameFile={onRenameFile}
+                    onDeleteFile={onDeleteFile}
+                    onBookmarkFile={onToggleBookmark}
+                    isBookmarked={isBookmarked}
+                    onDuplicateFile={onDuplicateFile}
+                    onRevealInNavigation={onRevealInNavigation}
+                    onOpenLocalGraph={onOpenLocalGraph}
+                    onExportPdf={onExportPdf}
+                    folders={folders}
                   />
                 </div>
               </div>
@@ -674,18 +706,64 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (viewMode === 'live') {
             return (
-              /* Live Preview Mode (Interactive WYSIWYG Editing) */
-              <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
-                <CodeMirrorEditor
-                  ref={editorRef}
-                  value={file.content}
-                  onChange={onContentChange}
-                  showLineNumbers={false}
-                  readableLineLength={readableLineLength}
-                  allFiles={allFiles}
-                  onNavigateLink={onNavigateLink}
-                  placeholder="Start typing your note... Use [[wikilinks]], #tags, and markdown."
-                />
+              /* Live Preview Mode (Interactive Notion-Style High-Fidelity Editing) */
+              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]">
+                <div className="flex items-center justify-between px-6 py-2 bg-zinc-900/60 border-b border-zinc-800/80 text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5 text-purple-300 font-medium bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/30">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Live Preview</span>
+                    </span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-400">High-Fidelity Notion-Style Editor</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onViewModeChange('reading')}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors text-xs"
+                      title="Switch to Reading View"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Reading</span>
+                    </button>
+                    <button
+                      onClick={() => onViewModeChange('source')}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors text-xs"
+                      title="Switch to Raw Markdown Source Mode"
+                    >
+                      <Code className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Source</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
+                  <LivePreview
+                    file={file}
+                    allFiles={allFiles}
+                    metadata={metadata}
+                    backlinks={backlinks}
+                    showFrontmatter={showFrontmatter}
+                    foldHeading={foldHeading}
+                    onNavigateLink={onNavigateLink}
+                    onTagClick={onTagClick}
+                    onToggleTask={handleToggleTask}
+                    onAddProperty={handleAddProperty}
+                    isEditable={true}
+                    onContentChange={onContentChange}
+                    onOpenFile={onOpenFile}
+                    onOpenSplit={onOpenSplit}
+                    onRenameFile={onRenameFile}
+                    onDeleteFile={onDeleteFile}
+                    onBookmarkFile={onToggleBookmark}
+                    isBookmarked={isBookmarked}
+                    onDuplicateFile={onDuplicateFile}
+                    onRevealInNavigation={onRevealInNavigation}
+                    onOpenLocalGraph={onOpenLocalGraph}
+                    onExportPdf={onExportPdf}
+                    folders={folders}
+                  />
+                </div>
               </div>
             );
           }
