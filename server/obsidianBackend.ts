@@ -49,7 +49,7 @@ const DEFAULT_CONFIGS: Record<string, any> = {
     showFrontmatter: true,
     foldHeading: true,
     foldIndent: true,
-    defaultViewMode: 'reading',
+    defaultViewMode: 'live',
     livePreview: true,
     attachmentFolderPath: 'Attachments',
     newFileLocation: 'root',

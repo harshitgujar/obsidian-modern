@@ -5,6 +5,7 @@ import { LivePreview } from './LivePreview';
 import { CodeMirrorEditor, CodeMirrorEditorRef } from './CodeMirrorEditor';
 import { FloatingFormatToolbar } from './FloatingFormatToolbar';
 import { EditorContextMenu, ContextMenuPosition } from './EditorContextMenu';
+import { FileContextMenu } from '../Common/FileContextMenu';
 import { 
   FileText, 
   Search, 
@@ -20,7 +21,16 @@ import {
   Code,
   Eye,
   Check,
-  Sparkles
+  Sparkles,
+  Plus,
+  Heading1,
+  Heading2,
+  Heading3,
+  CheckSquare,
+  List,
+  ListOrdered,
+  Info,
+  Table as TableIcon
 } from 'lucide-react';
 
 interface EditorProps {
@@ -105,8 +115,25 @@ export const Editor: React.FC<EditorProps> = ({
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const findInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Notion-Style Editable Title & Block Inserter
+  const [inlineTitle, setInlineTitle] = useState(file.name.replace(/\.md$/, ''));
+  const [showBlockMenu, setShowBlockMenu] = useState(false);
+
+  useEffect(() => {
+    setInlineTitle(file.name.replace(/\.md$/, ''));
+  }, [file.path, file.name]);
+
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
+  const [activeFileContextMenu, setActiveFileContextMenu] = useState<{
+    x: number;
+    y: number;
+    file: VaultFile;
+    embedContext?: {
+      rawEmbedText: string;
+      onRemoveEmbed: () => void;
+    };
+  } | null>(null);
 
   useEffect(() => {
     if (findReplaceOpen !== undefined) {
@@ -707,7 +734,14 @@ export const Editor: React.FC<EditorProps> = ({
           if (viewMode === 'live') {
             return (
               /* Live Preview Mode (Interactive Notion-Style High-Fidelity Editing) */
-              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]">
+              <div 
+                className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]"
+                onClick={e => {
+                  if (e.target === e.currentTarget) {
+                    editorRef.current?.focus();
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between px-6 py-2 bg-zinc-900/60 border-b border-zinc-800/80 text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1.5 text-purple-300 font-medium bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/30">
@@ -715,7 +749,7 @@ export const Editor: React.FC<EditorProps> = ({
                       <span>Live Preview</span>
                     </span>
                     <span className="text-zinc-600">•</span>
-                    <span className="text-zinc-400">High-Fidelity Notion-Style Editor</span>
+                    <span className="text-zinc-400">Click anywhere to type & edit</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -737,32 +771,83 @@ export const Editor: React.FC<EditorProps> = ({
                   </div>
                 </div>
 
-                <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
-                  <LivePreview
-                    file={file}
-                    allFiles={allFiles}
-                    metadata={metadata}
-                    backlinks={backlinks}
-                    showFrontmatter={showFrontmatter}
-                    foldHeading={foldHeading}
-                    onNavigateLink={onNavigateLink}
-                    onTagClick={onTagClick}
-                    onToggleTask={handleToggleTask}
-                    onAddProperty={handleAddProperty}
-                    isEditable={true}
-                    onContentChange={onContentChange}
-                    onOpenFile={onOpenFile}
-                    onOpenSplit={onOpenSplit}
-                    onRenameFile={onRenameFile}
-                    onDeleteFile={onDeleteFile}
-                    onBookmarkFile={onToggleBookmark}
-                    isBookmarked={isBookmarked}
-                    onDuplicateFile={onDuplicateFile}
-                    onRevealInNavigation={onRevealInNavigation}
-                    onOpenLocalGraph={onOpenLocalGraph}
-                    onExportPdf={onExportPdf}
-                    folders={folders}
-                  />
+                <div className={`flex-1 flex flex-col p-6 md:p-10 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
+                  {/* Notion-Style Editable Title */}
+                  <div className="group relative flex items-center mb-6 pb-2 border-b border-zinc-800/50">
+                    <input
+                      type="text"
+                      value={inlineTitle}
+                      onChange={e => setInlineTitle(e.target.value)}
+                      onBlur={() => {
+                        const trimmed = inlineTitle.trim();
+                        const currentBase = file.name.replace(/\.md$/, '');
+                        if (trimmed && trimmed !== currentBase && onRenameFile) {
+                          onRenameFile(file, `${trimmed}.md`);
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          (e.target as HTMLInputElement).blur();
+                          editorRef.current?.focus();
+                        }
+                      }}
+                      placeholder="Untitled Note"
+                      className="inline-title font-bold text-3xl md:text-4xl text-zinc-100 tracking-tight bg-transparent w-full focus:outline-none border-b border-transparent focus:border-purple-500"
+                    />
+                    <span className="opacity-0 group-hover:opacity-100 text-[10px] text-zinc-500 font-mono ml-2 shrink-0">
+                      Click to rename
+                    </span>
+                  </div>
+
+                  {/* Notion-Style High-Fidelity CodeMirror Editor */}
+                  <div className="flex-1 min-h-[450px]">
+                    <CodeMirrorEditor
+                      ref={editorRef}
+                      value={file.content}
+                      onChange={onContentChange}
+                      livePreview={true}
+                      showLineNumbers={false}
+                      readableLineLength={false}
+                      allFiles={allFiles}
+                      onNavigateLink={onNavigateLink}
+                      onMediaContextMenu={(e, targetFile, rawText) => {
+                        setActiveFileContextMenu({
+                          x: e.clientX,
+                          y: e.clientY,
+                          file: targetFile || {
+                            id: `file-${Date.now()}`,
+                            name: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim().split('/').pop() || 'media',
+                            path: rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim(),
+                            folder: '',
+                            extension: rawText.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || '',
+                            content: '',
+                            size: 0,
+                            updatedAt: Date.now(),
+                            createdAt: Date.now()
+                          },
+                          embedContext: {
+                            rawEmbedText: rawText,
+                            onRemoveEmbed: () => {
+                              const newContent = file.content.replace(rawText, '').replace(/\n\n\n+/g, '\n\n');
+                              onContentChange(newContent);
+                            }
+                          }
+                        });
+                      }}
+                      className="w-full h-full"
+                    />
+                  </div>
+
+                  {/* Notion-Style Add Block Button */}
+                  <div className="mt-8 pt-4 border-t border-dashed border-zinc-800/80">
+                    <button
+                      onClick={() => setShowBlockMenu(true)}
+                      className="flex items-center gap-2 text-zinc-500 hover:text-purple-400 text-xs py-2 px-3 rounded-lg hover:bg-zinc-800/40 transition-colors w-full text-left group"
+                    >
+                      <Plus className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 transition-colors" />
+                      <span className="font-medium">Add block (Heading, Checklist, Table, Callout, Media...)</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -828,6 +913,111 @@ export const Editor: React.FC<EditorProps> = ({
           </div>
         )}
       </div>
+
+      {/* Notion-Style Quick Block Inserter Modal */}
+      {showBlockMenu && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowBlockMenu(false)}
+        >
+          <div 
+            className="w-full max-w-sm bg-zinc-900 border border-zinc-750 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-zinc-800 bg-zinc-950/60 text-xs">
+              <span className="font-semibold text-zinc-300">Insert Block</span>
+              <button 
+                onClick={() => setShowBlockMenu(false)}
+                className="text-zinc-500 hover:text-zinc-300 p-0.5 rounded"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="p-1.5 max-h-80 overflow-y-auto space-y-0.5 text-xs">
+              {[
+                { label: 'Paragraph Text', desc: 'Plain text paragraph', icon: <FileText className="w-4 h-4 text-zinc-400" />, template: '\nNew paragraph text...\n' },
+                { label: 'Heading 1', desc: 'Large section heading', icon: <Heading1 className="w-4 h-4 text-purple-400" />, template: '\n# New Section\n' },
+                { label: 'Heading 2', desc: 'Medium section heading', icon: <Heading2 className="w-4 h-4 text-purple-400" />, template: '\n## New Sub-section\n' },
+                { label: 'Heading 3', desc: 'Small section heading', icon: <Heading3 className="w-4 h-4 text-purple-400" />, template: '\n### Subsection Title\n' },
+                { label: 'To-do List', desc: 'Track tasks with an interactive checklist', icon: <CheckSquare className="w-4 h-4 text-emerald-400" />, template: '\n- [ ] New to-do item\n' },
+                { label: 'Bulleted List', desc: 'Create a simple bulleted list', icon: <List className="w-4 h-4 text-sky-400" />, template: '\n- List item 1\n- List item 2\n' },
+                { label: 'Numbered List', desc: 'Create a list with numbering', icon: <ListOrdered className="w-4 h-4 text-amber-400" />, template: '\n1. First step\n2. Second step\n' },
+                { label: 'Callout Box', desc: 'Make writing stand out with an icon', icon: <Info className="w-4 h-4 text-blue-400" />, template: '\n> [!note]\n> Important highlight or insight goes here.\n' },
+                { label: 'Table', desc: 'Add a clean markdown table', icon: <TableIcon className="w-4 h-4 text-orange-400" />, template: '\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n' },
+                { label: 'Code Block', desc: 'Syntax highlighted code', icon: <Code className="w-4 h-4 text-pink-400" />, template: '\n```ts\nconsole.log("Hello, Obsidian!");\n```\n' }
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    editorRef.current?.insertBlock(item.template);
+                    setShowBlockMenu(false);
+                    editorRef.current?.focus();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 text-left transition-colors group"
+                >
+                  <div className="w-7 h-7 rounded-md bg-zinc-800/80 flex items-center justify-center shrink-0 border border-zinc-700/50 group-hover:border-purple-500/50">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="font-medium text-zinc-200 group-hover:text-purple-200">{item.label}</div>
+                    <div className="text-[11px] text-zinc-500">{item.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File / Embed Context Menu */}
+      {activeFileContextMenu && (
+        <FileContextMenu
+          x={activeFileContextMenu.x}
+          y={activeFileContextMenu.y}
+          file={activeFileContextMenu.file}
+          embedContext={activeFileContextMenu.embedContext}
+          onClose={() => setActiveFileContextMenu(null)}
+          onOpenFile={path => {
+            onOpenFile?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onOpenSplit={path => {
+            onOpenSplit?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onRenameFile={(f, newName) => {
+            onRenameFile?.(f, newName);
+            setActiveFileContextMenu(null);
+          }}
+          onDeleteFile={path => {
+            onDeleteFile?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onBookmarkFile={(path, title) => {
+            onToggleBookmark?.();
+            setActiveFileContextMenu(null);
+          }}
+          isBookmarked={isBookmarked}
+          onDuplicateFile={path => {
+            onDuplicateFile?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onRevealInNavigation={path => {
+            onRevealInNavigation?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onOpenLocalGraph={path => {
+            onOpenLocalGraph?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          onExportPdf={path => {
+            onExportPdf?.(path);
+            setActiveFileContextMenu(null);
+          }}
+          allFiles={allFiles}
+          folders={folders}
+        />
+      )}
 
       {/* Quick Action Toast Feedback */}
       {toastMessage && (

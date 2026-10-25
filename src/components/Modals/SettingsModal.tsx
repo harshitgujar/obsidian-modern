@@ -356,7 +356,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="text-zinc-500 text-[11px]">Choose whether notes open in Live Preview, Source, or Reading view</div>
                   </div>
                   <select
-                    value={appConfig.defaultViewMode || 'reading'}
+                    value={appConfig.defaultViewMode || 'live'}
                     onChange={e => onSaveAppConfig({ ...appConfig, defaultViewMode: e.target.value })}
                     className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200"
                   >

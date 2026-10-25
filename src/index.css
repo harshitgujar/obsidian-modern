@@ -856,3 +856,144 @@
     color: #111827 !important;
   }
 }
+
+/* ==========================================================================
+   CodeMirror Live Preview (WYSIWYG High-Fidelity Notion-Style Editor)
+   ========================================================================== */
+
+.cm-live-editor .cm-scroller {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.8 !important;
+  color: var(--text-primary, #f4f4f5) !important;
+}
+
+.cm-live-editor .cm-content {
+  padding-top: 12px !important;
+  padding-bottom: 240px !important;
+  caret-color: var(--accent, #a855f7) !important;
+}
+
+.cm-live-editor .cm-line {
+  padding: 3px 0 !important;
+}
+
+/* Heading Line Stylings */
+.cm-line-heading {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif !important;
+}
+
+.cm-line-h1 {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.025em !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 0.35rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.cm-line-h2 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: #f4f4f5 !important;
+  letter-spacing: -0.02em !important;
+  padding-top: 1rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+.cm-line-h3 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #e4e4e7 !important;
+  padding-top: 0.75rem !important;
+}
+
+.cm-line-h4 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  color: #e4e4e7 !important;
+}
+
+.cm-line-blockquote {
+  border-left: 3px solid #a855f7 !important;
+  background-color: rgba(168, 85, 247, 0.06) !important;
+  padding-left: 14px !important;
+  border-radius: 0 4px 4px 0 !important;
+  color: #d4d4d8 !important;
+  font-style: italic !important;
+}
+
+/* Prefix hiding / revealing */
+.cm-heading-prefix-hidden {
+  display: inline-block !important;
+  width: 0 !important;
+  opacity: 0 !important;
+  font-size: 0 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.cm-heading-prefix-active {
+  opacity: 0.5 !important;
+  font-size: 0.85em !important;
+  color: #c084fc !important;
+  font-family: ui-monospace, monospace !important;
+  margin-right: 6px !important;
+}
+
+/* Wikilink Pill in CodeMirror */
+.cm-wikilink-pill {
+  vertical-align: baseline;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cm-wikilink-pill:hover {
+  transform: translateY(-1px);
+}
+
+/* Light Theme Overrides for Live Preview */
+[data-theme="light"] .cm-live-editor .cm-scroller {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .cm-line-h1 {
+  color: #09090b !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .cm-line-h2 {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .cm-line-h3,
+[data-theme="light"] .cm-line-h4 {
+  color: #27272a !important;
+}
+
+[data-theme="light"] .cm-line-blockquote {
+  border-left-color: #7c3aed !important;
+  background-color: rgba(124, 58, 237, 0.06) !important;
+  color: #3f3f46 !important;
+}
+
+[data-theme="light"] .cm-heading-prefix-active {
+  color: #7c3aed !important;
+}
+
+[data-theme="light"] .cm-wikilink-pill {
+  background-color: rgba(124, 58, 237, 0.1) !important;
+  color: #6d28d9 !important;
+  border-color: rgba(124, 58, 237, 0.3) !important;
+}
+
+[data-theme="light"] .cm-wikilink-pill:hover {
+  background-color: rgba(124, 58, 237, 0.18) !important;
+  color: #5b21b6 !important;
+}
+

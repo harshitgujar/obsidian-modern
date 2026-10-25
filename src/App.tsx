@@ -249,7 +249,7 @@ export const App: React.FC = () => {
         const initialTab: TabItem = {
           id: `tab-${Date.now()}`,
           filePath: startNote.path,
-          viewMode: vault.getConfig('app')?.defaultViewMode || 'reading'
+          viewMode: vault.getConfig('app')?.defaultViewMode || 'live'
         };
         setPanes([{
           id: 'pane-main',
@@ -437,7 +437,7 @@ export const App: React.FC = () => {
         if (existingTab) {
           return { ...pane, activeTabId: existingTab.id };
         }
-        const defaultMode: EditorViewMode = appConfig.defaultViewMode || 'reading';
+        const defaultMode: EditorViewMode = appConfig.defaultViewMode || 'live';
         const newTab: TabItem = {
           id: `tab-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
           filePath: file.path,
@@ -517,7 +517,7 @@ export const App: React.FC = () => {
           const fallbackTab: TabItem = {
             id: `tab-${Date.now()}`,
             filePath: updatedFiles[0].path,
-            viewMode: appConfig.defaultViewMode || 'reading'
+            viewMode: appConfig.defaultViewMode || 'live'
           };
           return { ...pane, tabs: [fallbackTab], activeTabId: fallbackTab.id };
         }
@@ -789,7 +789,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: fileToOpen,
-      viewMode: appConfig.defaultViewMode || 'reading'
+      viewMode: appConfig.defaultViewMode || 'live'
     };
     const newPane: PaneItem = {
       id: `pane-${Date.now()}`,
@@ -844,7 +844,7 @@ export const App: React.FC = () => {
     const newTab: TabItem = {
       id: `tab-${Date.now()}`,
       filePath: defaultFile,
-      viewMode: appConfig.defaultViewMode || 'reading'
+      viewMode: appConfig.defaultViewMode || 'live'
     };
     setPanes(prev =>
       prev.map(p => (p.id === paneId ? { ...p, tabs: [...p.tabs, newTab], activeTabId: newTab.id } : p))
@@ -1562,7 +1562,7 @@ export const App: React.FC = () => {
                     isSidebarOpen={isSidebarOpen}
                     isInspectorOpen={isInspectorOpen}
                     isZenMode={isZenMode}
-                    activeViewMode={currentPaneTab?.viewMode || 'reading'}
+                    activeViewMode={currentPaneTab?.viewMode || 'live'}
                     canGoBack={canGoBack}
                     canGoForward={canGoForward}
                     isBookmarked={paneFile ? bookmarks.some(b => b.path === paneFile.path) : false}
@@ -1621,7 +1621,7 @@ export const App: React.FC = () => {
                         allFiles={files}
                         metadata={paneMeta}
                         backlinks={paneBacklinks}
-                        viewMode={currentPaneTab?.viewMode || 'reading'}
+                        viewMode={currentPaneTab?.viewMode || 'live'}
                         showLineNumbers={appConfig.showLineNumber !== false}
                         readableLineLength={appConfig.readableLineLength !== false}
                         strictLineBreaks={Boolean(appConfig.strictLineBreaks)}
@@ -1690,7 +1690,7 @@ export const App: React.FC = () => {
         totalNotesCount={files.filter(f => f.extension === 'md').length}
         totalCanvasesCount={files.filter(f => f.extension === 'canvas').length}
         activeFile={activeFile}
-        activeViewMode={activeTab?.viewMode || 'reading'}
+        activeViewMode={activeTab?.viewMode || 'live'}
         backlinksCount={activeBacklinks.length}
         isGraphActive={isGraphViewActive}
         graphStats={{ nodesCount: graphData.nodes.length, edgesCount: graphData.edges.length }}

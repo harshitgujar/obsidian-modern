@@ -15,6 +15,7 @@ import { tags as t } from '@lezer/highlight';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { autocompletion, closeBrackets, closeBracketsKeymap, CompletionContext } from '@codemirror/autocomplete';
 import { VaultFile } from '../../types';
+import { createLivePreviewPlugin } from './CodeMirrorLivePreview';
 
 // Obsidian Dark Syntax Theme
 const obsidianHighlightStyle = HighlightStyle.define([
@@ -135,8 +136,10 @@ interface CodeMirrorEditorProps {
   onChange: (value: string) => void;
   showLineNumbers?: boolean;
   readableLineLength?: boolean;
+  livePreview?: boolean;
   allFiles?: VaultFile[];
   onNavigateLink?: (targetTitle: string) => void;
+  onMediaContextMenu?: (e: MouseEvent | any, targetFile: VaultFile | undefined, rawText: string) => void;
   placeholder?: string;
   className?: string;
 }
@@ -146,8 +149,10 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
   onChange,
   showLineNumbers = true,
   readableLineLength = true,
+  livePreview = false,
   allFiles = [],
   onNavigateLink,
+  onMediaContextMenu,
   placeholder,
   className = ''
 }, ref) => {
@@ -381,7 +386,17 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
       EditorView.lineWrapping
     ];
 
-    if (showLineNumbers) {
+    if (livePreview) {
+      extensions.push(
+        createLivePreviewPlugin({
+          onNavigateLink,
+          allFiles,
+          onMediaContextMenu
+        })
+      );
+    }
+
+    if (showLineNumbers && !livePreview) {
       extensions.push(lineNumbers(), highlightActiveLineGutter());
     }
 
@@ -401,7 +416,7 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
       view.destroy();
       viewRef.current = null;
     };
-  }, [showLineNumbers, readableLineLength, wikilinkCompletion]);
+  }, [showLineNumbers, readableLineLength, livePreview, wikilinkCompletion, onNavigateLink, allFiles, onMediaContextMenu]);
 
   // Sync external changes
   useEffect(() => {
@@ -417,7 +432,16 @@ export const CodeMirrorEditor = React.forwardRef<CodeMirrorEditorRef, CodeMirror
   return (
     <div 
       ref={containerRef} 
-      className={`w-full h-full overflow-hidden select-text cursor-text ${className}`} 
+      onClick={(e) => {
+        if (e.target === containerRef.current && viewRef.current) {
+          const docLength = viewRef.current.state.doc.length;
+          viewRef.current.dispatch({
+            selection: { anchor: docLength }
+          });
+          viewRef.current.focus();
+        }
+      }}
+      className={`w-full h-full overflow-hidden select-text cursor-text ${livePreview ? 'cm-live-editor' : ''} ${className}`} 
     />
   );
 });
