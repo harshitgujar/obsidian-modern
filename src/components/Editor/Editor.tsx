@@ -681,12 +681,12 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (viewMode === 'reading') {
             return (
-              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]">
+              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#1e1e1e]">
                 {/* Reading View Header Bar */}
-                <div className="flex items-center justify-between px-6 py-2.5 bg-zinc-900/60 border-b border-zinc-800/80 text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                <div className="flex items-center justify-between px-6 py-2.5 bg-[#181818] border-b border-[#282828] text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-purple-300 font-medium bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/30">
-                      <BookOpen className="w-3.5 h-3.5" />
+                    <span className="flex items-center gap-1.5 text-[#e9d5ff] font-medium bg-[#382b54] px-2.5 py-0.5 rounded-md shadow-sm">
+                      <BookOpen className="w-3.5 h-3.5 text-purple-300" />
                       <span>Reading View</span>
                     </span>
                     <span className="text-zinc-600">•</span>
@@ -744,17 +744,17 @@ export const Editor: React.FC<EditorProps> = ({
             return (
               /* Live Preview Mode (Interactive Notion-Style High-Fidelity Editing) */
               <div 
-                className="w-full h-full flex flex-col overflow-y-auto bg-[#18181b]"
+                className="w-full h-full flex flex-col overflow-y-auto bg-[#1e1e1e]"
                 onClick={e => {
                   if (e.target === e.currentTarget) {
                     editorRef.current?.focus();
                   }
                 }}
               >
-                <div className="flex items-center justify-between px-6 py-2 bg-zinc-900/60 border-b border-zinc-800/80 text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                <div className="flex items-center justify-between px-6 py-2 bg-[#181818] border-b border-[#282828] text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-purple-300 font-medium bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/30">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="flex items-center gap-1.5 text-[#e9d5ff] font-medium bg-[#382b54] px-2.5 py-0.5 rounded-md shadow-sm">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-300" />
                       <span>Live Preview</span>
                     </span>
                     <span className="text-zinc-600">•</span>
@@ -841,8 +841,8 @@ export const Editor: React.FC<EditorProps> = ({
 
           /* Source Mode (Raw CodeMirror 6 with Line Numbers) */
           return (
-            <div className="w-full h-full flex flex-col overflow-hidden bg-[#18181b]">
-              <div className="px-4 py-1.5 bg-zinc-900/40 border-b border-zinc-800/60 flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
+            <div className="w-full h-full flex flex-col overflow-hidden bg-[#1e1e1e]">
+              <div className="px-4 py-1.5 bg-[#181818] border-b border-[#282828] flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
                 <div className="flex items-center gap-2">
                   <Code className="w-3.5 h-3.5 text-purple-400" />
                   <span className="font-mono text-zinc-300">Source Mode</span>

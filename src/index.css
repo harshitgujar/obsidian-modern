@@ -2,12 +2,12 @@
 
 @layer base {
   :root {
-    --bg-primary: #18181b;
-    --bg-secondary: #121214;
-    --bg-tertiary: #27272a;
-    --bg-elevated: #202024;
-    --border-color: #2e2e33;
-    --border-subtle: #242428;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #181818;
+    --bg-tertiary: #242424;
+    --bg-elevated: #222222;
+    --border-color: #282828;
+    --border-subtle: #222222;
     --text-primary: #f4f4f5;
     --text-secondary: #a1a1aa;
     --text-muted: #71717a;
@@ -947,14 +947,32 @@
   margin-right: 6px !important;
 }
 
-/* Wikilink Pill in CodeMirror */
+/* Wikilink Pill in CodeMirror - Apple Glass/Solid Pill */
 .cm-wikilink-pill {
   vertical-align: baseline;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  border: none !important;
 }
 
 .cm-wikilink-pill:hover {
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Highlight Mark (==text==) */
+.cm-highlight-mark {
+  background-color: rgba(245, 158, 11, 0.24) !important;
+  color: #fef08a !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+  font-weight: 500 !important;
+  border: none !important;
+}
+
+/* Strikethrough Mark (~~text~~) */
+.cm-strikethrough-mark {
+  text-decoration: line-through !important;
+  opacity: 0.65 !important;
 }
 
 /* Light Theme Overrides for Live Preview */
@@ -987,13 +1005,18 @@
 }
 
 [data-theme="light"] .cm-wikilink-pill {
-  background-color: rgba(124, 58, 237, 0.1) !important;
+  background-color: #ede9fe !important;
   color: #6d28d9 !important;
-  border-color: rgba(124, 58, 237, 0.3) !important;
+  border: none !important;
 }
 
 [data-theme="light"] .cm-wikilink-pill:hover {
-  background-color: rgba(124, 58, 237, 0.18) !important;
+  background-color: #ddd6fe !important;
   color: #5b21b6 !important;
+}
+
+[data-theme="light"] .cm-highlight-mark {
+  background-color: rgba(245, 158, 11, 0.28) !important;
+  color: #854d0e !important;
 }
 

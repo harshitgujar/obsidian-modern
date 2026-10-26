@@ -49,9 +49,7 @@ type SettingsSection =
   | 'hotkeys' 
   | 'daily-notes' 
   | 'templates' 
-  | 'zk-prefixer' 
   | 'file-recovery' 
-  | 'workspaces' 
   | 'about';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -78,22 +76,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [hotkeySearch, setHotkeySearch] = useState('');
   const [recordingCommandId, setRecordingCommandId] = useState<string | null>(null);
 
-  // Sub-settings states (Daily Notes, Templates, ZK, File Recovery, Workspaces)
+  // Sub-settings states (Daily Notes, Templates)
   const [dailyConfig, setDailyConfig] = useState<Record<string, any>>(() => vault.getConfig('daily-notes') || {});
   const [templatesConfig, setTemplatesConfig] = useState<Record<string, any>>(() => vault.getConfig('templates') || {});
-  const [zkConfig, setZkConfig] = useState<Record<string, any>>(() => vault.getConfig('zk-prefixer') || {});
-  const [recoveryConfig, setRecoveryConfig] = useState<Record<string, any>>(() => vault.getConfig('file-recovery') || {});
-  const [workspacesConfig, setWorkspacesConfig] = useState<Record<string, any>>(() => vault.getConfig('workspaces') || {});
-  const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
   // Load configs on open or section switch
   useEffect(() => {
     if (isOpen) {
       setDailyConfig(vault.getConfig('daily-notes') || { folder: 'Daily', format: 'YYYY-MM-DD', template: 'Templates/Daily Note Template.md' });
       setTemplatesConfig(vault.getConfig('templates') || { folder: 'Templates', dateFormat: 'YYYY-MM-DD', timeFormat: 'HH:mm' });
-      setZkConfig(vault.getConfig('zk-prefixer') || { folder: '', format: 'YYYYMMDDHHmm', template: 'Templates/Zettelkasten Note.md' });
-      setRecoveryConfig(vault.getConfig('file-recovery') || { intervalMinutes: 5, retentionDays: 7 });
-      setWorkspacesConfig(vault.getConfig('workspaces') || { active: 'default', workspaces: {} });
     }
   }, [isOpen, activeSection]);
 
@@ -144,16 +135,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleSaveTemplatesConfig = (cfg: Record<string, any>) => {
     setTemplatesConfig(cfg);
     vault.saveConfig('templates', cfg);
-  };
-
-  const handleSaveZkConfig = (cfg: Record<string, any>) => {
-    setZkConfig(cfg);
-    vault.saveConfig('zk-prefixer', cfg);
-  };
-
-  const handleSaveRecoveryConfig = (cfg: Record<string, any>) => {
-    setRecoveryConfig(cfg);
-    vault.saveConfig('file-recovery', cfg);
   };
 
   // Filter commands for hotkeys list
@@ -272,20 +253,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             )}
 
-            {corePluginsConfig['zk-prefixer'] !== false && (
-              <button
-                onClick={() => setActiveSection('zk-prefixer')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
-                  activeSection === 'zk-prefixer'
-                    ? 'bg-purple-600/20 text-purple-300 font-medium'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Unique Note Creator</span>
-              </button>
-            )}
-
             {corePluginsConfig['file-recovery'] !== false && (
               <button
                 onClick={() => setActiveSection('file-recovery')}
@@ -297,20 +264,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               >
                 <History className="w-3.5 h-3.5" />
                 <span>File Recovery</span>
-              </button>
-            )}
-
-            {corePluginsConfig['workspaces'] !== false && (
-              <button
-                onClick={() => setActiveSection('workspaces')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
-                  activeSection === 'workspaces'
-                    ? 'bg-purple-600/20 text-purple-300 font-medium'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-                }`}
-              >
-                <Layout className="w-3.5 h-3.5" />
-                <span>Workspaces</span>
               </button>
             )}
           </div>
@@ -368,19 +321,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                   <div>
-                    <div className="font-medium text-zinc-200">Show line numbers</div>
-                    <div className="text-zinc-500 text-[11px]">Display line number gutter in the editor</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={appConfig.showLineNumber !== false}
-                    onChange={e => onSaveAppConfig({ ...appConfig, showLineNumber: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
                     <div className="font-medium text-zinc-200">Fold heading</div>
                     <div className="text-zinc-500 text-[11px]">Allow folding content under markdown headings</div>
                   </div>
@@ -414,32 +354,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="checkbox"
                     checked={appConfig.readableLineLength !== false}
                     onChange={e => onSaveAppConfig({ ...appConfig, readableLineLength: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Strict line breaks</div>
-                    <div className="text-zinc-500 text-[11px]">Require two spaces or a blank line for line breaks</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(appConfig.strictLineBreaks)}
-                    onChange={e => onSaveAppConfig({ ...appConfig, strictLineBreaks: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Vim key bindings</div>
-                    <div className="text-zinc-500 text-[11px]">Enable modal Vim key bindings in code and markdown editors</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(appConfig.vimMode)}
-                    onChange={e => onSaveAppConfig({ ...appConfig, vimMode: e.target.checked })}
                     className="accent-purple-500 w-4 h-4"
                   />
                 </div>
@@ -488,21 +402,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onChange={e => onSaveAppConfig({ ...appConfig, attachmentFolderPath: e.target.value })}
                     className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 w-40"
                   />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Deleted files storage</div>
-                    <div className="text-zinc-500 text-[11px]">Move deleted files to .trash folder in vault</div>
-                  </div>
-                  <select
-                    value={appConfig.trashOption || 'local'}
-                    onChange={e => onSaveAppConfig({ ...appConfig, trashOption: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200"
-                  >
-                    <option value="local">Move to Obsidian .trash folder</option>
-                    <option value="system">Permanent delete</option>
-                  </select>
                 </div>
               </div>
             )}
@@ -797,97 +696,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             )}
 
-            {/* Sub-setting: Unique Note Creator (ZK) */}
-            {activeSection === 'zk-prefixer' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">New file location</div>
-                    <div className="text-zinc-500 text-[11px]">Folder where new Zettelkasten notes are created</div>
-                  </div>
-                  <input
-                    type="text"
-                    value={zkConfig.folder || ''}
-                    onChange={e => handleSaveZkConfig({ ...zkConfig, folder: e.target.value })}
-                    placeholder="Vault root"
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Unique prefix format</div>
-                    <div className="text-zinc-500 text-[11px]">Timestamp pattern prepended to note titles</div>
-                  </div>
-                  <input
-                    type="text"
-                    value={zkConfig.format || 'YYYYMMDDHHmm'}
-                    onChange={e => handleSaveZkConfig({ ...zkConfig, format: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44 font-mono"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Template file location</div>
-                    <div className="text-zinc-500 text-[11px]">Template note to populate new ZK notes</div>
-                  </div>
-                  <select
-                    value={zkConfig.template || ''}
-                    onChange={e => handleSaveZkConfig({ ...zkConfig, template: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-52"
-                  >
-                    <option value="">None</option>
-                    {files.filter(f => f.extension === 'md').map(f => (
-                      <option key={f.path} value={f.path}>{f.path}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
             {/* Sub-setting: File Recovery */}
             {activeSection === 'file-recovery' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                   <div>
-                    <div className="font-medium text-zinc-200">Snapshot interval</div>
-                    <div className="text-zinc-500 text-[11px]">Minimum interval (in minutes) between local backups</div>
-                  </div>
-                  <input
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={recoveryConfig.intervalMinutes || 5}
-                    onChange={e => handleSaveRecoveryConfig({ ...recoveryConfig, intervalMinutes: Number(e.target.value) })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-24"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">History retention</div>
-                    <div className="text-zinc-500 text-[11px]">Number of days to retain snapshots before cleanup</div>
-                  </div>
-                  <input
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={recoveryConfig.retentionDays || 7}
-                    onChange={e => handleSaveRecoveryConfig({ ...recoveryConfig, retentionDays: Number(e.target.value) })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-24"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div>
-                    <div className="font-medium text-zinc-200">Local snapshot archives</div>
-                    <div className="text-zinc-500 text-[11px]">Browse previous versions or clear recovery cache</div>
+                    <div className="font-medium text-zinc-200">Local snapshot recovery</div>
+                    <div className="text-zinc-500 text-[11px]">Browse previous note versions or clear backup snapshots</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={onOpenFileRecoveryModal}
-                      className="px-3 py-1.5 rounded bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs"
+                      className="px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs transition-colors shadow-sm"
                     >
                       View Snapshots
                     </button>
@@ -898,90 +718,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           alert('Recovery snapshot cache cleared.');
                         }
                       }}
-                      className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-rose-950/60 text-zinc-300 hover:text-rose-300 border border-zinc-700 text-xs"
+                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-rose-950/60 text-zinc-300 hover:text-rose-300 border border-zinc-750 text-xs transition-colors"
                     >
                       Clear History
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Sub-setting: Workspaces */}
-            {activeSection === 'workspaces' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                  <div>
-                    <div className="font-medium text-zinc-200">Save active layout as workspace</div>
-                    <div className="text-zinc-500 text-[11px]">Preserve current split panes, open tabs, and sidebars</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Workspace name..."
-                      value={newWorkspaceName}
-                      onChange={e => setNewWorkspaceName(e.target.value)}
-                      className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44"
-                    />
-                    <button
-                      onClick={() => {
-                        if (newWorkspaceName.trim() && onSaveCurrentWorkspace) {
-                          onSaveCurrentWorkspace(newWorkspaceName.trim());
-                          setNewWorkspaceName('');
-                          setWorkspacesConfig(vault.getConfig('workspaces') || {});
-                        }
-                      }}
-                      className="px-3 py-1 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-500"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="font-semibold text-zinc-300">Saved workspaces:</div>
-                  {Object.keys(workspacesConfig.workspaces || {}).length === 0 ? (
-                    <div className="p-3 text-center text-zinc-500 bg-zinc-900/40 rounded-lg border border-zinc-800/60 text-[11px]">
-                      No workspaces saved yet. Save your current layout above.
-                    </div>
-                  ) : (
-                    Object.entries(workspacesConfig.workspaces || {}).map(([wsName]) => (
-                      <div
-                        key={wsName}
-                        className="flex items-center justify-between p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/70"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Layout className="w-3.5 h-3.5 text-purple-400" />
-                          <span className="font-medium text-zinc-200">{wsName}</span>
-                          {workspacesConfig.active === wsName && (
-                            <span className="text-[10px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded border border-purple-800/50">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => onLoadWorkspace && onLoadWorkspace(wsName)}
-                            className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs"
-                          >
-                            Load
-                          </button>
-                          <button
-                            onClick={() => {
-                              const nextWs = { ...workspacesConfig.workspaces };
-                              delete nextWs[wsName];
-                              const updated = { ...workspacesConfig, workspaces: nextWs };
-                              setWorkspacesConfig(updated);
-                              vault.saveConfig('workspaces', updated);
-                            }}
-                            className="p-1 text-zinc-500 hover:text-rose-400"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
                 </div>
               </div>
             )}

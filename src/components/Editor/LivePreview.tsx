@@ -664,7 +664,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               }
             }}
             onMouseLeave={() => setHoverPreview(null)}
-            className="wikilink cursor-pointer hover:underline text-purple-400 font-medium inline-flex items-center gap-1"
+            className="wikilink cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-md bg-[#382b54] hover:bg-[#48376d] text-[#e9d5ff] hover:text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle"
             title={targetFile ? `Open note: ${targetFile.path} (Right-click for options)` : `Create note: ${target}`}
           >
             <FileText className="w-3 h-3 inline-block opacity-70" />
@@ -677,7 +677,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         parts.push(
           <mark
             key={`mark-${match.index}`}
-            className="bg-amber-400/25 text-amber-200 px-1 py-0.2 rounded border border-amber-500/30"
+            className="cm-highlight-mark bg-amber-500/22 text-amber-200 dark:text-amber-100 font-medium px-1.5 py-0.5 rounded-sm select-text"
           >
             {match[6]}
           </mark>
@@ -687,7 +687,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       else if (match[7]) {
         const codeContent = fullMatch.slice(1, -1);
         parts.push(
-          <code key={`code-${match.index}`} className="px-1.5 py-0.5 rounded bg-zinc-800 text-purple-300 font-mono text-[0.9em] border border-zinc-700/60">
+          <code key={`code-${match.index}`} className="px-1.5 py-0.5 rounded bg-[#27272a] text-[#f43f5e] font-mono text-[0.88em] select-text">
             {codeContent}
           </code>
         );

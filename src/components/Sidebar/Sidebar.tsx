@@ -291,24 +291,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (lower === 'md') return null;
 
     let label = lower.toUpperCase();
-    let badgeClasses = 'bg-zinc-800/90 text-zinc-400 border-zinc-700/70';
-
-    if (lower === 'canvas') {
-      badgeClasses = 'bg-amber-500/15 text-amber-400 border-amber-500/35';
-    } else if (lower === 'pdf') {
-      badgeClasses = 'bg-rose-500/15 text-rose-400 border-rose-500/35';
-    } else if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
-      label = lower === 'jpg' || lower === 'jpeg' ? 'IMG' : lower.toUpperCase();
-      badgeClasses = 'bg-sky-500/15 text-sky-400 border-sky-500/35';
-    } else if (lower === 'base') {
-      badgeClasses = 'bg-purple-500/15 text-purple-400 border-purple-500/35';
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
+      label = 'PNG';
     } else if (['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lower)) {
       label = 'AUDIO';
-      badgeClasses = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35';
     }
 
     return (
-      <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider shrink-0 select-none ${badgeClasses}`}>
+      <span className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-wider shrink-0 select-none ml-auto pl-1.5">
         {label}
       </span>
     );
@@ -432,9 +422,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       : 'files');
 
   return (
-    <div className="flex h-full bg-[#121214] border-r border-zinc-800/80 select-none shrink-0 relative">
+    <div className="flex h-full bg-[#181818] border-r border-[#262626] select-none shrink-0 relative">
       {/* 1. Left Vertical Ribbon */}
-      <div className="w-11 bg-[#0e0e10] border-r border-zinc-800/60 flex flex-col items-center py-2.5 justify-between shrink-0">
+      <div className="w-11 bg-[#141414] border-r border-[#222222] flex flex-col items-center py-2.5 justify-between shrink-0">
         <div className="flex flex-col items-center gap-1.5">
           <button
             onClick={() => {
@@ -559,9 +549,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 2. Main Sidebar Drawer Content */}
-      <div className="w-64 flex flex-col h-full bg-[#141416]">
+      <div className="w-64 flex flex-col h-full bg-[#181818]">
         {/* Tab Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800/80">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#262626]">
           <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate">
             {activeSidebarTab === 'files' && vaultName}
             {activeSidebarTab === 'search' && 'Search Vault'}
@@ -808,7 +798,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const renderFileRow = (file: VaultFile) => {
                   const isCanvas = file.extension === 'canvas';
                   const isActive = file.path === activeFilePath;
-                  const bookmarked = isBookmarked(file.path);
 
                   return (
                     <div
@@ -826,11 +815,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onContextMenu={e => handleContextMenuOpen(e, file)}
                       className={`group flex items-center justify-between px-2.5 py-1 rounded-md cursor-pointer transition-colors ${
                         isActive
-                          ? 'bg-zinc-800 text-zinc-100 font-medium'
-                          : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                          ? 'bg-[#2c2c2e] text-white font-medium shadow-sm'
+                          : 'text-zinc-400 hover:bg-[#202023] hover:text-zinc-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2 truncate">
+                      <div className="flex items-center gap-2 truncate flex-1 min-w-0">
                         {renderFileTypeIcon(file.extension)}
 
                         {editingFilePath === file.path ? (
@@ -851,49 +840,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {renderFileTypeBadge(file.extension)}
-                      </div>
-
-                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0">
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onToggleBookmark(file.path, file.name.replace(/\.[^/.]+$/, ''));
-                          }}
-                          title={bookmarked ? 'Remove Bookmark' : 'Bookmark'}
-                          className={`p-0.5 ${bookmarked ? 'text-amber-400' : 'text-zinc-500 hover:text-amber-300'}`}
-                        >
-                          <Bookmark className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={e => handleStartRename(file, e)}
-                          title="Rename (auto-updates links)"
-                          className="p-0.5 text-zinc-500 hover:text-zinc-300"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onDuplicateFile(file.path);
-                          }}
-                          title="Make a copy"
-                          className="p-0.5 text-zinc-500 hover:text-zinc-300"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onDeleteFile(file.path);
-                          }}
-                          title="Move to .trash"
-                          className="p-0.5 text-zinc-500 hover:text-rose-400"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                      {renderFileTypeBadge(file.extension)}
                     </div>
                   );
                 };

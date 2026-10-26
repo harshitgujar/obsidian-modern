@@ -17,7 +17,7 @@ export interface LivePreviewOptions {
   onMediaContextMenu?: (e: React.MouseEvent | MouseEvent, targetFile: VaultFile | undefined, rawText: string) => void;
 }
 
-// 1. Wikilink Pill Widget
+// 1. Wikilink Pill Widget (Apple-style solid pill)
 class WikilinkPillWidget extends WidgetType {
   constructor(
     readonly target: string,
@@ -34,11 +34,11 @@ class WikilinkPillWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
     span.className =
-      'cm-wikilink-pill inline-flex items-center gap-1 px-2 py-0.5 mx-0.5 rounded-md bg-purple-950/60 text-purple-300 hover:text-purple-100 hover:bg-purple-900/60 border border-purple-800/40 text-[13px] font-medium cursor-pointer transition-colors select-none align-middle';
+      'cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-md bg-[#382b54] hover:bg-[#4a396e] text-[#e9d5ff] hover:text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle';
     span.title = `Click to open [[${this.target}]]`;
 
     const icon = document.createElement('span');
-    icon.innerHTML = `<svg class="w-3 h-3 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+    icon.innerHTML = `<svg class="w-3 h-3 text-purple-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
     span.appendChild(icon);
 
     const label = document.createElement('span');
@@ -56,6 +56,70 @@ class WikilinkPillWidget extends WidgetType {
     });
 
     return span;
+  }
+
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// 2. Markdown Highlight Widget (==text==)
+class HighlightWidget extends WidgetType {
+  constructor(readonly text: string, readonly pos: number) {
+    super();
+  }
+
+  eq(other: HighlightWidget) {
+    return this.text === other.text && this.pos === other.pos;
+  }
+
+  toDOM(view: EditorView) {
+    const mark = document.createElement('mark');
+    mark.className =
+      'cm-highlight-mark bg-amber-500/22 text-amber-200 dark:text-amber-100 font-medium px-1.5 py-0.5 rounded-sm mx-0.5 cursor-text select-text transition-colors';
+    mark.textContent = this.text;
+
+    mark.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      view.dispatch({
+        selection: { anchor: this.pos }
+      });
+      view.focus();
+    });
+
+    return mark;
+  }
+
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// 3. Strikethrough Widget (~~text~~)
+class StrikethroughWidget extends WidgetType {
+  constructor(readonly text: string, readonly pos: number) {
+    super();
+  }
+
+  eq(other: StrikethroughWidget) {
+    return this.text === other.text && this.pos === other.pos;
+  }
+
+  toDOM(view: EditorView) {
+    const del = document.createElement('del');
+    del.className =
+      'cm-strikethrough-mark line-through text-zinc-400 dark:text-zinc-500 cursor-text select-text mx-0.5';
+    del.textContent = this.text;
+
+    del.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      view.dispatch({
+        selection: { anchor: this.pos }
+      });
+      view.focus();
+    });
+
+    return del;
   }
 
   ignoreEvent() {
@@ -134,7 +198,7 @@ class ImageEmbedWidget extends WidgetType {
 
     const frame = document.createElement('div');
     frame.className =
-      'rounded-xl overflow-hidden border border-zinc-750 shadow-xl bg-zinc-950 p-1 max-w-full hover:border-purple-500/50 transition-colors';
+      'rounded-xl overflow-hidden shadow-2xl bg-[#141416] p-1 max-w-full hover:ring-2 hover:ring-purple-500/40 transition-all';
 
     const img = document.createElement('img');
     img.src = this.src;
@@ -193,6 +257,68 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
       update(update: ViewUpdate) {
         if (update.docChanged || update.selectionSet || update.viewportChanged) {
           this.decorations = wikilinkDecorator.updateDeco(update, this.decorations);
+        }
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
+  // Highlight Match Decorator: ==text==
+  const highlightDecorator = new MatchDecorator({
+    regexp: /(?<!=)==([^=\n]+)==(?!=)/g,
+    decoration: (match, view, pos) => {
+      const { from, to } = view.state.selection.main;
+      const matchFrom = pos;
+      const matchTo = pos + match[0].length;
+      if (from >= matchFrom && to <= matchTo) {
+        return null;
+      }
+      return Decoration.replace({
+        widget: new HighlightWidget(match[1], pos)
+      });
+    }
+  });
+
+  const highlightPlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+      constructor(view: EditorView) {
+        this.decorations = highlightDecorator.createDeco(view);
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+          this.decorations = highlightDecorator.updateDeco(update, this.decorations);
+        }
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
+  // Strikethrough Match Decorator: ~~text~~
+  const strikethroughDecorator = new MatchDecorator({
+    regexp: /(?<!~)~~([^~\n]+)~~(?!~)/g,
+    decoration: (match, view, pos) => {
+      const { from, to } = view.state.selection.main;
+      const matchFrom = pos;
+      const matchTo = pos + match[0].length;
+      if (from >= matchFrom && to <= matchTo) {
+        return null;
+      }
+      return Decoration.replace({
+        widget: new StrikethroughWidget(match[1], pos)
+      });
+    }
+  });
+
+  const strikethroughPlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+      constructor(view: EditorView) {
+        this.decorations = strikethroughDecorator.createDeco(view);
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+          this.decorations = strikethroughDecorator.updateDeco(update, this.decorations);
         }
       }
     },
@@ -396,6 +522,8 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
 
   return [
     wikilinkPlugin,
+    highlightPlugin,
+    strikethroughPlugin,
     checkboxPlugin,
     hrPlugin,
     imagePlugin,
