@@ -1,6 +1,6 @@
 import React from 'react';
 import { VaultFile, EditorViewMode } from '../../types';
-import { HardDrive, CheckCircle2, FileText, LayoutDashboard, Share2 } from 'lucide-react';
+import { HardDrive, CheckCircle2, FileText, LayoutDashboard, Share2, Sparkles } from 'lucide-react';
 
 interface StatusBarProps {
   vaultName: string;
@@ -16,6 +16,7 @@ interface StatusBarProps {
   onOpenVaultSwitcher?: () => void;
   onCycleViewMode?: () => void;
   onOpenBacklinks?: () => void;
+  onToggleAIChat?: () => void;
   showWordCount?: boolean;
   showBacklinks?: boolean;
 }
@@ -34,6 +35,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   onOpenVaultSwitcher,
   onCycleViewMode,
   onOpenBacklinks,
+  onToggleAIChat,
   showWordCount = true,
   showBacklinks = true
 }) => {
@@ -75,6 +77,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <span>•</span>
           <span>{totalCanvasesCount} canvases</span>
         </div>
+
+        {onToggleAIChat && (
+          <button
+            onClick={onToggleAIChat}
+            className="hidden sm:flex items-center gap-1.5 text-zinc-400 hover:text-purple-300 transition-colors cursor-pointer pl-2 border-l border-zinc-800"
+            title="Open AI Vault Assistant (RAG Memory)"
+          >
+            <Sparkles className="w-3 h-3 text-purple-400" />
+            <span className="text-[10px]">Vault Copilot</span>
+          </button>
+        )}
       </div>
 
       {/* Right side: Active File or View Metrics */}

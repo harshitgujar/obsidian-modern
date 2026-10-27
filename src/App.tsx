@@ -478,7 +478,7 @@ export const App: React.FC = () => {
     handleSelectFile(targetPath);
   }, [historyIndex, historyStack, handleSelectFile]);
 
-  const handleCreateFile = useCallback(async (folder: string = '', ext: string = 'md', titleHint?: string) => {
+  const handleCreateFile = useCallback(async (folder: string = '', ext: string = 'md', titleHint?: string, initialContent: string = '') => {
     let targetFolder = folder;
     if (!targetFolder && appConfig.newFileLocation === 'current' && activeFilePath) {
       const parts = activeFilePath.split('/');
@@ -495,7 +495,7 @@ export const App: React.FC = () => {
       candidate = `${prefix} ${num}`;
     }
 
-    const newFile = await vault.createNote(candidate, targetFolder, '', ext);
+    const newFile = await vault.createNote(candidate, targetFolder, initialContent, ext);
     syncFromVaultManager();
     handleSelectFile(newFile.path);
   }, [handleSelectFile, syncFromVaultManager, appConfig.newFileLocation, activeFilePath]);
@@ -581,6 +581,29 @@ export const App: React.FC = () => {
 
     saveTimersRef.current.set(filePath, timer);
   }, []);
+
+  const handleInsertTextAtCursor = useCallback((textToInsert: string) => {
+    if (!activeFile || activeFile.extension !== 'md') return;
+    const current = activeFile.content || '';
+    const updated = current ? `${current}\n\n${textToInsert}` : textToInsert;
+    handleContentChange(activeFile.path, updated);
+  }, [activeFile, handleContentChange]);
+
+  const handleCreateNoteFromResponse = useCallback(async (title: string, content: string) => {
+    await handleCreateFile('', 'md', title, content);
+  }, [handleCreateFile]);
+
+  const handleToggleAIChat = useCallback(() => {
+    if (isGraphViewActive) {
+      setIsGraphViewActive(false);
+    }
+    if (isInspectorOpen && inspectorActiveTab === 'aiChat') {
+      setIsInspectorOpen(false);
+    } else {
+      setIsInspectorOpen(true);
+      setInspectorActiveTab('aiChat');
+    }
+  }, [isGraphViewActive, isInspectorOpen, inspectorActiveTab]);
 
   // Wikilink navigation: opens note or creates it on disk if not found
   const handleNavigateLink = useCallback(async (targetTitle: string) => {
@@ -1127,6 +1150,13 @@ export const App: React.FC = () => {
       action: () => setIsInspectorOpen(prev => !prev)
     },
     {
+      id: 'ai:toggle-chat',
+      title: 'AI Vault Assistant: Ask AI / Search RAG Memory',
+      category: 'AI Assistant',
+      shortcut: 'Ctrl+Shift+A',
+      action: handleToggleAIChat
+    },
+    {
       id: 'editor:toggle-source',
       title: 'Toggle Live Preview / Source mode',
       category: 'Editor',
@@ -1233,6 +1263,7 @@ export const App: React.FC = () => {
     handleSelectFile,
     handleGoBack,
     handleGoForward,
+    handleToggleAIChat,
     syncFromVaultManager
   ]);
 
@@ -1484,6 +1515,8 @@ export const App: React.FC = () => {
           }}
           searchFilter={searchFilter}
           onSearchChange={setSearchFilter}
+          onToggleAIChat={handleToggleAIChat}
+          isAIChatActive={isInspectorOpen && inspectorActiveTab === 'aiChat'}
         />
       )}
 
@@ -1669,8 +1702,8 @@ export const App: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Right Inspector (Backlinks, Outgoing Links, Outline, Local Graph) */}
-      {isInspectorOpen && !isGraphViewActive && activeFile && (
+      {/* 3. Right Inspector (Backlinks, Outgoing Links, Outline, Local Graph, AI Chat) */}
+      {isInspectorOpen && !isGraphViewActive && (activeFile || inspectorActiveTab === 'aiChat') && (
         <Inspector
           activeFile={activeFile}
           metadata={activeMetadata}
@@ -1682,6 +1715,8 @@ export const App: React.FC = () => {
           onLinkMention={handleLinkMention}
           activeTab={inspectorActiveTab}
           onSelectTab={setInspectorActiveTab}
+          onInsertTextAtCursor={handleInsertTextAtCursor}
+          onCreateNoteFromResponse={handleCreateNoteFromResponse}
         />
       )}
       </div>
@@ -1706,6 +1741,7 @@ export const App: React.FC = () => {
           setIsInspectorOpen(true);
           setInspectorActiveTab('backlinks');
         }}
+        onToggleAIChat={handleToggleAIChat}
       />
 
       {/* Quick Switcher Modal (Ctrl+O) */}

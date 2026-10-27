@@ -43,7 +43,8 @@ import {
   ChevronsUpDown,
   Image as ImageIcon,
   Music,
-  FileCode 
+  FileCode,
+  Sparkles
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -82,6 +83,8 @@ interface SidebarProps {
   onSearchChange: (q: string) => void;
   corePluginsConfig?: Record<string, any>;
   onExportPdf?: (filePath: string) => void;
+  onToggleAIChat?: () => void;
+  isAIChatActive?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -119,7 +122,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   searchFilter,
   onSearchChange,
   corePluginsConfig = {},
-  onExportPdf
+  onExportPdf,
+  onToggleAIChat,
+  isAIChatActive = false
 }) => {
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
   const [editingFilePath, setEditingFilePath] = useState<string | null>(null);
@@ -516,6 +521,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
+            </button>
+          )}
+
+          {onToggleAIChat && (
+            <button
+              onClick={onToggleAIChat}
+              title="AI Vault Assistant (RAG Memory)"
+              className={`p-2 rounded-lg transition-colors ${
+                isAIChatActive
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
+                  : 'text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 border border-transparent'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
             </button>
           )}
         </div>

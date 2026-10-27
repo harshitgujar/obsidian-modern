@@ -1,0 +1,499 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Sparkles, 
+  Send, 
+  RotateCcw, 
+  Copy, 
+  Check, 
+  FileText, 
+  ArrowDownToLine, 
+  Plus, 
+  Folder, 
+  Globe, 
+  RefreshCw, 
+  ExternalLink,
+  Bot,
+  ChevronDown
+} from 'lucide-react';
+import { VaultFile } from '../../types';
+
+export interface AISourceCitation {
+  wikilink: string;
+  noteTitle: string;
+  filePath: string;
+  heading: string;
+  score: number;
+  snippet: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: AISourceCitation[];
+  timestamp: number;
+}
+
+interface AIChatPaneProps {
+  activeFile?: VaultFile;
+  onNavigateFile: (filePath: string) => void;
+  onInsertTextAtCursor?: (text: string) => void;
+  onCreateNoteFromResponse?: (title: string, content: string) => void;
+}
+
+export const AIChatPane: React.FC<AIChatPaneProps> = ({
+  activeFile,
+  onNavigateFile,
+  onInsertTextAtCursor,
+  onCreateNoteFromResponse
+}) => {
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    return [
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: `👋 **Welcome to your Vault Copilot!**\n\nI have full, private access to your notes. Ask me anything, or try:\n* *"What are the core features of Obsidian?"*\n* *"How do plugins enhance note-taking?"*\n* *"Summarize my recent thoughts across all notes."*`,
+        timestamp: Date.now()
+      }
+    ];
+  });
+
+  const [inputQuery, setInputQuery] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [searchScope, setSearchScope] = useState<'vault' | 'activeNote' | 'folder'>('vault');
+  const [aiStatus, setAiStatus] = useState<any>(null);
+  const [isReindexing, setIsReindexing] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Auto-scroll to bottom of chat
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isStreaming]);
+
+  // Fetch RAG index status on mount
+  const fetchStatus = async () => {
+    try {
+      const res = await fetch('/api/vault/ai/status');
+      if (res.ok) {
+        const data = await res.json();
+        setAiStatus(data.status);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReindex = async () => {
+    setIsReindexing(true);
+    try {
+      const res = await fetch('/api/vault/ai/index', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setAiStatus(data.status);
+      }
+    } catch {} finally {
+      setIsReindexing(false);
+    }
+  };
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = inputQuery.trim();
+    if (!query || isStreaming) return;
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: query,
+      timestamp: Date.now()
+    };
+
+    const assistantMsgId = `assistant-${Date.now()}`;
+    const initialAssistantMessage: ChatMessage = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      sources: [],
+      timestamp: Date.now()
+    };
+
+    setMessages(prev => [...prev, userMessage, initialAssistantMessage]);
+    setInputQuery('');
+    setIsStreaming(true);
+
+    try {
+      const folderFilter =
+        searchScope === 'activeNote' && activeFile
+          ? activeFile.path
+          : searchScope === 'folder' && activeFile?.folder
+          ? activeFile.folder
+          : undefined;
+
+      const response = await fetch('/api/vault/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query,
+          folder: folderFilter,
+          history: messages.slice(-4).map(m => ({ role: m.role, content: m.content }))
+        })
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to stream chat: HTTP ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let accumulatedText = '';
+      let retrievedSources: AISourceCitation[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const block of lines) {
+          const blockLines = block.split('\n');
+          let eventType = '';
+          let dataStr = '';
+
+          for (const line of blockLines) {
+            if (line.startsWith('event: ')) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              dataStr = line.slice(6).trim();
+            }
+          }
+
+          if (eventType === 'sources' && dataStr) {
+            try {
+              retrievedSources = JSON.parse(dataStr);
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantMsgId ? { ...m, sources: retrievedSources } : m
+                )
+              );
+            } catch {}
+          } else if (eventType === 'token' && dataStr) {
+            try {
+              const token = JSON.parse(dataStr);
+              accumulatedText += token;
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantMsgId ? { ...m, content: accumulatedText } : m
+                )
+              );
+            } catch {}
+          } else if (eventType === 'error' && dataStr) {
+            try {
+              const err = JSON.parse(dataStr);
+              accumulatedText += `\n\n> [!WARNING]\n> ${err}`;
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantMsgId ? { ...m, content: accumulatedText } : m
+                )
+              );
+            } catch {}
+          }
+        }
+      }
+    } catch (err: any) {
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === assistantMsgId
+            ? { ...m, content: `⚠️ Error contacting AI: ${err.message || 'Check Ollama connection.'}` }
+            : m
+        )
+      );
+    } finally {
+      setIsStreaming(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  };
+
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMessageId(id);
+    setTimeout(() => setCopiedMessageId(null), 2000);
+  };
+
+  const renderContentWithWikilinks = (content: string) => {
+    if (!content) return null;
+    const parts: (string | JSX.Element)[] = [];
+    const regex = /\[\[([^\]]+)\]\]/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+      const rawTarget = match[1];
+      const [targetWithHeading, alias] = rawTarget.split('|');
+      const [notePath, heading] = targetWithHeading.split('#');
+      const label = alias || (heading ? `${notePath} > ${heading}` : notePath);
+      const targetNav = notePath.trim();
+      const matchIdx = match.index;
+      parts.push(
+        <button
+          key={`wl-${matchIdx}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigateFile(targetNav);
+          }}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-[#382b54] hover:bg-[#48376d] text-[#e9d5ff] hover:text-white font-medium text-[11px] align-baseline transition-colors select-none"
+          title={`Open ${targetWithHeading}`}
+        >
+          <span>{label}</span>
+        </button>
+      );
+      lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+    return parts;
+  };
+
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: `Chat history cleared. What would you like to search or summarize from your vault?`,
+        timestamp: Date.now()
+      }
+    ]);
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-[#181818] select-none text-xs text-zinc-300 overflow-hidden">
+      {/* 1. Header Toolbar */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#262626] bg-[#141414] shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 font-semibold text-zinc-100">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>Vault Copilot</span>
+          </div>
+
+          {/* Model Status Pill */}
+          {aiStatus && (
+            <div
+              title={`Provider: ${aiStatus.provider} • Model: ${aiStatus.embeddingModel || 'default'}`}
+              className="flex items-center gap-1 bg-[#242426] px-1.5 py-0.5 rounded text-[10px] text-zinc-400 border border-zinc-700/50"
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  aiStatus.isProviderAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`}
+              />
+              <span className="truncate max-w-[80px]">
+                {aiStatus.isProviderAvailable ? 'Ollama' : 'Offline'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={handleReindex}
+            disabled={isReindexing}
+            title={isReindexing ? 'Rebuilding vault vector index...' : 'Re-index vault now'}
+            className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-purple-400' : ''}`} />
+          </button>
+          <button
+            onClick={handleClearChat}
+            title="Clear chat history"
+            className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Scope Filter Strip */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[#161616] border-b border-[#242424] text-[11px] text-zinc-400 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <Globe className="w-3 h-3 text-zinc-500" />
+          <span>Scope:</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setSearchScope('vault')}
+            className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+              searchScope === 'vault'
+                ? 'bg-[#382b54] text-[#e9d5ff]'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+          >
+            Entire Vault
+          </button>
+          {activeFile && (
+            <button
+              onClick={() => setSearchScope('activeNote')}
+              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                searchScope === 'activeNote'
+                  ? 'bg-[#382b54] text-[#e9d5ff]'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              }`}
+            >
+              Active Note
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Messages Stream */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        {messages.map(msg => {
+          const isUser = msg.role === 'user';
+          return (
+            <div
+              key={msg.id}
+              className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} group`}
+            >
+              {/* Message Bubble */}
+              <div
+                className={`max-w-[92%] rounded-xl px-3.5 py-2.5 leading-relaxed text-xs ${
+                  isUser
+                    ? 'bg-[#2b2b2f] text-zinc-100 rounded-tr-sm shadow-sm'
+                    : 'bg-[#202023] text-zinc-200 rounded-tl-sm border border-zinc-800/60 shadow-sm w-full'
+                }`}
+              >
+                {/* Text Content */}
+                <div className="whitespace-pre-wrap select-text markdown-body">
+                  {msg.content ? (
+                    renderContentWithWikilinks(msg.content)
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-zinc-500 italic">
+                      <Sparkles className="w-3 h-3 text-purple-400 animate-spin" />
+                      <span>Thinking with vault context...</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Grounded Citations (Source Pills) */}
+                {!isUser && msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-3 pt-2.5 border-t border-zinc-700/40">
+                    <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <FileText className="w-3 h-3 text-purple-400" />
+                      <span>Vault Sources ({msg.sources.length}):</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {msg.sources.map((src, sIdx) => (
+                        <button
+                          key={sIdx}
+                          onClick={() => onNavigateFile(src.filePath)}
+                          title={`${src.snippet} (${src.score}% match)`}
+                          className="cm-wikilink-pill inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#382b54] hover:bg-[#48376d] text-[#e9d5ff] hover:text-white text-[11px] font-medium transition-all shadow-sm select-none"
+                        >
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0 text-purple-300" />
+                          <span className="truncate max-w-[130px]">{src.noteTitle}</span>
+                          <span className="text-[9px] text-purple-300/80 font-mono">
+                            {src.score}%
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Message Action Strip */}
+              {!isUser && msg.content && (
+                <div className="flex items-center gap-1.5 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleCopy(msg.id, msg.content)}
+                    className="p-1 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                    title="Copy response"
+                  >
+                    {copiedMessageId === msg.id ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                  </button>
+
+                  {onInsertTextAtCursor && (
+                    <button
+                      onClick={() => onInsertTextAtCursor(msg.content)}
+                      className="p-1 rounded text-zinc-500 hover:text-purple-300 hover:bg-zinc-800 transition-colors"
+                      title="Insert response into active note"
+                    >
+                      <ArrowDownToLine className="w-3 h-3" />
+                    </button>
+                  )}
+
+                  {onCreateNoteFromResponse && (
+                    <button
+                      onClick={() =>
+                        onCreateNoteFromResponse(
+                          `AI Summary - ${new Date().toISOString().slice(0, 10)}`,
+                          msg.content
+                        )
+                      }
+                      className="p-1 rounded text-zinc-500 hover:text-purple-300 hover:bg-zinc-800 transition-colors"
+                      title="Create new note from response"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* 4. Chat Input Bar */}
+      <form onSubmit={handleSendMessage} className="p-2.5 border-t border-[#262626] bg-[#141414] shrink-0">
+        <div className="relative flex items-center bg-[#202024] rounded-xl border border-zinc-700/60 focus-within:border-purple-500/80 shadow-md">
+          <textarea
+            ref={inputRef}
+            value={inputQuery}
+            onChange={e => setInputQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            placeholder={
+              searchScope === 'activeNote' && activeFile
+                ? `Ask about "${activeFile.name}"...`
+                : 'Ask your vault anything...'
+            }
+            rows={1}
+            disabled={isStreaming}
+            className="w-full bg-transparent px-3 py-2.5 pr-9 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none max-h-32"
+          />
+          <button
+            type="submit"
+            disabled={!inputQuery.trim() || isStreaming}
+            className="absolute right-1.5 p-1.5 rounded-lg bg-purple-600 text-white disabled:opacity-30 disabled:hover:bg-purple-600 hover:bg-purple-500 transition-all cursor-pointer disabled:cursor-not-allowed"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};

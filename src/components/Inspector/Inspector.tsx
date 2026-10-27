@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { VaultFile, NoteMetadata, BacklinkMention, InspectorTab, GraphData } from '../../types';
 import { GraphView } from '../Graph/GraphView';
+import { AIChatPane } from '../AI/AIChatPane';
 import { 
   Link, 
   ListTree, 
   Share2, 
   FileText, 
-  ExternalLink, 
   Plus, 
   ChevronRight, 
   ChevronDown,
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles
 } from 'lucide-react';
 
 interface InspectorProps {
@@ -24,6 +25,8 @@ interface InspectorProps {
   corePluginsConfig?: Record<string, any>;
   activeTab?: InspectorTab;
   onSelectTab?: (tab: InspectorTab) => void;
+  onInsertTextAtCursor?: (text: string) => void;
+  onCreateNoteFromResponse?: (title: string, content: string) => void;
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -36,14 +39,16 @@ export const Inspector: React.FC<InspectorProps> = ({
   onLinkMention,
   corePluginsConfig = {},
   activeTab: externalActiveTab,
-  onSelectTab
+  onSelectTab,
+  onInsertTextAtCursor,
+  onCreateNoteFromResponse
 }) => {
   const showBacklinks = corePluginsConfig['backlink'] !== false;
   const showOutlinks = corePluginsConfig['outgoing-link'] !== false;
   const showOutline = corePluginsConfig['outline'] !== false;
   const showGraph = corePluginsConfig['graph'] !== false;
 
-  const defaultTab: InspectorTab = showBacklinks ? 'backlinks' : showOutlinks ? 'outgoing' : showOutline ? 'outline' : 'localGraph';
+  const defaultTab: InspectorTab = showBacklinks ? 'backlinks' : showOutlinks ? 'outgoing' : showOutline ? 'outline' : 'aiChat';
   const [internalTab, setInternalTab] = useState<InspectorTab>(defaultTab);
   const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalTab;
 
@@ -56,14 +61,6 @@ export const Inspector: React.FC<InspectorProps> = ({
     linked: false,
     unlinked: false
   });
-
-  if (!activeFile) {
-    return (
-      <div className="w-72 bg-[#121214] border-l border-zinc-800/80 p-4 text-xs text-zinc-500 select-none">
-        No active note selected.
-      </div>
-    );
-  }
 
   const outlinks = metadata?.outlinks || [];
 
@@ -140,10 +137,45 @@ export const Inspector: React.FC<InspectorProps> = ({
             <span className="truncate">Graph</span>
           </button>
         )}
+
+        {/* AI Assistant Tab */}
+        <button
+          onClick={() => handleTabClick('aiChat')}
+          title="AI Vault Assistant (RAG Memory)"
+          className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
+            activeTab === 'aiChat'
+              ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
+              : 'text-zinc-400 hover:text-purple-300 hover:bg-zinc-800/50'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 shrink-0 text-purple-400" />
+          <span className="truncate">AI</span>
+        </button>
       </div>
 
+      {/* Tab: AI Vault Assistant */}
+      {activeTab === 'aiChat' && (
+        <AIChatPane
+          activeFile={activeFile}
+          onNavigateFile={onNavigateFile}
+          onInsertTextAtCursor={onInsertTextAtCursor}
+          onCreateNoteFromResponse={onCreateNoteFromResponse}
+        />
+      )}
+
+      {/* Empty State for note-specific tabs when no active file is selected */}
+      {!activeFile && activeTab !== 'aiChat' && (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-500 text-xs">
+          <FileText className="w-8 h-8 text-zinc-700 mb-2 stroke-[1.5]" />
+          <p className="font-medium text-zinc-400">No active note selected</p>
+          <p className="text-[11px] text-zinc-500 mt-1 max-w-[200px]">
+            Open a note to view backlinks, outline, and local connections, or switch to the AI tab.
+          </p>
+        </div>
+      )}
+
       {/* Tab 1: Backlinks & Mentions */}
-      {activeTab === 'backlinks' && (
+      {activeFile && activeTab === 'backlinks' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
           {/* Linked Mentions */}
           <div>
@@ -241,7 +273,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       )}
 
       {/* Tab 2: Outgoing Links */}
-      {activeTab === 'outgoing' && (
+      {activeFile && activeTab === 'outgoing' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
             Links in this note ({outlinks.length})
@@ -267,7 +299,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       )}
 
       {/* Tab 3: Document Outline */}
-      {activeTab === 'outline' && (
+      {activeFile && activeTab === 'outline' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {(!metadata || metadata.headings.length === 0) ? (
             <div className="text-zinc-500 italic text-center py-6 text-[11px]">
@@ -289,7 +321,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       )}
 
       {/* Tab 4: Local Graph */}
-      {activeTab === 'localGraph' && (
+      {activeFile && activeTab === 'localGraph' && (
         <div className="flex-1 p-2 flex flex-col">
           <div className="text-[11px] text-zinc-400 mb-2 font-medium">
             Local connections for <span className="text-purple-400">{activeFile.name.replace(/\.md$/, '')}</span>

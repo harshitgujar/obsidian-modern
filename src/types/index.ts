@@ -93,7 +93,7 @@ export interface PaneItem {
 }
 
 export type SidebarTab = 'files' | 'search' | 'bookmarks' | 'tags' | 'graph';
-export type InspectorTab = 'backlinks' | 'outgoing' | 'outline' | 'tags' | 'localGraph';
+export type InspectorTab = 'backlinks' | 'outgoing' | 'outline' | 'tags' | 'localGraph' | 'aiChat';
 
 export interface CommandItem {
   id: string;
