@@ -122,25 +122,23 @@ export const TabBar: React.FC<TabBarProps> = ({
   const getFile = (filePath: string) => files.find(f => f.path === filePath);
 
   return (
-    <div className="flex items-center justify-between bg-[#111114] border-b border-zinc-800/80 px-2.5 select-none shrink-0 h-10 gap-2">
-      {/* Left controls: Traffic lights + Sidebar toggle (only for primary header) */}
+    <div className="flex items-center justify-between glass-header px-3 select-none shrink-0 h-11 gap-2.5">
+      {/* Left controls: Navigation arrows + Sidebar toggle (only for primary header) */}
       <div className="flex items-center gap-2 shrink-0">
         {isPrimary && (
           <>
-            {/* macOS Window Traffic Lights */}
-            <div className="flex items-center gap-1.5 mr-1 pl-1">
-              <div className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] hover:brightness-110 cursor-pointer" />
-              <div className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] hover:brightness-110 cursor-pointer" />
-              <div className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] hover:brightness-110 cursor-pointer" />
-            </div>
+            {/* When sidebar is closed on Mac, add graceful spacer for native traffic lights */}
+            {!isSidebarOpen && (
+              <div className="w-16 shrink-0" />
+            )}
 
-            {/* Navigation History Arrows (< and >) matching Real Obsidian */}
-            <div className="flex items-center gap-0.5 ml-0.5">
+            {/* Navigation History Arrows (< and >) */}
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={onGoBack}
                 disabled={!canGoBack}
                 title="Navigate Back (Alt+← / ⌘[)"
-                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -148,7 +146,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 onClick={onGoForward}
                 disabled={!canGoForward}
                 title="Navigate Forward (Alt+→ / ⌘])"
-                className="p-1 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -158,7 +156,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               <button
                 onClick={onToggleSidebar}
                 title={isSidebarOpen ? 'Collapse Left Sidebar (Cmd+B)' : 'Expand Left Sidebar (Cmd+B)'}
-                className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 rounded transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg transition-all"
               >
                 {isSidebarOpen ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
               </button>
@@ -168,7 +166,7 @@ export const TabBar: React.FC<TabBarProps> = ({
       </div>
 
       {/* Tabs list */}
-      <div className="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar min-w-0">
+      <div className="flex items-center gap-1.5 flex-1 overflow-x-auto no-scrollbar min-w-0">
         {tabs.map(tab => {
           const file = getFile(tab.filePath);
           const isActive = tab.id === activeTabId;
@@ -178,10 +176,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <div
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
-              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all max-w-[190px] shrink-0 ${
+              className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer transition-all max-w-[200px] shrink-0 ${
                 isActive
-                  ? 'bg-[#18181b] text-zinc-100 shadow-sm border border-zinc-700/60 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 border border-transparent'
+                  ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-[0_2px_8px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] font-medium'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05] border border-transparent'
               }`}
             >
               {isCanvas ? (
@@ -204,7 +202,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                     e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-zinc-700/60 text-zinc-400 hover:text-zinc-200 transition-opacity ml-1"
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-white/[0.12] text-zinc-400 hover:text-white transition-opacity ml-1"
                   title="Close tab"
                 >
                   <X className="w-3 h-3" />
@@ -218,24 +216,24 @@ export const TabBar: React.FC<TabBarProps> = ({
         <button
           onClick={onNewTab}
           title="New Tab (Ctrl+T)"
-          className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 rounded-lg transition-colors shrink-0"
+          className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Right controls: Quick Switcher + Save + Bookmark + View Mode + Split + Zen + Inspector + More */}
-      <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
+      <div className="flex items-center gap-2 text-zinc-400 shrink-0">
         {/* Quick Switcher Search Pill (on primary) */}
         {isPrimary && onOpenQuickSwitcher && (
           <button
             onClick={onOpenQuickSwitcher}
             title="Quick Switcher (Ctrl+O / Cmd+O)"
-            className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-900/90 border border-zinc-700/60 text-zinc-400 hover:text-zinc-100 hover:border-purple-500/50 transition-all text-[11px]"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-zinc-300 hover:text-white transition-all text-[11px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
           >
-            <Search className="w-3 h-3 text-zinc-400" />
+            <Search className="w-3 h-3 text-purple-400" />
             <span className="text-[11px]">Jump to...</span>
-            <kbd className="text-[9px] bg-zinc-800 px-1 py-0.5 rounded text-zinc-500 font-mono">⌘O</kbd>
+            <kbd className="text-[9px] bg-white/[0.08] border border-white/[0.1] px-1.5 py-0.5 rounded text-zinc-300 font-mono">⌘O</kbd>
           </button>
         )}
 
@@ -250,12 +248,12 @@ export const TabBar: React.FC<TabBarProps> = ({
                 ? 'Save note to disk (⌘S)'
                 : 'All changes saved to disk (⌘S)'
             }
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all ${
               isSaving
                 ? 'bg-purple-950/40 border-purple-500/50 text-purple-300 animate-pulse'
                 : hasUnsavedChanges
-                ? 'bg-amber-950/40 border-amber-500/60 text-amber-300 hover:bg-amber-900/50'
-                : 'bg-zinc-900/80 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'
+                ? 'bg-amber-500/20 border-amber-400/40 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                : 'bg-white/[0.05] border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.08]'
             }`}
           >
             {isSaving ? (
@@ -269,22 +267,22 @@ export const TabBar: React.FC<TabBarProps> = ({
               {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
             </span>
             {hasUnsavedChanges && (
-              <kbd className="hidden lg:inline text-[9px] bg-zinc-800 px-1 py-0.2 rounded text-zinc-400 font-mono">
+              <kbd className="hidden lg:inline text-[9px] bg-white/[0.08] px-1 py-0.2 rounded text-zinc-300 font-mono">
                 ⌘S
               </kbd>
             )}
           </button>
         )}
 
-        {/* Bookmark Button (toggles .obsidian/bookmarks.json) */}
+        {/* Bookmark Button */}
         {onToggleBookmark && (
           <button
             onClick={onToggleBookmark}
-            title={isBookmarked ? 'Remove bookmark from note (⌘D)' : 'Bookmark note to .obsidian/bookmarks.json (⌘D)'}
-            className={`p-1.5 rounded-lg border transition-all ${
+            title={isBookmarked ? 'Remove bookmark from note (⌘D)' : 'Bookmark note (⌘D)'}
+            className={`p-1.5 rounded-xl border transition-all ${
               isBookmarked
-                ? 'bg-amber-500/15 border-amber-500/50 text-amber-400 hover:bg-amber-500/25 shadow-sm'
-                : 'border-zinc-800/80 bg-zinc-900/60 text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/60'
+                ? 'bg-amber-500/20 border-amber-400/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                : 'border-white/[0.08] bg-white/[0.04] text-zinc-400 hover:text-amber-300 hover:bg-white/[0.08]'
             }`}
           >
             <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
@@ -293,14 +291,14 @@ export const TabBar: React.FC<TabBarProps> = ({
 
         {/* View Mode Segmented Switcher (Live / Source / Reading) */}
         {onToggleViewMode && (
-          <div className="flex items-center bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-800">
+          <div className="glass-segment-container flex items-center p-0.5 rounded-xl">
             <button
               onClick={() => onToggleViewMode('live')}
               title="Live Preview Mode: Interactive editing with live styled formatting"
-              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-[11px] ${
                 activeViewMode === 'live'
-                  ? 'bg-purple-600/30 text-purple-300 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-purple-600/35 text-white border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] font-medium'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -309,10 +307,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('source')}
               title="Source Mode: Raw Markdown code editor with line numbers"
-              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-[11px] ${
                 activeViewMode === 'source'
-                  ? 'bg-purple-600/30 text-purple-300 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-purple-600/35 text-white border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] font-medium'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
               }`}
             >
               <Code className="w-3.5 h-3.5" />
@@ -321,10 +319,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('reading')}
               title="Reading View: Pristine read-only publication reader"
-              className={`flex items-center gap-1 px-1.5 py-1 rounded transition-colors text-[11px] ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all text-[11px] ${
                 activeViewMode === 'reading'
-                  ? 'bg-purple-600/30 text-purple-300 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-purple-600/35 text-white border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] font-medium'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -338,7 +336,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={() => onSplitRight()}
             title="Split Right (Ctrl+\)"
-            className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-lg transition-colors"
+            className="p-1.5 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all"
           >
             <Columns className="w-3.5 h-3.5" />
           </button>
@@ -348,7 +346,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onClosePane}
             title="Close Split Pane"
-            className="p-1.5 hover:text-rose-300 hover:bg-zinc-800/60 rounded-lg transition-colors"
+            className="p-1.5 hover:text-rose-300 hover:bg-white/[0.08] rounded-xl transition-all"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -359,20 +357,20 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onToggleZenMode}
             title={isZenMode ? 'Exit Focus Mode (Cmd+Shift+F)' : 'Focus Mode (Cmd+Shift+F)'}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isZenMode ? 'text-purple-300 bg-purple-600/20' : 'hover:text-zinc-100 hover:bg-zinc-800/60'
+            className={`p-1.5 rounded-xl transition-all ${
+              isZenMode ? 'text-purple-300 bg-purple-600/25 border border-purple-500/30' : 'hover:text-white hover:bg-white/[0.08]'
             }`}
           >
             {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
         )}
 
-        {/* Right Inspector Toggle (only on primary) */}
+        {/* Right Inspector Toggle */}
         {isPrimary && onToggleInspector && (
           <button
             onClick={onToggleInspector}
             title={isInspectorOpen ? 'Collapse Inspector (Cmd+I)' : 'Expand Inspector (Cmd+I)'}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all"
           >
             {isInspectorOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
           </button>

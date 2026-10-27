@@ -59,14 +59,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-100"
+      className="fixed inset-0 bg-black/65 backdrop-blur-2xl z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-150"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-xl bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden flex flex-col text-sm"
+        className="glass-panel-elevated w-full max-w-xl rounded-2xl overflow-hidden flex flex-col text-sm shadow-[0_24px_64px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)]"
       >
         {/* Input */}
-        <div className="flex items-center px-4 py-3 border-b border-zinc-800">
+        <div className="flex items-center px-4 py-3.5 border-b border-white/[0.08] bg-white/[0.03]">
           <Terminal className="w-4 h-4 text-purple-400 mr-3 shrink-0" />
           <input
             ref={inputRef}
@@ -78,9 +78,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Type a command..."
-            className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 focus:outline-none text-base"
+            className="flex-1 bg-transparent text-white placeholder-zinc-500 focus:outline-none text-base"
           />
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
+          <button onClick={onClose} className="text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.08] transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>

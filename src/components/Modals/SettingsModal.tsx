@@ -147,10 +147,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm select-none">
-      <div className="w-[840px] h-[600px] bg-[#18181b] border border-zinc-700/80 rounded-2xl shadow-2xl flex overflow-hidden text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-2xl select-none animate-in fade-in duration-150">
+      <div className="w-[860px] h-[620px] glass-panel-elevated rounded-2xl shadow-[0_32px_96px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.18)] flex overflow-hidden text-zinc-100">
         {/* Left Settings Sidebar */}
-        <div className="w-60 bg-[#121214] border-r border-zinc-800/80 p-3 flex flex-col justify-between shrink-0 overflow-y-auto">
+        <div className="w-60 bg-black/30 border-r border-white/[0.08] p-3.5 flex flex-col justify-between shrink-0 overflow-y-auto">
           <div className="space-y-1">
             <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
               Options

@@ -681,17 +681,17 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (viewMode === 'reading') {
             return (
-              <div className="w-full h-full flex flex-col overflow-y-auto bg-[#1e1e1e]">
+              <div className="w-full h-full flex flex-col overflow-y-auto bg-transparent">
                 {/* Reading View Header Bar */}
-                <div className="flex items-center justify-between px-6 py-2.5 bg-[#181818] border-b border-[#282828] text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                <div className="flex items-center justify-between px-6 py-2.5 glass-header text-xs text-zinc-300 shrink-0 sticky top-0 z-30">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-[#e9d5ff] font-medium bg-[#382b54] px-2.5 py-0.5 rounded-md shadow-sm">
+                    <span className="flex items-center gap-1.5 text-white font-medium bg-purple-600/35 border border-purple-400/40 px-3 py-1 rounded-xl shadow-[0_2px_8px_rgba(168,85,247,0.3)] backdrop-blur-md">
                       <BookOpen className="w-3.5 h-3.5 text-purple-300" />
                       <span>Reading View</span>
                     </span>
                     <span className="text-zinc-600">•</span>
                     <span className="flex items-center gap-1 text-zinc-400">
-                      <Clock className="w-3 h-3 text-zinc-500" />
+                      <Clock className="w-3 h-3 text-purple-400/80" />
                       <span>{readingStats.readingTime} min read</span>
                     </span>
                     <span className="text-zinc-600">•</span>
@@ -699,12 +699,12 @@ export const Editor: React.FC<EditorProps> = ({
                   </div>
                   <button
                     onClick={() => onViewModeChange('live')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition-colors text-xs font-medium"
+                    className="glass-pill flex items-center gap-2 px-3 py-1.5 rounded-xl text-zinc-200 hover:text-white transition-all text-xs font-medium shadow-sm"
                     title="Switch to Live Preview to edit (⌘E)"
                   >
                     <Edit3 className="w-3.5 h-3.5 text-purple-400" />
                     <span>Edit Note</span>
-                    <kbd className="text-[10px] bg-zinc-900 px-1 py-0.5 rounded text-zinc-400 font-mono">⌘E</kbd>
+                    <kbd className="text-[10px] bg-white/[0.08] px-1.5 py-0.5 rounded text-zinc-300 font-mono">⌘E</kbd>
                   </button>
                 </div>
 
@@ -744,26 +744,26 @@ export const Editor: React.FC<EditorProps> = ({
             return (
               /* Live Preview Mode (Interactive Notion-Style High-Fidelity Editing) */
               <div 
-                className="w-full h-full flex flex-col overflow-y-auto bg-[#1e1e1e]"
+                className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
                 onClick={e => {
                   if (e.target === e.currentTarget) {
                     editorRef.current?.focus();
                   }
                 }}
               >
-                <div className="flex items-center justify-between px-6 py-2 bg-[#181818] border-b border-[#282828] text-xs text-zinc-400 shrink-0 sticky top-0 z-30 backdrop-blur-md">
+                <div className="flex items-center justify-between px-6 py-2 glass-header text-xs text-zinc-300 shrink-0 sticky top-0 z-30">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-[#e9d5ff] font-medium bg-[#382b54] px-2.5 py-0.5 rounded-md shadow-sm">
+                    <span className="flex items-center gap-1.5 text-white font-medium bg-purple-600/35 border border-purple-400/40 px-3 py-1 rounded-xl shadow-[0_2px_8px_rgba(168,85,247,0.3)] backdrop-blur-md">
                       <Sparkles className="w-3.5 h-3.5 text-purple-300" />
                       <span>Live Preview</span>
                     </span>
                     <span className="text-zinc-600">•</span>
                     <span className="text-zinc-400">Click anywhere to type & edit</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="glass-segment-container flex items-center p-0.5 rounded-xl gap-1">
                     <button
                       onClick={() => onViewModeChange('reading')}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors text-xs"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/[0.08] text-zinc-300 hover:text-white transition-all text-xs"
                       title="Switch to Reading View"
                     >
                       <BookOpen className="w-3.5 h-3.5 text-purple-400" />
@@ -771,7 +771,7 @@ export const Editor: React.FC<EditorProps> = ({
                     </button>
                     <button
                       onClick={() => onViewModeChange('source')}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors text-xs"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-zinc-200 transition-all text-xs"
                       title="Switch to Raw Markdown Source Mode"
                     >
                       <Code className="w-3.5 h-3.5 text-zinc-400" />

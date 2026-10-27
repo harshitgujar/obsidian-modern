@@ -65,92 +65,94 @@ export const Inspector: React.FC<InspectorProps> = ({
   const outlinks = metadata?.outlinks || [];
 
   return (
-    <div className="w-80 bg-[#141416] border-l border-zinc-800/80 flex flex-col h-full select-none shrink-0 text-xs">
-      {/* Top Tabs */}
-      <div className="flex items-center gap-1 border-b border-zinc-800/80 bg-[#101012] p-1.5 shrink-0 overflow-x-auto">
-        {showBacklinks && (
+    <div className="w-80 glass-inspector flex flex-col h-full select-none shrink-0 text-xs">
+      {/* Top Floating Segmented Tabs */}
+      <div className="p-2 border-b border-white/[0.07] bg-white/[0.02] shrink-0">
+        <div className="glass-segment-container flex items-center p-1 rounded-xl gap-1">
+          {showBacklinks && (
+            <button
+              onClick={() => handleTabClick('backlinks')}
+              title="Backlinks"
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+                activeTab === 'backlinks'
+                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+              }`}
+            >
+              <Link className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Links</span>
+              {backlinks.length > 0 && (
+                <span className="text-[9px] bg-purple-900/60 text-purple-200 px-1.5 py-0.2 rounded-full font-mono shrink-0">
+                  {backlinks.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          {showOutlinks && (
+            <button
+              onClick={() => handleTabClick('outgoing')}
+              title="Outgoing Links"
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+                activeTab === 'outgoing'
+                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+              }`}
+            >
+              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Out</span>
+              {outlinks.length > 0 && (
+                <span className="text-[9px] bg-purple-900/60 text-purple-200 px-1.5 py-0.2 rounded-full font-mono shrink-0">
+                  {outlinks.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          {showOutline && (
+            <button
+              onClick={() => handleTabClick('outline')}
+              title="Document Outline"
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+                activeTab === 'outline'
+                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+              }`}
+            >
+              <ListTree className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Outline</span>
+            </button>
+          )}
+
+          {showGraph && (
+            <button
+              onClick={() => handleTabClick('localGraph')}
+              title="Local Graph"
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+                activeTab === 'localGraph'
+                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5 shrink-0 text-purple-300" />
+              <span className="truncate">Graph</span>
+            </button>
+          )}
+
+          {/* AI Assistant Tab */}
           <button
-            onClick={() => handleTabClick('backlinks')}
-            title="Backlinks"
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
-              activeTab === 'backlinks'
-                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            onClick={() => handleTabClick('aiChat')}
+            title="AI Vault Assistant (RAG Memory)"
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+              activeTab === 'aiChat'
+                ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_0_12px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.06] border border-transparent'
             }`}
           >
-            <Link className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Links</span>
-            {backlinks.length > 0 && (
-              <span className="text-[9px] bg-purple-950 text-purple-400 px-1 rounded-full shrink-0">
-                {backlinks.length}
-              </span>
-            )}
+            <Sparkles className="w-3.5 h-3.5 shrink-0 text-purple-300" />
+            <span className="truncate">AI</span>
           </button>
-        )}
-
-        {showOutlinks && (
-          <button
-            onClick={() => handleTabClick('outgoing')}
-            title="Outgoing Links"
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
-              activeTab === 'outgoing'
-                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Out</span>
-            {outlinks.length > 0 && (
-              <span className="text-[9px] bg-purple-950 text-purple-400 px-1 rounded-full shrink-0">
-                {outlinks.length}
-              </span>
-            )}
-          </button>
-        )}
-
-        {showOutline && (
-          <button
-            onClick={() => handleTabClick('outline')}
-            title="Document Outline"
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
-              activeTab === 'outline'
-                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <ListTree className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Outline</span>
-          </button>
-        )}
-
-        {showGraph && (
-          <button
-            onClick={() => handleTabClick('localGraph')}
-            title="Local Graph"
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
-              activeTab === 'localGraph'
-                ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <Share2 className="w-3.5 h-3.5 shrink-0 text-purple-400" />
-            <span className="truncate">Graph</span>
-          </button>
-        )}
-
-        {/* AI Assistant Tab */}
-        <button
-          onClick={() => handleTabClick('aiChat')}
-          title="AI Vault Assistant (RAG Memory)"
-          className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-colors min-w-0 ${
-            activeTab === 'aiChat'
-              ? 'bg-purple-600/25 text-purple-200 font-medium border border-purple-500/40 shadow-sm'
-              : 'text-zinc-400 hover:text-purple-300 hover:bg-zinc-800/50'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 shrink-0 text-purple-400" />
-          <span className="truncate">AI</span>
-        </button>
+        </div>
       </div>
 
       {/* Tab: AI Vault Assistant */}

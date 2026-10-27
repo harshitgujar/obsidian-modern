@@ -427,9 +427,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       : 'files');
 
   return (
-    <div className="flex h-full bg-[#181818] border-r border-[#262626] select-none shrink-0 relative">
+    <div className="flex h-full glass-sidebar select-none shrink-0 relative">
       {/* 1. Left Vertical Ribbon */}
-      <div className="w-11 bg-[#141414] border-r border-[#222222] flex flex-col items-center py-2.5 justify-between shrink-0">
+      <div className="w-12 glass-ribbon flex flex-col items-center pt-8 pb-3 justify-between shrink-0">
         <div className="flex flex-col items-center gap-1.5">
           <button
             onClick={() => {
@@ -441,10 +441,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }
             }}
             title="File Explorer (Ctrl+Shift+E)"
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-2 rounded-xl transition-all duration-200 ${
               currentRibbonPill === 'files'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
+                ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
             }`}
           >
             <Files className="w-4 h-4" />
@@ -458,10 +458,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onSelectTab('search');
             }}
             title="Search Vault (Ctrl+Shift+F)"
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-2 rounded-xl transition-all duration-200 ${
               currentRibbonPill === 'search'
-                ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
+                ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
             }`}
           >
             <Search className="w-4 h-4" />
@@ -476,27 +476,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onSelectTab('bookmarks');
               }}
               title="Bookmarks (.obsidian/bookmarks.json)"
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-xl transition-all duration-200 ${
                 currentRibbonPill === 'bookmarks'
-                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
+                  ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
               }`}
             >
               <Bookmark className="w-4 h-4" />
             </button>
           )}
 
-          <div className="w-6 h-[1px] bg-zinc-800 my-1" />
+          <div className="w-6 h-[1px] bg-white/[0.08] my-1" />
 
           {/* Core Plugin Ribbon Actions */}
           {corePluginsConfig['graph'] !== false && (
             <button
               onClick={onToggleGraphView}
               title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-xl transition-all duration-200 ${
                 currentRibbonPill === 'graph'
-                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
-                  : 'text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 border border-transparent'
+                  ? 'bg-purple-600/30 text-purple-200 border border-purple-400/40 shadow-[0_0_14px_rgba(168,85,247,0.3)]'
+                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
               }`}
             >
               <Share2 className="w-4 h-4" />
@@ -514,10 +514,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
               }}
               title="Canvas Board (.canvas)"
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-xl transition-all duration-200 ${
                 currentRibbonPill === 'canvas'
-                  ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 shadow-sm'
-                  : 'text-zinc-400 hover:text-orange-400 hover:bg-zinc-800/60 border border-transparent'
+                  ? 'bg-orange-500/25 text-orange-300 border border-orange-400/40 shadow-[0_0_14px_rgba(249,115,22,0.3)]'
+                  : 'text-zinc-400 hover:text-orange-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -528,10 +528,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onToggleAIChat}
               title="AI Vault Assistant (RAG Memory)"
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-xl transition-all duration-200 ${
                 isAIChatActive
-                  ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-sm'
-                  : 'text-zinc-400 hover:text-purple-400 hover:bg-zinc-800/60 border border-transparent'
+                  ? 'bg-purple-600/35 text-purple-200 border border-purple-400/50 shadow-[0_0_16px_rgba(168,85,247,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]'
+                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -544,7 +544,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onOpenVaultManager}
             title="Manage Vaults on Disk"
-            className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800/60 transition-colors"
+            className="p-2 rounded-xl text-zinc-400 hover:text-emerald-300 hover:bg-white/[0.08] transition-all"
           >
             <HardDrive className="w-4 h-4" />
           </button>
@@ -552,7 +552,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onToggleTheme}
             title="Toggle Light / Dark Theme"
-            className="p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800/60 transition-colors"
+            className="p-2 rounded-xl text-zinc-400 hover:text-amber-300 hover:bg-white/[0.08] transition-all"
           >
             {isDarkTheme ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -560,7 +560,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onOpenSettings}
             title="Settings (Ctrl+,)"
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -568,9 +568,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 2. Main Sidebar Drawer Content */}
-      <div className="w-64 flex flex-col h-full bg-[#181818]">
+      <div className="w-64 flex flex-col h-full bg-black/20 backdrop-blur-2xl">
         {/* Tab Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#262626]">
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.07] bg-white/[0.02]">
           <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate">
             {activeSidebarTab === 'files' && vaultName}
             {activeSidebarTab === 'search' && 'Search Vault'}
@@ -832,10 +832,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                       onClick={() => onSelectFile(file.path)}
                       onContextMenu={e => handleContextMenuOpen(e, file)}
-                      className={`group flex items-center justify-between px-2.5 py-1 rounded-md cursor-pointer transition-colors ${
+                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-150 ${
                         isActive
-                          ? 'bg-[#2c2c2e] text-white font-medium shadow-sm'
-                          : 'text-zinc-400 hover:bg-[#202023] hover:text-zinc-200'
+                          ? 'bg-purple-600/25 text-purple-200 border border-purple-400/35 shadow-[0_2px_8px_rgba(147,51,234,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] font-medium'
+                          : 'text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200 border border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate flex-1 min-w-0">
@@ -905,9 +905,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }
                         }
                       }}
-                      className="group flex items-center justify-between px-2 py-1.5 rounded text-zinc-300 hover:bg-zinc-800/40 cursor-pointer font-medium"
+                      className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-zinc-300 hover:bg-white/[0.06] cursor-pointer font-medium transition-all"
                     >
-                      <div className="flex items-center gap-1.5 truncate">
+                      <div className="flex items-center gap-2 truncate">
                         {isCollapsed ? (
                           <ChevronRight className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                         ) : (
@@ -921,8 +921,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="truncate">{folderName}</span>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-zinc-600">{folderFiles.length}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-zinc-400/80 bg-white/[0.06] border border-white/[0.06] px-1.5 py-0.2 rounded-full font-mono">{folderFiles.length}</span>
                         <button
                           onClick={e => {
                             e.stopPropagation();

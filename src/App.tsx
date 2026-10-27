@@ -1429,7 +1429,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#18181b] text-zinc-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden glass-canvas text-zinc-100 font-sans">
       {/* Main Row: Sidebar + Workspace + Inspector */}
       <div className="flex-1 flex w-full overflow-hidden min-h-0">
         {/* 1. Left Sidebar (Ribbon + File Explorer / Search / Bookmarks / Tags) */}
