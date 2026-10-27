@@ -7,11 +7,11 @@
   "showArrow": true,
   "textFadeMultiplier": 1.5,
   "nodeSizeMultiplier": 1.7,
-  "lineSizeMultiplier": 0.5,
+  "lineSizeMultiplier": 2.1,
   "centerStrength": 0.05,
-  "repelStrength": 2350,
-  "linkStrength": 2,
-  "linkDistance": 240,
+  "repelStrength": 2500,
+  "linkStrength": 0.9,
+  "linkDistance": 300,
   "colorGroups": [
     {
       "query": "path:Formatting",

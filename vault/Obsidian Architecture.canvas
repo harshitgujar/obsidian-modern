@@ -4,8 +4,8 @@
       "id": "node-1792147207822",
       "type": "group",
       "label": "New Group",
-      "x": -167,
-      "y": 997,
+      "x": 930,
+      "y": 657,
       "width": 480,
       "height": 360,
       "color": "6"
@@ -14,8 +14,8 @@
       "id": "node-1792147193957",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": -147,
-      "y": 810,
+      "x": 119,
+      "y": 168,
       "width": 280,
       "height": 180,
       "color": "6"
@@ -24,8 +24,8 @@
       "id": "node-1792147201095",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": 61,
-      "y": 964,
+      "x": 305,
+      "y": 636,
       "width": 280,
       "height": 180,
       "color": "6"
@@ -44,8 +44,8 @@
       "id": "node-img-1",
       "type": "file",
       "file": "Attachments/image1.png",
-      "x": -500,
-      "y": 750,
+      "x": -362,
+      "y": 497,
       "width": 320,
       "height": 240,
       "color": "4"

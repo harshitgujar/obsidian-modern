@@ -4,8 +4,8 @@
       "id": "node-1792665352723",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": -318,
-      "y": -80,
+      "x": 1047,
+      "y": 10,
       "width": 280,
       "height": 180,
       "color": "6"
@@ -14,10 +14,10 @@
       "id": "node-1792665355248",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": -318,
-      "y": -80,
-      "width": 280,
-      "height": 180,
+      "x": -98,
+      "y": -44,
+      "width": 804,
+      "height": 961,
       "color": "6"
     }
   ],

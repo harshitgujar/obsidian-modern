@@ -1,13 +1,7 @@
-Great, that means you should already be familiar with taking notes!
+Obsidian is similar to plain-text based note-taking apps in the sense that [[Vault is just a local folder|a vault is just a local folder]].
 
-But hold on a second. There’s no silver bullet solution that works perfectly for everyone. Obsidian works best if you care about what we care about.
+Having already taken the unconventional route of plain-text note-taking, chances are you’re already familiar with the benefit of it. Obsidian has the same benefits, plus we have our secret sauce that can make Obsidian really special for you.
 
-Do you have any of the following concerns below?
+→ [[Plugins make Obsidian special for you|Tell me more about that secret sauce!]]
 
-→ [[Vault is just a local folder|I don’t want my notes to been seen by others]]
-
-→ [[Vault is just a local folder|I don’t want my notes to be inaccessible someday]]
-
-→ [[Plugins make Obsidian special for you|I feel like the previous note-taking apps I used didn’t suit me well]]
-
-→ [[Get started with Obsidian|Just let me get started already]]
+→ [[Get started with Obsidian|Say no more. How do I get started?]]

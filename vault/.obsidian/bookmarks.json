@@ -14,6 +14,11 @@
       "type": "file",
       "path": "Vault is just a local folder.md",
       "title": "Vault is just a local folder"
+    },
+    {
+      "type": "file",
+      "path": "Adventurer/From plain-text note-taking.md",
+      "title": "From plain-text note-taking"
     }
   ]
 }

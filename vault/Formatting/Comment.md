@@ -1,22 +1,24 @@
-Use `%%` to enclose comments, which will be parsed as Markdown, but will not show up in the preview.
+Syntax highlight is supported with the language specified after the first set of backticks. We use prismjs for syntax highlighting, a list of supported languages can be found [at their site](https://prismjs.com/#supported-languages)
 
+<pre><code>```js
+function fancyAlert(arg) {
+  if(arg) {
+    $.facebox({div:'#foo'})
+  }
+}
+```</code></pre>
+
+```js
+function fancyAlert(arg) {
+  if(arg) {
+    $.facebox({div:'#foo'})
+  }
+}
+```
+    
+	
 ```md
-Here is an inline comment: %%You can't see this text%% (can't see it in preview)
-
-Here is a block comment: (can't see it in preview either)
-%%
-It can span
-multiple lines
-%%
+    Text indented with a tab is formatted like this, and will also look like a code block in preview. 
 ```
 
-Here is an inline comment: %%You can't see this text%% (can't see it in preview)
-
-Here is a block comment: (can't see it in preview either)
-%%
-It can span
-multiple lines
-%%
-
-> [!note]
-> For ease of editing, comments remain visible in the Live Preview mode.
+    Text indented with a tab is formatted like this, and will also look like a code block in preview. 

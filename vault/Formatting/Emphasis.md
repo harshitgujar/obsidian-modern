@@ -1,21 +1,15 @@
 ```md
-*This text will be italic*
-_This will also be italic_
+# This is a heading 1
+## This is a heading 2
+### This is a heading 3 
+#### This is a heading 4
+##### This is a heading 5
+###### This is a heading 6
 ```
 
-*This text will be italic*
-_This will also be italic_
-
-```md
-**This text will be bold**
-__This will also be bold__
-```
-
-**This text will be bold**
-__This will also be bold__
-
-```md
-_You **can** combine them_
-```
-
-_You **can** combine them_
+# This is a heading 1
+## This is a heading 2
+### This is a heading 3 
+#### This is a heading 4
+##### This is a heading 5
+###### This is a heading 6

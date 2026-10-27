@@ -1,4 +1,4 @@
-Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.
+*## Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.*
 
 In Obsidian, a vault is a plain folder on your computer. By plain, we mean it's just like a folder you created and put some files in. You can open it with your system explorer or Finder, zip it up, make a copy, or move it around.
 
@@ -21,3 +21,18 @@ Finally, please understand that with great power comes great responsibility. Now
 If you’re convinced Obsidian is worth a try for you, it’s time to get started:
 
 → [[Get started with Obsidian]]
+
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Item 1   | Item 2   |
+
+# Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your 
+
+## Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.
+
+
+### Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.
+
+
+*Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.
+*
