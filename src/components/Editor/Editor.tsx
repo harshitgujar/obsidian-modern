@@ -682,32 +682,6 @@ export const Editor: React.FC<EditorProps> = ({
           if (viewMode === 'reading') {
             return (
               <div className="w-full h-full flex flex-col overflow-y-auto bg-transparent">
-                {/* Reading View Header Bar */}
-                <div className="flex items-center justify-between px-6 py-2.5 glass-header text-xs text-zinc-300 shrink-0 sticky top-0 z-30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-white font-medium bg-purple-600/35 border border-purple-400/40 px-3 py-1 rounded-xl shadow-[0_2px_8px_rgba(168,85,247,0.3)] backdrop-blur-md">
-                      <BookOpen className="w-3.5 h-3.5 text-purple-300" />
-                      <span>Reading View</span>
-                    </span>
-                    <span className="text-zinc-600">•</span>
-                    <span className="flex items-center gap-1 text-zinc-400">
-                      <Clock className="w-3 h-3 text-purple-400/80" />
-                      <span>{readingStats.readingTime} min read</span>
-                    </span>
-                    <span className="text-zinc-600">•</span>
-                    <span className="text-zinc-400">{readingStats.words} words</span>
-                  </div>
-                  <button
-                    onClick={() => onViewModeChange('live')}
-                    className="glass-pill flex items-center gap-2 px-3 py-1.5 rounded-xl text-zinc-200 hover:text-white transition-all text-xs font-medium shadow-sm"
-                    title="Switch to Live Preview to edit (⌘E)"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Edit Note</span>
-                    <kbd className="text-[10px] bg-white/[0.08] px-1.5 py-0.5 rounded text-zinc-300 font-mono">⌘E</kbd>
-                  </button>
-                </div>
-
                 <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
                   <LivePreview
                     file={file}
@@ -742,7 +716,7 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (viewMode === 'live') {
             return (
-              /* Live Preview Mode (Interactive Notion-Style High-Fidelity Editing) */
+              /* Live Preview Mode (Interactive Clean Document View) */
               <div 
                 className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
                 onClick={e => {
@@ -751,38 +725,9 @@ export const Editor: React.FC<EditorProps> = ({
                   }
                 }}
               >
-                <div className="flex items-center justify-between px-6 py-2 glass-header text-xs text-zinc-300 shrink-0 sticky top-0 z-30">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5 text-white font-medium bg-purple-600/35 border border-purple-400/40 px-3 py-1 rounded-xl shadow-[0_2px_8px_rgba(168,85,247,0.3)] backdrop-blur-md">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-                      <span>Live Preview</span>
-                    </span>
-                    <span className="text-zinc-600">•</span>
-                    <span className="text-zinc-400">Click anywhere to type & edit</span>
-                  </div>
-                  <div className="glass-segment-container flex items-center p-0.5 rounded-xl gap-1">
-                    <button
-                      onClick={() => onViewModeChange('reading')}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/[0.08] text-zinc-300 hover:text-white transition-all text-xs"
-                      title="Switch to Reading View"
-                    >
-                      <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Reading</span>
-                    </button>
-                    <button
-                      onClick={() => onViewModeChange('source')}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/[0.08] text-zinc-400 hover:text-zinc-200 transition-all text-xs"
-                      title="Switch to Raw Markdown Source Mode"
-                    >
-                      <Code className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>Source</span>
-                    </button>
-                  </div>
-                </div>
-
                 <div className={`flex-1 flex flex-col p-6 md:p-10 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
                   {/* Notion-Style Editable Title */}
-                  <div className="group relative flex items-center mb-6 pb-2 border-b border-zinc-800/50">
+                  <div className="group relative flex items-center mb-6 pb-2 border-b border-zinc-800/40">
                     <input
                       type="text"
                       value={inlineTitle}

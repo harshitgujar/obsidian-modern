@@ -664,7 +664,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               }
             }}
             onMouseLeave={() => setHoverPreview(null)}
-            className="wikilink cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-md bg-[#382b54] hover:bg-[#48376d] text-[#e9d5ff] hover:text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle"
+            className="wikilink cm-wikilink-pill inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle border-none"
             title={targetFile ? `Open note: ${targetFile.path} (Right-click for options)` : `Create note: ${target}`}
           >
             <FileText className="w-3 h-3 inline-block opacity-70" />

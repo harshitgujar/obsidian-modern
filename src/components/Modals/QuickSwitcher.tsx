@@ -257,23 +257,23 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onSelectFile(file.path);
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
                       isSelected
-                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
-                        : 'text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
+                        ? 'bg-[#705dcf] text-white shadow-sm'
+                        : 'text-zinc-300 hover:bg-zinc-800/50'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       {isCanvas ? (
                         <LayoutGrid className="w-4 h-4 text-orange-400 shrink-0" />
                       ) : (
-                        <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                        <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-purple-400'}`} />
                       )}
                       <span className="font-medium truncate">
                         {file.name.replace(/\.md$/, '')}
                       </span>
                       {file.folder && (
-                        <span className="text-xs text-zinc-500 truncate">{file.folder}</span>
+                        <span className={`text-xs truncate ${isSelected ? 'text-white/70' : 'text-zinc-500'}`}>{file.folder}</span>
                       )}
                       {isCanvas && (
                         <span className="text-[9px] px-1 rounded bg-orange-950/80 text-orange-300 border border-orange-700/40 font-mono uppercase">
@@ -283,7 +283,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     </div>
 
                     {isSelected && (
-                      <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
                     )}
                   </div>
                 );
@@ -309,10 +309,10 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onSelectFile(match.file.path);
                       onClose();
                     }}
-                    className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                    className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
                       isSelected
-                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
-                        : 'text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
+                        ? 'bg-[#705dcf] text-white shadow-sm'
+                        : 'text-zinc-300 hover:bg-zinc-800/50'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
@@ -348,20 +348,20 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onCreateFile(query.trim());
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
                       isSelected
-                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
-                        : 'text-emerald-400 hover:bg-zinc-800/50 border border-transparent'
+                        ? 'bg-[#705dcf] text-white shadow-sm'
+                        : 'text-emerald-400 hover:bg-zinc-800/50'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Plus className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <Plus className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-400'}`} />
                       <span>
                         Create note: <strong>"{query.trim()}"</strong>
                       </span>
                     </div>
                     {isSelected && (
-                      <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
                     )}
                   </div>
                 );
@@ -381,14 +381,14 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       if (onOpenVaultSearch) onOpenVaultSearch(query.trim());
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
                       isSelected
-                        ? 'bg-purple-600/30 text-purple-100 border border-purple-500/40'
-                        : 'text-zinc-400 hover:bg-zinc-800/50 border border-transparent'
+                        ? 'bg-[#705dcf] text-white shadow-sm'
+                        : 'text-zinc-400 hover:bg-zinc-800/50'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Search className="w-3.5 h-3.5 text-zinc-400" />
+                      <Search className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-zinc-400'}`} />
                       <span>
                         Search entire vault for <strong>"{query.trim()}"</strong> in sidebar
                       </span>

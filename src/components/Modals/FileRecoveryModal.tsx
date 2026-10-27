@@ -79,17 +79,17 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
                   <div
                     key={snap.id}
                     onClick={() => setSelectedId(snap.id)}
-                    className={`p-2.5 rounded-lg cursor-pointer border transition-colors ${
+                    className={`p-2.5 rounded-lg cursor-pointer border-none transition-colors ${
                       snap.id === selectedId
-                        ? 'bg-purple-600/20 border-purple-500/40 text-purple-200'
-                        : 'bg-zinc-900/50 border-zinc-800/60 text-zinc-300 hover:bg-zinc-800/60'
+                        ? 'bg-[#705dcf] text-white shadow-sm'
+                        : 'bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800/60'
                     }`}
                   >
                     <div className="flex items-center gap-1.5 font-medium truncate">
-                      <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <FileText className={`w-3.5 h-3.5 shrink-0 ${snap.id === selectedId ? 'text-white' : 'text-purple-400'}`} />
                       <span className="truncate">{snap.path}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-zinc-500 mt-1">
+                    <div className={`flex items-center justify-between text-[10px] mt-1 ${snap.id === selectedId ? 'text-white/80' : 'text-zinc-500'}`}>
                       <span className="flex items-center gap-1">
                         <Clock className="w-2.5 h-2.5" />
                         {new Date(snap.timestamp).toLocaleTimeString()}

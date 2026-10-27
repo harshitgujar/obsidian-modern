@@ -158,9 +158,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={() => setActiveSection('editor')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'editor'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -170,9 +170,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={() => setActiveSection('files')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'files'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -182,9 +182,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={() => setActiveSection('appearance')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'appearance'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -194,9 +194,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={() => setActiveSection('hotkeys')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'hotkeys'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -210,9 +210,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             <button
               onClick={() => setActiveSection('plugins')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'plugins'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -228,9 +228,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {corePluginsConfig['daily-notes'] !== false && (
               <button
                 onClick={() => setActiveSection('daily-notes')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'daily-notes'
-                    ? 'bg-purple-600/20 text-purple-300 font-medium'
+                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                 }`}
               >
@@ -242,9 +242,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {corePluginsConfig['templates'] !== false && (
               <button
                 onClick={() => setActiveSection('templates')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'templates'
-                    ? 'bg-purple-600/20 text-purple-300 font-medium'
+                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                 }`}
               >
@@ -256,9 +256,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {corePluginsConfig['file-recovery'] !== false && (
               <button
                 onClick={() => setActiveSection('file-recovery')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'file-recovery'
-                    ? 'bg-purple-600/20 text-purple-300 font-medium'
+                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                 }`}
               >
@@ -271,9 +271,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="pt-4 border-t border-zinc-850">
             <button
               onClick={() => setActiveSection('about')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'about'
-                  ? 'bg-purple-600/20 text-purple-300 font-medium'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -418,10 +418,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onSaveAppearanceConfig({ ...appearanceConfig, theme: 'obsidian' })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border-none font-medium transition-all ${
                           appearanceConfig.theme !== 'moonstone'
-                            ? 'bg-purple-600/30 text-purple-200 border-purple-500/50'
-                            : 'bg-zinc-900 text-zinc-400 border-zinc-700'
+                            ? 'bg-[#705dcf] text-white shadow-sm'
+                            : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
                         }`}
                       >
                         <Moon className="w-3.5 h-3.5" />
@@ -429,10 +429,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                       <button
                         onClick={() => onSaveAppearanceConfig({ ...appearanceConfig, theme: 'moonstone' })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border-none font-medium transition-all ${
                           appearanceConfig.theme === 'moonstone'
-                            ? 'bg-purple-600/30 text-purple-200 border-purple-500/50'
-                            : 'bg-zinc-900 text-zinc-400 border-zinc-700'
+                            ? 'bg-[#705dcf] text-white shadow-sm'
+                            : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
                         }`}
                       >
                         <Sun className="w-3.5 h-3.5" />

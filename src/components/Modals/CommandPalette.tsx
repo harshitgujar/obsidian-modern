@@ -99,15 +99,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   cmd.action();
                   onClose();
                 }}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors border-none ${
                   idx === selectedIndex
-                    ? 'bg-purple-600/30 text-purple-200'
+                    ? 'bg-[#705dcf] text-white shadow-sm'
                     : 'text-zinc-300 hover:bg-zinc-800/60'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {cmd.category && (
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === selectedIndex ? 'text-white/70' : 'text-zinc-500'}`}>
                       {cmd.category}:
                     </span>
                   )}
@@ -116,12 +116,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                 <div className="flex items-center gap-2">
                   {cmd.shortcut && (
-                    <kbd className="px-1.5 py-0.5 bg-zinc-800 text-zinc-400 border border-zinc-700 rounded text-[10px] font-mono">
+                    <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono border-none ${idx === selectedIndex ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-400'}`}>
                       {cmd.shortcut}
                     </kbd>
                   )}
                   {idx === selectedIndex && (
-                    <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
                   )}
                 </div>
               </div>

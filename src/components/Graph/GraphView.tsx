@@ -1011,10 +1011,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={handleToggleTimelapse}
             title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
-            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border backdrop-blur-md shadow-lg transition-all ${
+            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border-none backdrop-blur-md shadow-lg transition-all ${
               isTimelapseRunning
-                ? 'bg-purple-950/80 border-purple-500/70 text-purple-200 hover:bg-purple-900/80'
-                : 'bg-zinc-900/85 hover:bg-zinc-800 text-zinc-300 hover:text-white border-zinc-700/60 hover:border-purple-500/40'
+                ? 'bg-[#705dcf] text-white'
+                : 'bg-[#202028] hover:bg-[#282834] text-zinc-300 hover:text-white'
             }`}
           >
             {isTimelapseRunning ? (
@@ -1073,10 +1073,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={() => setShowControls(prev => !prev)}
             title="Graph Settings"
-            className={`graph-control-btn p-2 rounded-lg border backdrop-blur-md shadow-xl transition-all ${
+            className={`graph-control-btn p-2 rounded-lg border-none backdrop-blur-md shadow-xl transition-all ${
               showControls
-                ? 'bg-purple-600/30 text-purple-200 border-purple-500/60'
-                : 'bg-zinc-900/85 text-zinc-400 border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800'
+                ? 'bg-[#705dcf] text-white shadow-sm'
+                : 'bg-[#202028] text-zinc-400 hover:text-white hover:bg-[#282834]'
             }`}
           >
             <Sliders className="w-4 h-4" />

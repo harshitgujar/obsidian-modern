@@ -441,10 +441,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }
             }}
             title="File Explorer (Ctrl+Shift+E)"
-            className={`p-2 rounded-xl transition-all duration-200 ${
+            className={`p-2 rounded-lg transition-all duration-200 border-none ${
               currentRibbonPill === 'files'
-                ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                ? 'bg-[#2a2b36] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             <Files className="w-4 h-4" />
@@ -458,10 +458,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onSelectTab('search');
             }}
             title="Search Vault (Ctrl+Shift+F)"
-            className={`p-2 rounded-xl transition-all duration-200 ${
+            className={`p-2 rounded-lg transition-all duration-200 border-none ${
               currentRibbonPill === 'search'
-                ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                ? 'bg-[#2a2b36] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             <Search className="w-4 h-4" />
@@ -476,10 +476,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onSelectTab('bookmarks');
               }}
               title="Bookmarks (.obsidian/bookmarks.json)"
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-200 border-none ${
                 currentRibbonPill === 'bookmarks'
-                  ? 'bg-white/[0.14] text-white border border-white/[0.22] shadow-[0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                  ? 'bg-[#2a2b36] text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
               <Bookmark className="w-4 h-4" />
@@ -493,10 +493,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onToggleGraphView}
               title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-200 border-none ${
                 currentRibbonPill === 'graph'
-                  ? 'bg-purple-600/30 text-purple-200 border border-purple-400/40 shadow-[0_0_14px_rgba(168,85,247,0.3)]'
-                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                  ? 'bg-[#705dcf] text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.06]'
               }`}
             >
               <Share2 className="w-4 h-4" />
@@ -514,10 +514,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
               }}
               title="Canvas Board (.canvas)"
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-200 border-none ${
                 currentRibbonPill === 'canvas'
-                  ? 'bg-orange-500/25 text-orange-300 border border-orange-400/40 shadow-[0_0_14px_rgba(249,115,22,0.3)]'
-                  : 'text-zinc-400 hover:text-orange-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                  ? 'bg-[#d97706] text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-orange-300 hover:bg-white/[0.06]'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -528,10 +528,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onToggleAIChat}
               title="AI Vault Assistant (RAG Memory)"
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-200 border-none ${
                 isAIChatActive
-                  ? 'bg-purple-600/35 text-purple-200 border border-purple-400/50 shadow-[0_0_16px_rgba(168,85,247,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]'
-                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] hover:border-white/[0.12] border border-transparent'
+                  ? 'bg-[#705dcf] text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.06]'
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -627,40 +627,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setSortOrder('name-asc');
                         setShowSortMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-asc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-asc' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span>File name (A to Z)</span>
-                      {sortOrder === 'name-asc' && <Check className="w-3 h-3 text-purple-400" />}
+                      {sortOrder === 'name-asc' && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <button
                       onClick={() => {
                         setSortOrder('name-desc');
                         setShowSortMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-desc' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span>File name (Z to A)</span>
-                      {sortOrder === 'name-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                      {sortOrder === 'name-desc' && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <button
                       onClick={() => {
                         setSortOrder('mtime-desc');
                         setShowSortMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'mtime-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'mtime-desc' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span>Modified time (new first)</span>
-                      {sortOrder === 'mtime-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                      {sortOrder === 'mtime-desc' && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <button
                       onClick={() => {
                         setSortOrder('ctime-desc');
                         setShowSortMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'ctime-desc' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'ctime-desc' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span>Created time (new first)</span>
-                      {sortOrder === 'ctime-desc' && <Check className="w-3 h-3 text-purple-400" />}
+                      {sortOrder === 'ctime-desc' && <Check className="w-3 h-3 text-white" />}
                     </button>
                   </div>
                 )}
@@ -685,7 +685,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }}
                   title="Filter notes by type or tag"
                   className={`p-1 rounded transition-colors ${
-                    activeFilter !== 'all' ? 'text-purple-300 bg-purple-600/30' : showFilterMenu ? 'text-purple-400 bg-zinc-800' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                    activeFilter !== 'all' ? 'text-white bg-[#705dcf]' : showFilterMenu ? 'text-purple-400 bg-zinc-800' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`}
                 >
                   <Filter className="w-3.5 h-3.5" />
@@ -700,36 +700,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         setActiveFilter('all');
                         setShowFilterMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'all' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'all' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span>All Notes</span>
-                      {activeFilter === 'all' && <Check className="w-3 h-3 text-purple-400" />}
+                      {activeFilter === 'all' && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <button
                       onClick={() => {
                         setActiveFilter('journal');
                         setShowFilterMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'journal' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'journal' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-purple-400" />
+                        <Calendar className="w-3.5 h-3.5 text-white" />
                         <span>Daily Journals</span>
                       </span>
-                      {activeFilter === 'journal' && <Check className="w-3 h-3 text-purple-400" />}
+                      {activeFilter === 'journal' && <Check className="w-3 h-3 text-white" />}
                     </button>
                     <button
                       onClick={() => {
                         setActiveFilter('canvas');
                         setShowFilterMenu(false);
                       }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'canvas' ? 'bg-purple-600/30 text-purple-200' : 'hover:bg-zinc-800'}`}
+                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'canvas' ? 'bg-[#705dcf] text-white' : 'hover:bg-zinc-800'}`}
                     >
                       <span className="flex items-center gap-1.5">
                         <LayoutGrid className="w-3.5 h-3.5 text-orange-400" />
                         <span>Canvases (.canvas)</span>
                       </span>
-                      {activeFilter === 'canvas' && <Check className="w-3 h-3 text-purple-400" />}
+                      {activeFilter === 'canvas' && <Check className="w-3 h-3 text-white" />}
                     </button>
                   </div>
                 )}
@@ -740,14 +740,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Active Filter Indicator */}
         {activeFilter !== 'all' && activeSidebarTab === 'files' && (
-          <div className="px-3 py-1.5 bg-purple-950/40 border-b border-purple-900/40 text-[11px] text-purple-300 flex items-center justify-between">
+          <div className="px-3 py-1.5 bg-[#1e1a2e] border-b border-white/[0.06] text-[11px] text-purple-200 flex items-center justify-between">
             <span className="flex items-center gap-1.5 capitalize font-medium">
-              <Filter className="w-3 h-3 text-purple-400" />
+              <Filter className="w-3 h-3 text-[#705dcf]" />
               <span>Filter: {activeFilter === 'journal' ? 'Daily Journals' : activeFilter}</span>
             </span>
             <button
               onClick={() => setActiveFilter('all')}
-              className="text-purple-400 hover:text-purple-100 p-0.5 rounded hover:bg-purple-900/50"
+              className="text-purple-300 hover:text-white p-0.5 rounded hover:bg-white/[0.08]"
               title="Clear filter"
             >
               <X className="w-3 h-3" />
@@ -832,10 +832,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                       onClick={() => onSelectFile(file.path)}
                       onContextMenu={e => handleContextMenuOpen(e, file)}
-                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-150 ${
+                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-150 border-none ${
                         isActive
-                          ? 'bg-purple-600/25 text-purple-200 border border-purple-400/35 shadow-[0_2px_8px_rgba(147,51,234,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] font-medium'
-                          : 'text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200 border border-transparent'
+                          ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                          : 'text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-200'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate flex-1 min-w-0">

@@ -256,7 +256,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             e.stopPropagation();
             onNavigateFile(targetNav);
           }}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 border border-purple-400/40 text-purple-200 hover:text-white font-medium text-[11px] align-baseline backdrop-blur-sm transition-all select-none shadow-sm"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white font-medium text-[11px] align-baseline transition-all select-none shadow-sm"
           title={`Open ${targetWithHeading}`}
         >
           <span>{label}</span>
@@ -334,13 +334,13 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           <Globe className="w-3 h-3 text-purple-400/80" />
           <span>Scope:</span>
         </div>
-        <div className="glass-segment-container flex items-center p-0.5 rounded-xl">
+        <div className="flex items-center p-0.5 rounded-lg bg-[#181820] border-none">
           <button
             onClick={() => setSearchScope('vault')}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border-none ${
               searchScope === 'vault'
-                ? 'bg-purple-600/35 text-white border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
+                ? 'bg-[#705dcf] text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
             Entire Vault
@@ -348,10 +348,10 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           {activeFile && (
             <button
               onClick={() => setSearchScope('activeNote')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border-none ${
                 searchScope === 'activeNote'
-                  ? 'bg-purple-600/35 text-white border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.05]'
+                  ? 'bg-[#705dcf] text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
               }`}
             >
               Active Note
@@ -402,11 +402,11 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                           key={sIdx}
                           onClick={() => onNavigateFile(src.filePath)}
                           title={`${src.snippet} (${src.score}% match)`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 hover:text-white text-[11px] font-medium backdrop-blur-md shadow-sm transition-all select-none"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white text-[11px] font-medium shadow-sm transition-all select-none"
                         >
-                          <ExternalLink className="w-2.5 h-2.5 shrink-0 text-purple-300" />
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0 text-white/80" />
                           <span className="truncate max-w-[140px]">{src.noteTitle}</span>
-                          <span className="text-[9px] text-purple-300/90 font-mono font-semibold">
+                          <span className="text-[9px] text-white/90 font-mono font-semibold">
                             {src.score}%
                           </span>
                         </button>
@@ -488,7 +488,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           <button
             type="submit"
             disabled={!inputQuery.trim() || isStreaming}
-            className="absolute right-2 p-2 rounded-xl bg-purple-600/85 hover:bg-purple-500 text-white disabled:opacity-30 disabled:hover:bg-purple-600/85 border border-purple-400/40 shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-2 p-2 rounded-xl bg-[#705dcf] hover:bg-[#5e4db5] text-white disabled:opacity-30 disabled:hover:bg-[#705dcf] border-none shadow-sm transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             <Send className="w-3.5 h-3.5" />
           </button>

@@ -66,17 +66,17 @@ export const TemplatePickerModal: React.FC<TemplatePickerModalProps> = ({
               <div
                 key={file.path}
                 onClick={() => handleSelect(file)}
-                className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors border-none ${
                   idx === selectedIndex
-                    ? 'bg-purple-600/30 text-purple-200'
+                    ? 'bg-[#705dcf] text-white shadow-sm'
                     : 'text-zinc-300 hover:bg-zinc-800/60'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                  <FileText className={`w-4 h-4 shrink-0 ${idx === selectedIndex ? 'text-white' : 'text-purple-400'}`} />
                   <span className="font-medium truncate">{file.name.replace(/\.md$/, '')}</span>
                 </div>
-                <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <CornerDownLeft className={`w-3.5 h-3.5 shrink-0 ${idx === selectedIndex ? 'text-white/90' : 'text-purple-400'}`} />
               </div>
             ))
           )}

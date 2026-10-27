@@ -68,21 +68,22 @@ export const Inspector: React.FC<InspectorProps> = ({
     <div className="w-80 glass-inspector flex flex-col h-full select-none shrink-0 text-xs">
       {/* Top Floating Segmented Tabs */}
       <div className="p-2 border-b border-white/[0.07] bg-white/[0.02] shrink-0">
-        <div className="glass-segment-container flex items-center p-1 rounded-xl gap-1">
+        <div className="flex items-center justify-between p-1 rounded-xl bg-black/25 gap-1 border-none">
           {showBacklinks && (
             <button
               onClick={() => handleTabClick('backlinks')}
-              title="Backlinks"
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+              title={backlinks.length > 0 ? `Backlinks (${backlinks.length})` : 'Backlinks'}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
                 activeTab === 'backlinks'
-                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <Link className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Links</span>
+              <Link className="w-4 h-4 shrink-0" />
               {backlinks.length > 0 && (
-                <span className="text-[9px] bg-purple-900/60 text-purple-200 px-1.5 py-0.2 rounded-full font-mono shrink-0">
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
+                  activeTab === 'backlinks' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-300'
+                }`}>
                   {backlinks.length}
                 </span>
               )}
@@ -92,17 +93,18 @@ export const Inspector: React.FC<InspectorProps> = ({
           {showOutlinks && (
             <button
               onClick={() => handleTabClick('outgoing')}
-              title="Outgoing Links"
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+              title={outlinks.length > 0 ? `Outgoing Links (${outlinks.length})` : 'Outgoing Links'}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
                 activeTab === 'outgoing'
-                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Out</span>
+              <ArrowUpRight className="w-4 h-4 shrink-0" />
               {outlinks.length > 0 && (
-                <span className="text-[9px] bg-purple-900/60 text-purple-200 px-1.5 py-0.2 rounded-full font-mono shrink-0">
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
+                  activeTab === 'outgoing' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-300'
+                }`}>
                   {outlinks.length}
                 </span>
               )}
@@ -113,14 +115,13 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={() => handleTabClick('outline')}
               title="Document Outline"
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
                 activeTab === 'outline'
-                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <ListTree className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Outline</span>
+              <ListTree className="w-4 h-4 shrink-0" />
             </button>
           )}
 
@@ -128,14 +129,13 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={() => handleTabClick('localGraph')}
               title="Local Graph"
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
                 activeTab === 'localGraph'
-                  ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_2px_8px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <Share2 className="w-3.5 h-3.5 shrink-0 text-purple-300" />
-              <span className="truncate">Graph</span>
+              <Share2 className="w-4 h-4 shrink-0" />
             </button>
           )}
 
@@ -143,14 +143,13 @@ export const Inspector: React.FC<InspectorProps> = ({
           <button
             onClick={() => handleTabClick('aiChat')}
             title="AI Vault Assistant (RAG Memory)"
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg transition-all min-w-0 ${
+            className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
               activeTab === 'aiChat'
-                ? 'bg-purple-600/35 text-white font-medium border border-purple-400/40 shadow-[0_0_12px_rgba(168,85,247,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-zinc-400 hover:text-purple-300 hover:bg-white/[0.06] border border-transparent'
+                ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 shrink-0 text-purple-300" />
-            <span className="truncate">AI</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
           </button>
         </div>
       </div>
@@ -255,7 +254,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         </span>
                         <button
                           onClick={() => onLinkMention(um.filePath, activeFile.name.replace(/\.md$/, ''))}
-                          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-300 hover:bg-purple-600/40 border border-purple-500/30 text-[10px]"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white border-none text-[10px] font-medium transition-all"
                           title="Convert to [[Wikilink]]"
                         >
                           <Plus className="w-3 h-3" />

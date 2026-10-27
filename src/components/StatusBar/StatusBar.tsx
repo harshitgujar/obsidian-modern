@@ -60,14 +60,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center gap-2.5">
         <button
           onClick={onOpenVaultSwitcher}
-          className="glass-pill px-2 py-0.5 rounded-lg flex items-center gap-1.5 text-zinc-300 hover:text-white transition-all cursor-pointer"
+          className="px-2 py-0.5 rounded-md flex items-center gap-1.5 text-zinc-300 hover:text-white bg-[#202028] hover:bg-[#282834] transition-all cursor-pointer border-none shadow-sm"
           title="Click to Switch Vault"
         >
-          <HardDrive className="w-3 h-3 text-purple-400" />
+          <HardDrive className="w-3 h-3 text-[#705dcf]" />
           <span className="font-medium truncate max-w-[140px]">{vaultName}</span>
         </button>
 
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px]">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[10px] border-none">
           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
           <span>Synced to disk</span>
         </div>
@@ -81,7 +81,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {onToggleAIChat && (
           <button
             onClick={onToggleAIChat}
-            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-600/15 border border-purple-500/30 text-purple-300 hover:text-white hover:bg-purple-600/25 transition-all cursor-pointer text-[10px]"
+            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#202028] hover:bg-[#282834] text-zinc-300 hover:text-white transition-all cursor-pointer text-[10px] border-none"
             title="Open AI Vault Assistant (RAG Memory)"
           >
             <Sparkles className="w-3 h-3 text-purple-300" />
@@ -93,14 +93,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       {/* Right side: Active File or View Metrics */}
       <div className="flex items-center gap-3">
         {isGraphActive ? (
-          <div className="flex items-center gap-1.5 text-purple-300 text-[10px] bg-purple-600/15 border border-purple-500/30 px-2 py-0.5 rounded-full">
-            <Share2 className="w-3 h-3 text-purple-400" />
+          <div className="flex items-center gap-1.5 text-purple-200 text-[10px] bg-[#202028] px-2 py-0.5 rounded-md border-none">
+            <Share2 className="w-3 h-3 text-[#705dcf]" />
             <span>
               {graphStats ? `${graphStats.nodesCount} nodes • ${graphStats.edgesCount} links` : 'Interactive Graph'}
             </span>
           </div>
         ) : activeFile?.extension === 'canvas' ? (
-          <div className="flex items-center gap-1.5 text-orange-300 text-[10px] bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-1.5 text-orange-300 text-[10px] bg-[#202028] px-2 py-0.5 rounded-md border-none">
             <LayoutDashboard className="w-3 h-3 text-orange-400" />
             <span>
               {canvasStats ? `${canvasStats.nodesCount} cards • ${canvasStats.edgesCount} edges` : 'Canvas'}
@@ -133,7 +133,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             {/* View mode toggle */}
             <button
               onClick={onCycleViewMode}
-              className="glass-pill px-2 py-0.5 rounded-lg border border-white/[0.1] bg-white/[0.05] hover:bg-white/[0.1] text-[10px] font-medium text-zinc-200 hover:text-white transition-all cursor-pointer capitalize shadow-sm"
+              className="px-2 py-0.5 rounded-md bg-[#202028] hover:bg-[#282834] text-[10px] font-medium text-zinc-200 hover:text-white transition-all cursor-pointer capitalize border-none shadow-sm"
               title="Click to Switch View Mode (Live Preview / Source / Reading)"
             >
               {activeViewMode === 'live' ? 'Live Preview' : activeViewMode === 'source' ? 'Source Mode' : 'Reading View'}

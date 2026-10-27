@@ -34,7 +34,7 @@ class WikilinkPillWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
     span.className =
-      'cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-md bg-[#382b54] hover:bg-[#4a396e] text-[#e9d5ff] hover:text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle';
+      'cm-wikilink-pill inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle border-none';
     span.title = `Click to open [[${this.target}]]`;
 
     const icon = document.createElement('span');

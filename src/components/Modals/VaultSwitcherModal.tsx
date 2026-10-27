@@ -78,19 +78,19 @@ export const VaultSwitcherModal: React.FC<VaultSwitcherModalProps> = ({
                 onClick={() => {
                   if (!isActive) onOpenVault(v.path);
                 }}
-                className={`group flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+                className={`group flex items-center justify-between p-3 rounded-xl border-none transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-purple-950/20 border-purple-500/50 shadow-sm'
-                    : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-800/50'
+                    ? 'bg-[#2a2b36] text-white shadow-sm'
+                    : 'bg-zinc-900/60 hover:bg-zinc-800/50 text-zinc-300'
                 }`}
               >
                 <div className="flex items-center gap-3 truncate">
-                  <Folder className={`w-5 h-5 shrink-0 ${isActive ? 'text-purple-400' : 'text-zinc-400'}`} />
+                  <Folder className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#705dcf]' : 'text-zinc-400'}`} />
                   <div className="truncate">
                     <div className="font-semibold text-xs text-zinc-200 flex items-center gap-2">
                       <span>{v.name}</span>
                       {isActive && (
-                        <span className="px-1.5 py-0.2 rounded bg-purple-600/30 text-purple-300 text-[10px] border border-purple-500/40 font-medium">
+                        <span className="px-1.5 py-0.2 rounded bg-[#705dcf] text-white text-[10px] font-medium border-none shadow-sm">
                           Active
                         </span>
                       )}
