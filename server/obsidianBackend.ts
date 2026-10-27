@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import { exec } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import JSZip from 'jszip';
+import { RAGEngine } from './rag/ragEngine';
+import { VaultMCPServer } from './rag/mcpServer';
 
 export interface VaultEntry {
   id: string;
@@ -202,6 +204,8 @@ export class ObsidianVaultServer {
   private watchers: Set<ServerResponse> = new Set();
   private fsWatcher: fs.FSWatcher | null = null;
   private suppressWatchUntil: number = 0;
+  private ragEngine!: RAGEngine;
+  private mcpServer!: VaultMCPServer;
 
   constructor(options?: ObsidianServerOptions) {
     this.rootDir = options?.rootDir || process.env.OBSIDIAN_ROOT_DIR || process.cwd();
@@ -212,7 +216,36 @@ export class ObsidianVaultServer {
 
     this.initGlobalRegistry();
     this.ensureVaultInitialized(this.activeVaultPath);
+    this.initRAG();
     this.startWatchingVault();
+  }
+
+  private initRAG() {
+    let aiConfig = {};
+    const configPath = path.join(this.activeVaultPath, '.obsidian', 'ai-config.json');
+    if (fs.existsSync(configPath)) {
+      try {
+        aiConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      } catch {}
+    }
+    this.ragEngine = new RAGEngine(this.activeVaultPath, aiConfig);
+    this.mcpServer = new VaultMCPServer(this.ragEngine);
+    // Background incremental sync of vault markdown files
+    this.syncVaultRAG().catch(err => {
+      console.warn('Initial RAG vault sync error:', err);
+    });
+  }
+
+  public async syncVaultRAG() {
+    try {
+      const { files } = this.scanVault();
+      const mdFiles = files.filter(f => f.extension === 'md' && !f.isBinary);
+      for (const file of mdFiles) {
+        await this.ragEngine.getVectorStore().indexFile(file.path, file.content, file.updatedAt);
+      }
+    } catch (err) {
+      console.warn('Error syncing vault RAG:', err);
+    }
   }
 
   private initGlobalRegistry() {
@@ -519,6 +552,13 @@ export class ObsidianVaultServer {
     // Save snapshot in .obsidian/file-recovery if markdown/canvas
     this.recordFileRecoverySnapshot(relPath, content);
 
+    // Auto-update RAG vector store incrementally
+    if (relPath.endsWith('.md')) {
+      this.ragEngine.getVectorStore().indexFile(relPath, content).catch(err => {
+        console.warn('RAG auto-index error:', err);
+      });
+    }
+
     const stat = fs.statSync(absPath);
     const ext = path.extname(relPath).slice(1).toLowerCase();
     const folder = path.dirname(relPath) === '.' ? '' : path.dirname(relPath).replace(/\\/g, '/');
@@ -707,6 +747,10 @@ export class ObsidianVaultServer {
       }
     }
 
+    if (oldRelPath.endsWith('.md')) {
+      this.ragEngine.getVectorStore().renameFile(oldRelPath, newRelPath);
+    }
+
     return { newPath: newRelPath, updatedLinksCount };
   }
 
@@ -717,6 +761,10 @@ export class ObsidianVaultServer {
 
     const configs = this.getAllConfigs();
     const trashOption = configs.app?.trashOption || 'local';
+
+    if (relPath.endsWith('.md')) {
+      this.ragEngine.getVectorStore().removeFile(relPath);
+    }
 
     if (trashOption === 'local') {
       const trashDir = path.join(this.activeVaultPath, '.trash');
@@ -754,6 +802,7 @@ export class ObsidianVaultServer {
       });
     }
     this.saveKnownVaults(vaults);
+    this.initRAG();
     this.startWatchingVault();
     return this.activeVaultPath;
   }
@@ -1073,6 +1122,107 @@ export class ObsidianVaultServer {
           const vaults = this.getKnownVaults().filter(v => v.path !== body.path);
           this.saveKnownVaults(vaults);
           return sendJson(200, { ok: true, vaults });
+        }
+
+        // ==========================================
+        // AI & RAG Endpoints
+        // ==========================================
+        if (pathname === '/api/vault/ai/status' && req.method === 'GET') {
+          const { files } = this.scanVault();
+          const mdCount = files.filter(f => f.extension === 'md' && !f.isBinary).length;
+          const status = await this.ragEngine.getStatus(mdCount);
+          return sendJson(200, { ok: true, status });
+        }
+
+        if (pathname === '/api/vault/ai/index' && req.method === 'POST') {
+          await this.syncVaultRAG();
+          const { files } = this.scanVault();
+          const mdCount = files.filter(f => f.extension === 'md' && !f.isBinary).length;
+          const status = await this.ragEngine.getStatus(mdCount);
+          return sendJson(200, { ok: true, status });
+        }
+
+        if (pathname === '/api/vault/ai/search' && req.method === 'POST') {
+          const body = await readJsonBody();
+          const query = String(body.query || '');
+          const topK = Number(body.topK) || 5;
+          const folder = body.folder || undefined;
+          const results = await this.ragEngine.search(query, topK, { folder });
+          return sendJson(200, { ok: true, results });
+        }
+
+        if (pathname === '/api/vault/ai/related' && req.method === 'POST') {
+          const body = await readJsonBody();
+          if (!body.filePath) return sendJson(400, { error: 'Missing filePath' });
+          const topK = Number(body.topK) || 4;
+          const related = await this.ragEngine.getRelatedNotes(body.filePath, topK);
+          return sendJson(200, { ok: true, related });
+        }
+
+        if (pathname === '/api/vault/ai/config' && req.method === 'POST') {
+          const body = await readJsonBody();
+          this.ragEngine.getEmbeddingProvider().updateConfig(body);
+          const configPath = path.join(this.activeVaultPath, '.obsidian', 'ai-config.json');
+          fs.writeFileSync(configPath, JSON.stringify(body, null, 2), 'utf8');
+          return sendJson(200, { ok: true, config: this.ragEngine.getEmbeddingProvider().getConfig() });
+        }
+
+        // Streaming Chat endpoint (Server-Sent Events)
+        if (pathname === '/api/vault/ai/chat' && req.method === 'POST') {
+          const body = await readJsonBody();
+          const query = String(body.query || '');
+          if (!query.trim()) return sendJson(400, { error: 'Missing query' });
+
+          const topK = Number(body.topK) || 5;
+          const folder = body.folder || undefined;
+          const history = Array.isArray(body.history) ? body.history : [];
+
+          // 1. Retrieve grounded chunks
+          const searchResults = await this.ragEngine.search(query, topK, { folder });
+
+          // 2. Set SSE Headers
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive'
+          });
+
+          // Send citations metadata event first
+          const sources = searchResults.map(r => ({
+            wikilink: r.chunk.wikilink,
+            noteTitle: r.chunk.noteTitle,
+            filePath: r.chunk.filePath,
+            heading: r.chunk.heading,
+            score: Math.round(r.score * 100),
+            snippet: r.chunk.content.slice(0, 160)
+          }));
+          res.write(`event: sources\ndata: ${JSON.stringify(sources)}\n\n`);
+
+          try {
+            for await (const token of this.ragEngine.streamChat(query, searchResults, history)) {
+              res.write(`event: token\ndata: ${JSON.stringify(token)}\n\n`);
+            }
+          } catch (streamErr: any) {
+            res.write(`event: error\ndata: ${JSON.stringify(streamErr.message || 'Stream error')}\n\n`);
+          }
+
+          res.write(`event: done\ndata: {}\n\n`);
+          res.end();
+          return;
+        }
+
+        // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Agents)
+        if (pathname === '/api/vault/ai/mcp' && req.method === 'POST') {
+          const body = await readJsonBody();
+          if (body.method === 'tools/list') {
+            const tools = this.mcpServer.listTools();
+            return sendJson(200, { tools });
+          }
+          if (body.method === 'tools/call') {
+            const result = await this.mcpServer.callTool(body.params?.name, body.params?.arguments || {});
+            return sendJson(200, result);
+          }
+          return sendJson(400, { error: `Unsupported MCP method: ${body.method}` });
         }
 
         return sendJson(404, { error: `Unknown endpoint: ${pathname}` });

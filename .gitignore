@@ -7,4 +7,6 @@ dist-ssr
 .trash
 dist-electron
 release
+**/.obsidian/ai-index/
+**/.obsidian/ai-config.json
 
