@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { VaultFile } from '../../types';
 import { vault } from '../../services/vault';
 import {
@@ -175,7 +176,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 
   // Render swap file dialog
   if (isSwappingFile) {
-    return (
+    return createPortal(
       <div
         ref={menuRef}
         style={{ left: `${posX}px`, top: `${posY}px` }}
@@ -226,14 +227,15 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
             ))
           )}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   // Render Move to folder dialog
   if (isMovingFile) {
     const uniqueFolders = Array.from(new Set(['', ...folders])).sort();
-    return (
+    return createPortal(
       <div
         ref={menuRef}
         style={{ left: `${posX}px`, top: `${posY}px` }}
@@ -261,13 +263,14 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
             </button>
           ))}
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   // Render Rename dialog
   if (isRenaming) {
-    return (
+    return createPortal(
       <div
         ref={menuRef}
         style={{ left: `${posX}px`, top: `${posY}px` }}
@@ -307,7 +310,8 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
             Rename
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -321,7 +325,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     return <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />;
   };
 
-  return (
+  return createPortal(
     <div
       ref={menuRef}
       style={{ left: `${posX}px`, top: `${posY}px` }}
@@ -620,6 +624,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           </button>
         </>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -408,8 +408,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({
-      x: Math.min(window.innerWidth - 220, e.clientX),
-      y: Math.min(window.innerHeight - 260, e.clientY),
+      x: e.clientX,
+      y: e.clientY,
       file
     });
   };

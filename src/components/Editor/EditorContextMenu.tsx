@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bold, 
   Italic, 
@@ -91,7 +92,7 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
       ref={menuRef}
       style={{ left: `${left}px`, top: `${top}px` }}
@@ -299,6 +300,7 @@ export const EditorContextMenu: React.FC<EditorContextMenuProps> = ({
           </span>
         </button>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
