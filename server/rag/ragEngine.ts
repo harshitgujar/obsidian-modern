@@ -1,6 +1,6 @@
 import { VectorStore } from './vectorStore';
 import { EmbeddingProvider } from './embeddingProvider';
-import { DocumentChunk, RAGSearchResult, AIProviderConfig, RAGStatus } from './types';
+import { DocumentChunk, RAGSearchResult, AIProviderConfig, RAGStatus, RAGSearchFilter } from './types';
 
 export class RAGEngine {
   private vectorStore: VectorStore;
@@ -56,7 +56,7 @@ export class RAGEngine {
   private computeBM25Scores(
     queryTerms: string[],
     chunks: DocumentChunk[],
-    filter?: { folder?: string; excludePath?: string }
+    filter?: RAGSearchFilter
   ): { chunk: DocumentChunk; score: number }[] {
     const k1 = 1.2;
     const b = 0.75;
@@ -67,10 +67,12 @@ export class RAGEngine {
     const docLengths = new Map<string, number>();
     const docTermFreqs = new Map<string, Map<string, number>>();
     const docFrequency = new Map<string, number>();
+    const folderPrefix = filter?.folder ? (filter.folder.endsWith('/') ? filter.folder : filter.folder + '/') : undefined;
 
     for (const chunk of chunks) {
       if (filter?.excludePath && chunk.filePath === filter.excludePath) continue;
-      if (filter?.folder && !chunk.filePath.startsWith(filter.folder)) continue;
+      if (filter?.filePath && chunk.filePath !== filter.filePath) continue;
+      if (folderPrefix && !chunk.filePath.startsWith(folderPrefix) && chunk.filePath !== filter?.folder) continue;
 
       const words = chunk.content.toLowerCase().match(/\b[a-z0-9_-]+\b/g) || [];
       const len = words.length;
@@ -130,13 +132,19 @@ export class RAGEngine {
   /**
    * GraphRAG: Performs 1-Hop Knowledge Graph Expansion on top seed chunks.
    * Traverses explicit outlinks and backlinks to bring human-curated connections into context.
+   * If scoped specifically to an active note (filePath), expansion is disabled to prevent leakage.
    */
   private expandGraphNeighborhood(
     seedChunks: DocumentChunk[],
     existingChunkIds: Set<string>,
-    maxExpansion = 2
+    maxExpansion = 2,
+    filter?: RAGSearchFilter
   ): RAGSearchResult[] {
+    // If scoped specifically to a single active note, do not leak neighbor notes
+    if (filter?.filePath) return [];
+
     const graphResults: RAGSearchResult[] = [];
+    const folderPrefix = filter?.folder ? (filter.folder.endsWith('/') ? filter.folder : filter.folder + '/') : undefined;
 
     for (const seed of seedChunks) {
       if (graphResults.length >= maxExpansion) break;
@@ -147,6 +155,9 @@ export class RAGEngine {
 
         const targetChunks = this.vectorStore.getChunksByTitle(targetTitle);
         for (const targetChunk of targetChunks) {
+          if (filter?.excludePath && targetChunk.filePath === filter.excludePath) continue;
+          if (folderPrefix && !targetChunk.filePath.startsWith(folderPrefix) && targetChunk.filePath !== filter?.folder) continue;
+
           if (!existingChunkIds.has(targetChunk.id)) {
             existingChunkIds.add(targetChunk.id);
             graphResults.push({
@@ -164,6 +175,9 @@ export class RAGEngine {
       if (graphResults.length < maxExpansion) {
         const backlinkChunks = this.vectorStore.findChunksLinkingTo(seed.noteTitle);
         for (const blChunk of backlinkChunks) {
+          if (filter?.excludePath && blChunk.filePath === filter.excludePath) continue;
+          if (folderPrefix && !blChunk.filePath.startsWith(folderPrefix) && blChunk.filePath !== filter?.folder) continue;
+
           if (!existingChunkIds.has(blChunk.id)) {
             existingChunkIds.add(blChunk.id);
             graphResults.push({
@@ -191,7 +205,7 @@ export class RAGEngine {
   public async search(
     query: string,
     topK = 5,
-    filter?: { folder?: string; excludePath?: string }
+    filter?: RAGSearchFilter
   ): Promise<RAGSearchResult[]> {
     if (!query.trim()) return [];
 
@@ -250,7 +264,7 @@ export class RAGEngine {
     // 4. GraphRAG: 1-Hop Knowledge Graph Neighborhood Expansion
     const selectedIds = new Set(primaryHits.map(h => h.chunk.id));
     const seedChunks = primaryHits.slice(0, 2).map(h => h.chunk);
-    const graphExpansion = this.expandGraphNeighborhood(seedChunks, selectedIds, 2);
+    const graphExpansion = this.expandGraphNeighborhood(seedChunks, selectedIds, 2, filter);
 
     return [...primaryHits, ...graphExpansion];
   }
@@ -325,55 +339,69 @@ CRITICAL RULES:
     const { systemPrompt, userPrompt } = this.buildPromptContext(query, searchResults);
     const config = this.embeddingProvider.getConfig();
 
+    // Sanitize chat history to avoid sending empty messages (causes HTTP 400 with modern LLMs)
+    const validHistory = history
+      .filter(m => m && typeof m.content === 'string' && m.content.trim().length > 0)
+      .slice(-4);
+
     if (config.provider === 'ollama') {
       const baseUrl = config.ollamaUrl || 'http://127.0.0.1:11434';
       const model = config.chatModel || 'llama3.2';
 
       const messages = [
         { role: 'system', content: systemPrompt },
-        ...history.slice(-4),
+        ...validHistory,
         { role: 'user', content: userPrompt }
       ];
 
-      const res = await fetch(`${baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages,
-          stream: true
-        })
-      });
+      try {
+        const res = await fetch(`${baseUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages,
+            stream: true
+          })
+        });
 
-      if (!res.ok) {
-        throw new Error(`Ollama chat stream failed: HTTP ${res.status}`);
-      }
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          let helpHint = '';
+          if (res.status === 404) {
+            helpHint = `\n\n> [!WARNING]\n> Model \`${model}\` not found in Ollama. Run \`ollama pull ${model}\` in your terminal or configure an installed model in AI Settings.`;
+          }
+          yield `*(Ollama Error ${res.status}: ${errText.slice(0, 100) || 'Model request failed'})*${helpHint}\n\nFalling back to local GraphRAG synthesis:\n\n`;
+        } else {
+          const reader = res.body?.getReader();
+          if (reader) {
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error('No readable stream from Ollama');
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-      const decoder = new TextDecoder();
-      let buffer = '';
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const parsed = JSON.parse(line);
-            if (parsed.message?.content) {
-              yield parsed.message.content;
+              for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                  const parsed = JSON.parse(line);
+                  if (parsed.message?.content) {
+                    yield parsed.message.content;
+                  }
+                } catch {}
+              }
             }
-          } catch {}
+            return;
+          }
         }
+      } catch (err: any) {
+        yield `*(Could not connect to Ollama at ${baseUrl}: ${err?.message || 'Connection refused'}). Falling back to offline synthesis:*\n\n`;
       }
-      return;
     }
 
     // OpenAI-compatible streaming
@@ -381,52 +409,57 @@ CRITICAL RULES:
       const url = config.apiUrl || 'https://api.openai.com/v1/chat/completions';
       const messages = [
         { role: 'system', content: systemPrompt },
-        ...history.slice(-4),
+        ...validHistory,
         { role: 'user', content: userPrompt }
       ];
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-          model: config.chatModel || 'gpt-4o-mini',
-          messages,
-          stream: true
-        })
-      });
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`
+          },
+          body: JSON.stringify({
+            model: config.chatModel || 'gpt-4o-mini',
+            messages,
+            stream: true
+          })
+        });
 
-      if (!res.ok) {
-        throw new Error(`OpenAI chat stream failed: HTTP ${res.status}`);
-      }
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          yield `*(OpenAI stream error ${res.status}: ${errText.slice(0, 100)}). Falling back to offline synthesis:*\n\n`;
+        } else {
+          const reader = res.body?.getReader();
+          if (reader) {
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-      const reader = res.body?.getReader();
-      if (!reader) return;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-      const decoder = new TextDecoder();
-      let buffer = '';
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const clean = line.replace(/^data:\s*/, '').trim();
-          if (!clean || clean === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(clean);
-            const token = parsed.choices?.[0]?.delta?.content;
-            if (token) yield token;
-          } catch {}
+              for (const line of lines) {
+                const clean = line.replace(/^data:\s*/, '').trim();
+                if (!clean || clean === '[DONE]') continue;
+                try {
+                  const parsed = JSON.parse(clean);
+                  const token = parsed.choices?.[0]?.delta?.content;
+                  if (token) yield token;
+                } catch {}
+              }
+            }
+            return;
+          }
         }
+      } catch (err: any) {
+        yield `*(OpenAI request failed: ${err?.message}). Falling back to offline synthesis:*\n\n`;
       }
-      return;
     }
 
     // Offline Intelligent Fallback Synthesis when no LLM is actively streaming

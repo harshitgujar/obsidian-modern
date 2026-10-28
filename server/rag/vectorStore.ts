@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { DocumentChunk, IndexManifest, FileIndexMeta } from './types';
+import { DocumentChunk, IndexManifest, FileIndexMeta, RAGSearchFilter } from './types';
 import { chunkMarkdown } from './markdownChunker';
 import { EmbeddingProvider } from './embeddingProvider';
 
@@ -93,16 +93,21 @@ export class VectorStore {
 
   /**
    * Indexes a single markdown file incrementally.
-   * If file content hash hasn't changed, skips embedding computation.
+   * If file content hash hasn't changed and forceReindex is false, skips embedding computation.
    */
-  public async indexFile(filePath: string, content: string, mtime = Date.now()): Promise<boolean> {
+  public async indexFile(
+    filePath: string,
+    content: string,
+    mtime = Date.now(),
+    forceReindex = false
+  ): Promise<boolean> {
     if (!filePath.endsWith('.md')) return false;
 
     const hash = crypto.createHash('sha256').update(content).digest('hex');
     const existingMeta = this.manifest.files[filePath];
 
-    // If unchanged and chunks exist, skip
-    if (existingMeta && existingMeta.hash === hash && existingMeta.chunkIds.length > 0) {
+    // If unchanged and not forcing reindex, skip
+    if (!forceReindex && existingMeta && existingMeta.hash === hash && existingMeta.chunkIds.length > 0) {
       const allChunksExist = existingMeta.chunkIds.every(id => this.chunks.has(id));
       if (allChunksExist) {
         return false; // No changes
@@ -166,6 +171,30 @@ export class VectorStore {
   }
 
   /**
+   * Removes all files inside a deleted folder.
+   */
+  public removeFolder(folderPath: string) {
+    const normalized = folderPath.replace(/\/$/, '') + '/';
+    const filesToRemove = Object.keys(this.manifest.files).filter(
+      fp => fp.startsWith(normalized) || fp === folderPath
+    );
+
+    for (const fp of filesToRemove) {
+      const meta = this.manifest.files[fp];
+      if (meta) {
+        for (const id of meta.chunkIds) {
+          this.chunks.delete(id);
+        }
+        delete this.manifest.files[fp];
+      }
+    }
+
+    if (filesToRemove.length > 0) {
+      this.saveIndex();
+    }
+  }
+
+  /**
    * Renames a file in the index in O(1) without recomputing embeddings.
    */
   public renameFile(oldPath: string, newPath: string) {
@@ -184,7 +213,7 @@ export class VectorStore {
         chunk.filePath = newPath;
         chunk.noteTitle = newTitle;
         chunk.wikilink = chunk.heading
-          ? `[[${newTitle}#${chunk.heading}]]`
+          ? `[[${newTitle}#${chunk.heading.replace(/[*_~`#\[\]]/g, '').trim()}]]`
           : `[[${newTitle}]]`;
       }
     }
@@ -193,23 +222,46 @@ export class VectorStore {
   }
 
   /**
-   * Performs high-speed vector cosine similarity search.
+   * Renames a folder in the index in O(1) without recomputing embeddings.
+   */
+  public renameFolder(oldFolder: string, newFolder: string) {
+    const oldPrefix = oldFolder.replace(/\/$/, '') + '/';
+    const newPrefix = newFolder.replace(/\/$/, '') + '/';
+
+    const matchingFiles = Object.keys(this.manifest.files).filter(
+      fp => fp.startsWith(oldPrefix)
+    );
+
+    for (const oldFp of matchingFiles) {
+      const newFp = oldFp.replace(oldPrefix, newPrefix);
+      this.renameFile(oldFp, newFp);
+    }
+  }
+
+  /**
+   * Performs high-speed vector cosine similarity search with noise thresholding.
    */
   public searchVector(
     queryVector: number[],
     topK = 6,
-    filter?: { folder?: string; excludePath?: string }
+    filter?: RAGSearchFilter
   ): { chunk: DocumentChunk; score: number }[] {
     if (!queryVector || queryVector.length === 0) return [];
 
     const results: { chunk: DocumentChunk; score: number }[] = [];
+    const minSimilarityThreshold = 0.20; // Rejects low-confidence hallucinations
+
+    const folderPrefix = filter?.folder ? filter.folder.replace(/\/$/, '') + '/' : undefined;
 
     for (const chunk of this.chunks.values()) {
       if (!chunk.vector) continue;
       if (filter?.excludePath && chunk.filePath === filter.excludePath) continue;
-      if (filter?.folder && !chunk.filePath.startsWith(filter.folder)) continue;
+      if (filter?.filePath && chunk.filePath !== filter.filePath) continue;
+      if (folderPrefix && !chunk.filePath.startsWith(folderPrefix) && chunk.filePath !== filter?.folder) continue;
 
       const sim = this.cosineSimilarity(queryVector, chunk.vector);
+      if (sim < minSimilarityThreshold) continue;
+
       results.push({ chunk, score: sim });
     }
 

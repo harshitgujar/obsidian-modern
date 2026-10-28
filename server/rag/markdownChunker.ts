@@ -236,8 +236,13 @@ export function chunkMarkdown(
     const sectionText = section.lines.join('\n').trim();
     if (!sectionText && !section.heading) continue;
 
-    const wikilink = section.heading
-      ? `[[${noteTitle}#${section.heading}]]`
+    // Sanitize heading for clean wikilink navigation without Markdown formatting artifacts
+    const cleanHeading = section.heading
+      ? section.heading.replace(/[*_~`#\[\]]/g, '').trim()
+      : '';
+
+    const wikilink = cleanHeading
+      ? `[[${noteTitle}#${cleanHeading}]]`
       : `[[${noteTitle}]]`;
 
     // High-context hierarchical breadcrumb prefix
@@ -249,7 +254,7 @@ export function chunkMarkdown(
       const fullContent = contextPrefix + (sectionText || section.heading);
       const chunkId = crypto
         .createHash('sha256')
-        .update(`${filePath}::${section.heading}::${chunkIndex}`)
+        .update(`${filePath}::${cleanHeading}::${chunkIndex}`)
         .digest('hex')
         .slice(0, 16);
 
@@ -283,7 +288,7 @@ export function chunkMarkdown(
           const fullContent = contextPrefix + buffer.trim();
           const chunkId = crypto
             .createHash('sha256')
-            .update(`${filePath}::${section.heading}::${chunkIndex}`)
+            .update(`${filePath}::${cleanHeading}::${chunkIndex}`)
             .digest('hex')
             .slice(0, 16);
 
@@ -312,7 +317,7 @@ export function chunkMarkdown(
         const fullContent = contextPrefix + buffer.trim();
         const chunkId = crypto
           .createHash('sha256')
-          .update(`${filePath}::${section.heading}::${chunkIndex}`)
+          .update(`${filePath}::${cleanHeading}::${chunkIndex}`)
           .digest('hex')
           .slice(0, 16);
 

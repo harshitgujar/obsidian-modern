@@ -82,6 +82,13 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
     scrollToBottom();
   }, [messages, isStreaming]);
 
+  // Reset scope if active file is closed
+  useEffect(() => {
+    if (!activeFile && (searchScope === 'activeNote' || searchScope === 'folder')) {
+      setSearchScope('vault');
+    }
+  }, [activeFile, searchScope]);
+
   // Fetch RAG index status on mount
   const fetchStatus = async () => {
     try {
@@ -138,20 +145,25 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
     setIsStreaming(true);
 
     try {
+      const filePathFilter =
+        searchScope === 'activeNote' && activeFile ? activeFile.path : undefined;
       const folderFilter =
-        searchScope === 'activeNote' && activeFile
-          ? activeFile.path
-          : searchScope === 'folder' && activeFile?.folder
-          ? activeFile.folder
-          : undefined;
+        searchScope === 'folder' && activeFile?.folder ? activeFile.folder : undefined;
+
+      // Filter out empty messages to avoid HTTP 400 with modern LLMs
+      const cleanHistory = messages
+        .filter(m => m.content && m.content.trim().length > 0)
+        .slice(-4)
+        .map(m => ({ role: m.role, content: m.content }));
 
       const response = await fetch('/api/vault/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query,
+          filePath: filePathFilter,
           folder: folderFilter,
-          history: messages.slice(-4).map(m => ({ role: m.role, content: m.content }))
+          history: cleanHistory
         })
       });
 
@@ -238,41 +250,149 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
     setTimeout(() => setCopiedMessageId(null), 2000);
   };
 
-  const renderContentWithWikilinks = (content: string) => {
-    if (!content) return null;
-    const parts: (string | JSX.Element)[] = [];
-    const regex = /\[\[([^\]]+)\]\]/g;
-    let lastIndex = 0;
+  const formatInlineText = (text: string): (string | JSX.Element)[] => {
+    if (!text) return [];
+    // Tokenize on wikilinks [[...]], inline code `...`, bold **...**, and italics *...*
+    const tokenRegex = /(\[\[[^\]]+\]\]|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
+    const tokens: (string | JSX.Element)[] = [];
+    let last = 0;
     let match;
-    while ((match = regex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(content.slice(lastIndex, match.index));
+
+    while ((match = tokenRegex.exec(text)) !== null) {
+      if (match.index > last) {
+        tokens.push(text.slice(last, match.index));
       }
-      const rawTarget = match[1];
-      const [targetWithHeading, alias] = rawTarget.split('|');
-      const [notePath, heading] = targetWithHeading.split('#');
-      const label = alias || (heading ? `${notePath} > ${heading}` : notePath);
-      const targetNav = notePath.trim();
-      const matchIdx = match.index;
-      parts.push(
-        <button
-          key={`wl-${matchIdx}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onNavigateFile(targetNav);
-          }}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white font-medium text-[11px] align-baseline transition-all select-none shadow-sm"
-          title={`Open ${targetWithHeading}`}
-        >
-          <span>{label}</span>
-        </button>
-      );
-      lastIndex = regex.lastIndex;
+      const raw = match[1];
+      const keyId = `tok-${match.index}-${raw.slice(0, 10)}`;
+
+      if (raw.startsWith('[[') && raw.endsWith(']]')) {
+        const inner = raw.slice(2, -2);
+        const [targetWithHeading, alias] = inner.split('|');
+        const [notePath, heading] = targetWithHeading.split('#');
+        const label = alias || (heading ? `${notePath} > ${heading}` : notePath);
+        const targetNav = notePath.trim();
+        tokens.push(
+          <button
+            key={keyId}
+            onClick={(e) => {
+              e.stopPropagation();
+              onNavigateFile(targetNav);
+            }}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white font-medium text-[11px] align-baseline transition-all select-none shadow-sm cursor-pointer"
+            title={`Open ${targetWithHeading}`}
+          >
+            <span>{label}</span>
+          </button>
+        );
+      } else if (raw.startsWith('`') && raw.endsWith('`')) {
+        tokens.push(
+          <code
+            key={keyId}
+            className="px-1.5 py-0.5 mx-0.5 rounded bg-black/50 text-purple-200 font-mono text-[11px] select-text"
+          >
+            {raw.slice(1, -1)}
+          </code>
+        );
+      } else if (raw.startsWith('**') && raw.endsWith('**')) {
+        tokens.push(
+          <strong key={keyId} className="font-semibold text-white">
+            {formatInlineText(raw.slice(2, -2))}
+          </strong>
+        );
+      } else if (raw.startsWith('*') && raw.endsWith('*')) {
+        tokens.push(
+          <em key={keyId} className="italic text-zinc-200">
+            {formatInlineText(raw.slice(1, -1))}
+          </em>
+        );
+      } else {
+        tokens.push(raw);
+      }
+      last = tokenRegex.lastIndex;
     }
-    if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex));
+
+    if (last < text.length) {
+      tokens.push(text.slice(last));
     }
-    return parts;
+    return tokens;
+  };
+
+  const renderFormattedMarkdown = (content: string) => {
+    if (!content) return null;
+    const lines = content.split('\n');
+    return (
+      <div className="space-y-1.5 select-text">
+        {lines.map((line, idx) => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            return <div key={`empty-${idx}`} className="h-1.5" />;
+          }
+
+          // Headers
+          if (trimmed.startsWith('### ')) {
+            return (
+              <h4 key={`h3-${idx}`} className="font-bold text-zinc-100 text-xs mt-3 mb-1 border-b border-white/[0.06] pb-1">
+                {formatInlineText(trimmed.slice(4))}
+              </h4>
+            );
+          }
+          if (trimmed.startsWith('## ')) {
+            return (
+              <h3 key={`h2-${idx}`} className="font-bold text-white text-sm mt-3.5 mb-1.5 border-b border-white/[0.08] pb-1">
+                {formatInlineText(trimmed.slice(3))}
+              </h3>
+            );
+          }
+
+          // Obsidian Callout (e.g. > [!TIP] or > [!WARNING])
+          if (trimmed.startsWith('> [!')) {
+            const match = trimmed.match(/^>\s*\[!([a-zA-Z]+)\]\s*(.*)$/);
+            const calloutType = match?.[1]?.toUpperCase() || 'NOTE';
+            const calloutTitle = match?.[2] || calloutType;
+            return (
+              <div
+                key={`callout-${idx}`}
+                className="my-2 p-2.5 rounded-lg bg-purple-950/30 border-l-2 border-[#705dcf] text-xs text-zinc-200"
+              >
+                <div className="font-semibold text-[#a594fd] mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
+                  <span>{calloutTitle}</span>
+                </div>
+              </div>
+            );
+          }
+
+          // Blockquote
+          if (trimmed.startsWith('> ')) {
+            return (
+              <div
+                key={`quote-${idx}`}
+                className="border-l-2 border-white/20 pl-2.5 py-0.5 my-1 text-zinc-300 italic text-[11px]"
+              >
+                {formatInlineText(trimmed.slice(2))}
+              </div>
+            );
+          }
+
+          // Unordered Bullet List
+          if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+            return (
+              <div key={`li-${idx}`} className="flex items-start gap-2 my-0.5 pl-1.5 leading-relaxed">
+                <span className="text-[#705dcf] font-bold text-sm leading-none mt-0.5">•</span>
+                <span className="flex-1">{formatInlineText(trimmed.slice(2))}</span>
+              </div>
+            );
+          }
+
+          // Standard paragraph line
+          return (
+            <div key={`p-${idx}`} className="leading-relaxed">
+              {formatInlineText(line)}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const handleClearChat = () => {
@@ -391,9 +511,9 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                 }`}
               >
                 {/* Text Content */}
-                <div className="whitespace-pre-wrap select-text markdown-body">
+                <div className="select-text markdown-body">
                   {msg.content ? (
-                    renderContentWithWikilinks(msg.content)
+                    renderFormattedMarkdown(msg.content)
                   ) : (
                     <span className="flex items-center gap-2 text-zinc-400 italic">
                       <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-spin" />

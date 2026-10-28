@@ -30,6 +30,12 @@ export interface IndexManifest {
   files: Record<string, FileIndexMeta>;
 }
 
+export interface RAGSearchFilter {
+  filePath?: string;        // Exact note file path (e.g. "Adventurer/No prior experience.md")
+  folder?: string;          // Folder path (e.g. "Adventurer")
+  excludePath?: string;     // File path to exclude from results
+}
+
 export interface RAGSearchResult {
   chunk: DocumentChunk;
   score: number;            // Normalized similarity score (0 to 1)

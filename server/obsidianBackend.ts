@@ -237,7 +237,7 @@ export class ObsidianVaultServer {
     });
   }
 
-  public async syncVaultRAG() {
+  public async syncVaultRAG(force = false) {
     try {
       this.ragEngine.setIndexingStatus(true);
       const { files } = this.scanVault();
@@ -246,7 +246,7 @@ export class ObsidianVaultServer {
       for (const file of mdFiles) {
         count++;
         this.ragEngine.setIndexingStatus(true, mdFiles.length - count);
-        await this.ragEngine.getVectorStore().indexFile(file.path, file.content, file.updatedAt);
+        await this.ragEngine.getVectorStore().indexFile(file.path, file.content, file.updatedAt, force);
         // Non-blocking yield to keep event loop and UI smooth
         await new Promise(resolve => setImmediate(resolve));
       }
@@ -764,6 +764,9 @@ export class ObsidianVaultServer {
 
     if (oldRelPath.endsWith('.md')) {
       this.ragEngine.getVectorStore().renameFile(oldRelPath, newRelPath);
+    } else {
+      // If folder or directory, cascade rename throughout vector store and graph links
+      this.ragEngine.getVectorStore().renameFolder(oldRelPath, newRelPath);
     }
 
     return { newPath: newRelPath, updatedLinksCount };
@@ -779,6 +782,9 @@ export class ObsidianVaultServer {
 
     if (relPath.endsWith('.md')) {
       this.ragEngine.getVectorStore().removeFile(relPath);
+    } else {
+      // If folder or directory, remove all indexed chunks and manifest entries
+      this.ragEngine.getVectorStore().removeFolder(relPath);
     }
 
     if (trashOption === 'local') {
@@ -1150,7 +1156,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/index' && req.method === 'POST') {
-          await this.syncVaultRAG();
+          await this.syncVaultRAG(true);
           const { files } = this.scanVault();
           const mdCount = files.filter(f => f.extension === 'md' && !f.isBinary).length;
           const status = await this.ragEngine.getStatus(mdCount);
@@ -1161,8 +1167,11 @@ export class ObsidianVaultServer {
           const body = await readJsonBody();
           const query = String(body.query || '');
           const topK = Number(body.topK) || 5;
-          const folder = body.folder || undefined;
-          const results = await this.ragEngine.search(query, topK, { folder });
+          const filter = {
+            filePath: body.filePath || undefined,
+            folder: body.folder || undefined
+          };
+          const results = await this.ragEngine.search(query, topK, filter);
           return sendJson(200, { ok: true, results });
         }
 
@@ -1189,11 +1198,14 @@ export class ObsidianVaultServer {
           if (!query.trim()) return sendJson(400, { error: 'Missing query' });
 
           const topK = Number(body.topK) || 5;
-          const folder = body.folder || undefined;
+          const filter = {
+            filePath: body.filePath || undefined,
+            folder: body.folder || undefined
+          };
           const history = Array.isArray(body.history) ? body.history : [];
 
           // 1. Retrieve grounded chunks
-          const searchResults = await this.ragEngine.search(query, topK, { folder });
+          const searchResults = await this.ragEngine.search(query, topK, filter);
 
           // 2. Set SSE Headers
           res.writeHead(200, {
