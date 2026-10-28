@@ -127,6 +127,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isInstallingClaude, setIsInstallingClaude] = useState(false);
   const [claudeFeedback, setClaudeFeedback] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
   const [copiedCursor, setCopiedCursor] = useState(false);
+  const [copiedCursorCommand, setCopiedCursorCommand] = useState(false);
   const [copiedCli, setCopiedCli] = useState(false);
 
   const fetchAiStatus = async () => {
@@ -203,6 +204,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     navigator.clipboard.writeText(JSON.stringify(mcpStatus.cursorConfig, null, 2));
     setCopiedCursor(true);
     setTimeout(() => setCopiedCursor(false), 2000);
+  };
+
+  const handleCopyCursorCommand = () => {
+    if (!mcpStatus) return;
+    const cmd = `${mcpStatus.nodeBinary} "${mcpStatus.bridgePath}" "${mcpStatus.vaultPath}" "${mcpStatus.port}"`;
+    navigator.clipboard.writeText(cmd);
+    setCopiedCursorCommand(true);
+    setTimeout(() => setCopiedCursorCommand(false), 2000);
   };
 
   const handleCopyCliCommand = () => {
@@ -1392,6 +1401,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           )}
                         </div>
 
+                        {mcpStatus?.isDifferentVault && (
+                          <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-2">
+                            <span className="truncate">Claude is currently connected to: <code className="text-amber-100">{mcpStatus.connectedVaultPath}</code></span>
+                            <button
+                              onClick={handleInstallClaude}
+                              disabled={isInstallingClaude}
+                              className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-semibold shrink-0"
+                            >
+                              Switch to Current Vault
+                            </button>
+                          </div>
+                        )}
+
                         {claudeFeedback && (
                           <div className={`p-2 rounded text-xs flex items-center gap-2 ${
                             claudeFeedback.status === 'success' 
@@ -1420,13 +1442,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-zinc-200">Cursor MCP Setup</span>
-                          <button
-                            onClick={handleCopyCursorConfig}
-                            className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
-                          >
-                            {copiedCursor ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
-                            <span>{copiedCursor ? 'Copied to Clipboard!' : 'Copy Cursor Config'}</span>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={handleCopyCursorConfig}
+                              className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                            >
+                              {copiedCursor ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
+                              <span>{copiedCursor ? 'Copied Full JSON!' : 'Copy Cursor Config'}</span>
+                            </button>
+                            <button
+                              onClick={handleCopyCursorCommand}
+                              className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-medium flex items-center gap-1.5 transition-colors border border-zinc-700"
+                            >
+                              {copiedCursorCommand ? <Check className="w-3 h-3 text-emerald-300" /> : <Terminal className="w-3 h-3" />}
+                              <span>{copiedCursorCommand ? 'Copied Command!' : 'Copy Command Only'}</span>
+                            </button>
+                          </div>
                         </div>
 
                         <ol className="list-decimal pl-4 space-y-1 text-[11px] text-zinc-400 leading-relaxed">

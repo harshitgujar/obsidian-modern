@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
-import { exec } from 'node:child_process';
+import { exec, execSync } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import JSZip from 'jszip';
 import { RAGEngine } from './rag/ragEngine';
@@ -863,14 +863,25 @@ export class ObsidianVaultServer {
   }
 
   public getNodeBinary(): string {
-    if (process.execPath && !process.execPath.toLowerCase().includes('electron')) {
+    // 1. Try finding active node in PATH via which/where
+    try {
+      const cmd = process.platform === 'win32' ? 'where.exe node' : 'which node';
+      const output = execSync(cmd, { encoding: 'utf8', timeout: 1000 }).trim().split('\n')[0].trim();
+      if (output && fs.existsSync(output)) return output;
+    } catch {}
+
+    // 2. If running under normal Node, process.execPath is the exact node binary
+    if (process.execPath && !process.execPath.toLowerCase().includes('electron') && !process.execPath.toLowerCase().includes('obsidian')) {
       return process.execPath;
     }
+
+    // 3. Check known directories
     const candidates = [
       path.join(os.homedir(), '.local', 'bin', 'node'),
       '/opt/homebrew/bin/node',
       '/usr/local/bin/node',
-      '/usr/bin/node'
+      '/usr/bin/node',
+      'C:\\Program Files\\nodejs\\node.exe'
     ];
     for (const c of candidates) {
       if (fs.existsSync(c)) return c;
@@ -895,7 +906,13 @@ export class ObsidianVaultServer {
     const host = req.headers.host || '127.0.0.1:5175';
     if (host.includes(':')) {
       const p = parseInt(host.split(':')[1], 10);
-      if (!isNaN(p)) this.currentServerPort = p;
+      if (!isNaN(p) && p !== this.currentServerPort) {
+        this.currentServerPort = p;
+        try {
+          const portFile = path.join(this.activeVaultPath, '.obsidian', 'active-port');
+          fs.writeFileSync(portFile, String(p), 'utf8');
+        } catch {}
+      }
     }
 
     const parsedUrl = new URL(urlStr, 'http://localhost');
@@ -1326,12 +1343,15 @@ export class ObsidianVaultServer {
           let isClaudeConnected = false;
           let existingServers: string[] = [];
 
+          let connectedVaultPath: string | undefined;
           if (isConfigPresent) {
             try {
               const raw = fs.readFileSync(configPath, 'utf8');
-              const parsed = JSON.parse(raw);
+              const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
+              const parsed = JSON.parse(clean);
               if (parsed.mcpServers?.['obsidian-vault-memory']) {
                 isClaudeConnected = true;
+                connectedVaultPath = parsed.mcpServers['obsidian-vault-memory']?.args?.[1];
               }
               if (parsed.mcpServers) {
                 existingServers = Object.keys(parsed.mcpServers);
@@ -1366,6 +1386,8 @@ export class ObsidianVaultServer {
             claudeConfigPath: configPath,
             isConfigPresent,
             isClaudeConnected,
+            connectedVaultPath,
+            isDifferentVault: Boolean(isClaudeConnected && connectedVaultPath && connectedVaultPath !== vaultPath),
             existingServers,
             nodeBinary,
             bridgePath,
@@ -1385,9 +1407,11 @@ export class ObsidianVaultServer {
           let config: any = { mcpServers: {} };
           if (fs.existsSync(configPath)) {
             try {
-              config = JSON.parse(fs.readFileSync(configPath, 'utf8')) || { mcpServers: {} };
+              const raw = fs.readFileSync(configPath, 'utf8');
+              const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
+              config = JSON.parse(clean) || { mcpServers: {} };
               if (!config.mcpServers) config.mcpServers = {};
-              fs.writeFileSync(`${configPath}.bak`, JSON.stringify(config, null, 2), 'utf8');
+              fs.writeFileSync(`${configPath}.bak`, raw, 'utf8');
             } catch {}
           }
 

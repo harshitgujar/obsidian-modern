@@ -13,20 +13,44 @@ const path = require('path');
 const readline = require('readline');
 
 // Command line arguments with intelligent defaults
-const vaultPath = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(__dirname, '../../vault');
-const serverPort = parseInt(process.argv[3] || process.env.OBSIDIAN_PORT || '5175', 10);
+const rawVault = (process.argv[2] || '').replace(/^["']|["']$/g, '').trim();
+const vaultPath = rawVault ? path.resolve(rawVault) : path.resolve(__dirname, '../../vault');
 const serverHost = process.env.OBSIDIAN_HOST || '127.0.0.1';
+
+/**
+ * Auto-healing dynamic port discovery:
+ * Reads .obsidian/active-port if available, otherwise checks CLI args and env.
+ */
+function getEffectivePort() {
+  const portFile = path.join(vaultPath, '.obsidian', 'active-port');
+  if (fs.existsSync(portFile)) {
+    try {
+      const p = parseInt(fs.readFileSync(portFile, 'utf8').trim(), 10);
+      if (!isNaN(p) && p > 0) return p;
+    } catch {}
+  }
+  if (process.argv[3]) {
+    const p = parseInt(process.argv[3].replace(/^["']|["']$/g, ''), 10);
+    if (!isNaN(p) && p > 0) return p;
+  }
+  if (process.env.OBSIDIAN_PORT) {
+    const p = parseInt(process.env.OBSIDIAN_PORT, 10);
+    if (!isNaN(p) && p > 0) return p;
+  }
+  return 5175;
+}
 
 /**
  * Sends an HTTP request to the running Obsidian server.
  */
 function callObsidianMcp(method, params = {}) {
   return new Promise((resolve, reject) => {
+    const activePort = getEffectivePort();
     const payload = JSON.stringify({ method, params });
     const req = http.request(
       {
         hostname: serverHost,
-        port: serverPort,
+        port: activePort,
         path: '/api/vault/ai/mcp',
         method: 'POST',
         headers: {
@@ -85,7 +109,7 @@ function searchVaultOffline(query, topK = 5) {
   try {
     const raw = fs.readFileSync(chunksPath, 'utf8');
     const chunks = JSON.parse(raw);
-    const qLower = query.toLowerCase().trim();
+    const qLower = (query || '').toLowerCase().trim();
     const terms = qLower.split(/\s+/).filter(t => t.length > 1);
 
     const scored = [];
@@ -123,6 +147,28 @@ function searchVaultOffline(query, topK = 5) {
         content: `Failed reading offline index: ${err.message}`
       }
     ];
+  }
+}
+
+/**
+ * Offline fallback for related notes when Obsidian app is closed.
+ */
+function getRelatedNotesOffline(filePath) {
+  const chunksPath = path.join(vaultPath, '.obsidian', 'ai-index', 'chunks.json');
+  if (!fs.existsSync(chunksPath)) return [];
+  try {
+    const raw = fs.readFileSync(chunksPath, 'utf8');
+    const chunks = JSON.parse(raw);
+    const targetChunk = chunks.find(c => c.filePath === filePath);
+    if (!targetChunk || !Array.isArray(targetChunk.outlinks)) return [];
+
+    return targetChunk.outlinks.map(link => ({
+      noteTitle: link,
+      wikilink: `[[${link}]]`,
+      similarity: 75
+    }));
+  } catch {
+    return [];
   }
 }
 
@@ -226,13 +272,30 @@ rl.on('line', async line => {
     return;
   }
 
-  // 3. Tools Listing
+  // 3. Ping (MCP Specification)
+  if (method === 'ping') {
+    sendJsonRpc(id, {});
+    return;
+  }
+
+  // 4. Tools Listing
   if (method === 'tools/list') {
     sendJsonRpc(id, { tools: TOOLS });
     return;
   }
 
-  // 4. Tools Execution
+  // 5. Prompts & Resources Listing (MCP Specification)
+  if (method === 'prompts/list') {
+    sendJsonRpc(id, { prompts: [] });
+    return;
+  }
+
+  if (method === 'resources/list') {
+    sendJsonRpc(id, { resources: [] });
+    return;
+  }
+
+  // 6. Tools Execution
   if (method === 'tools/call') {
     const toolName = params?.name;
     const toolArgs = params?.arguments || {};
@@ -253,6 +316,23 @@ rl.on('line', async line => {
                 {
                   notice: 'Obsidian app is offline. Results retrieved from local cached vault index.',
                   results: offlineResults
+                },
+                null,
+                2
+              )
+            }
+          ]
+        });
+      } else if (toolName === 'get_related_notes') {
+        const offlineRelated = getRelatedNotesOffline(toolArgs.filePath || '');
+        sendJsonRpc(id, {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  notice: 'Obsidian app is offline. Related notes derived from static outlinks.',
+                  related: offlineRelated
                 },
                 null,
                 2
@@ -290,7 +370,7 @@ rl.on('line', async line => {
     return;
   }
 
-  // Unsupported methods
+  // Unsupported methods (ignore notifications without id)
   if (id !== undefined) {
     sendJsonRpc(id, null, { code: -32601, message: `Method not found: ${method}` });
   }
