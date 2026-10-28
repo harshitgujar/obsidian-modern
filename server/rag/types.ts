@@ -4,9 +4,11 @@ export interface DocumentChunk {
   noteTitle: string;        // e.g. "No prior experience"
   heading: string;          // e.g. "Core AI Features"
   headingLevel: number;     // 1 to 6 (0 if before first heading)
+  breadcrumbs: string[];    // Hierarchical heading trail: ["Doc Title", "Heading 1", "Subheading 2"]
   wikilink: string;         // e.g. "[[No prior experience#Core AI Features]]"
   tags: string[];           // Extracted tags (frontmatter + inline)
-  content: string;          // Chunk text content
+  outlinks: string[];       // Explicit [[wikilinks]] targeted inside this chunk
+  content: string;          // Chunk text content with breadcrumb context
   charCount: number;
   tokenEstimate: number;    // ~chars / 4
   vector?: number[];        // Float embedding vector
@@ -31,7 +33,8 @@ export interface IndexManifest {
 export interface RAGSearchResult {
   chunk: DocumentChunk;
   score: number;            // Normalized similarity score (0 to 1)
-  matchType: 'semantic' | 'lexical' | 'hybrid';
+  matchType: 'semantic' | 'lexical' | 'hybrid' | 'graph';
+  graphSource?: string;     // e.g. "Linked via [[Architecture]]"
 }
 
 export interface AIProviderConfig {
@@ -53,4 +56,6 @@ export interface RAGStatus {
   isProviderAvailable: boolean;
   providerError?: string;
   lastIndexTime: number;
+  queueLength?: number;
+  progressPercent?: number;
 }

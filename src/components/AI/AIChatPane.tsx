@@ -13,7 +13,9 @@ import {
   RefreshCw, 
   ExternalLink,
   Bot,
-  ChevronDown
+  ChevronDown,
+  Share2,
+  Cpu
 } from 'lucide-react';
 import { VaultFile } from '../../types';
 
@@ -24,6 +26,9 @@ export interface AISourceCitation {
   heading: string;
   score: number;
   snippet: string;
+  matchType?: 'semantic' | 'lexical' | 'hybrid' | 'graph';
+  graphSource?: string;
+  breadcrumbs?: string[];
 }
 
 export interface ChatMessage {
@@ -294,16 +299,24 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           {/* Model Status Pill */}
           {aiStatus && (
             <div
-              title={`Provider: ${aiStatus.provider} • Model: ${aiStatus.embeddingModel || 'default'}`}
-              className="flex items-center gap-1.5 bg-white/[0.06] px-2 py-0.5 rounded-full text-[10px] text-zinc-300 border border-white/[0.08] shadow-sm"
+              title={`Provider: ${aiStatus.provider} • Engine: GraphRAG (BM25 + Semantic + 1-Hop) • Model: ${aiStatus.embeddingModel || 'default'}`}
+              className="flex items-center gap-1.5 bg-[#202028] px-2 py-0.5 rounded-full text-[10px] text-zinc-300 border-none shadow-sm"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  aiStatus.isProviderAvailable ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-amber-400'
+                  aiStatus.isIndexing
+                    ? 'bg-purple-400 animate-pulse'
+                    : aiStatus.isProviderAvailable
+                    ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                    : 'bg-indigo-400'
                 }`}
               />
-              <span className="truncate max-w-[80px] font-medium">
-                {aiStatus.isProviderAvailable ? 'Ollama' : 'Offline'}
+              <span className="truncate max-w-[105px] font-medium">
+                {aiStatus.isIndexing
+                  ? `Indexing (${aiStatus.queueLength || 0})...`
+                  : aiStatus.isProviderAvailable
+                  ? 'Ollama (Local)'
+                  : 'GraphRAG (Local)'}
               </span>
             </div>
           )}
@@ -392,25 +405,43 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                 {/* Grounded Citations (Source Pills) */}
                 {!isUser && msg.sources && msg.sources.length > 0 && (
                   <div className="mt-3.5 pt-3 border-t border-white/[0.08]">
-                    <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                      <FileText className="w-3 h-3 text-purple-400" />
-                      <span>Vault Sources ({msg.sources.length}):</span>
+                    <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="w-3 h-3 text-[#705dcf]" />
+                        <span>Grounded Sources ({msg.sources.length}):</span>
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-500">BM25 + Dense + Graph</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {msg.sources.map((src, sIdx) => (
-                        <button
-                          key={sIdx}
-                          onClick={() => onNavigateFile(src.filePath)}
-                          title={`${src.snippet} (${src.score}% match)`}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white text-[11px] font-medium shadow-sm transition-all select-none"
-                        >
-                          <ExternalLink className="w-2.5 h-2.5 shrink-0 text-white/80" />
-                          <span className="truncate max-w-[140px]">{src.noteTitle}</span>
-                          <span className="text-[9px] text-white/90 font-mono font-semibold">
-                            {src.score}%
-                          </span>
-                        </button>
-                      ))}
+                      {msg.sources.map((src, sIdx) => {
+                        const isGraph = src.matchType === 'graph';
+                        const tooltip = [
+                          src.breadcrumbs && src.breadcrumbs.length > 1 ? `Context: ${src.breadcrumbs.join(' > ')}` : null,
+                          src.graphSource ? `Graph link: ${src.graphSource}` : null,
+                          `${src.snippet} (${src.score}% match)`
+                        ].filter(Boolean).join('\n\n');
+
+                        return (
+                          <button
+                            key={sIdx}
+                            onClick={() => onNavigateFile(src.filePath)}
+                            title={tooltip}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border-none text-white text-[11px] font-medium shadow-sm transition-all select-none ${
+                              isGraph ? 'bg-[#5e4db5] hover:bg-[#4d3da3]' : 'bg-[#705dcf] hover:bg-[#5e4db5]'
+                            }`}
+                          >
+                            {isGraph ? (
+                              <Share2 className="w-2.5 h-2.5 shrink-0 text-amber-300" />
+                            ) : (
+                              <ExternalLink className="w-2.5 h-2.5 shrink-0 text-white/80" />
+                            )}
+                            <span className="truncate max-w-[130px]">{src.noteTitle}</span>
+                            <span className="text-[9px] text-white/90 font-mono font-semibold">
+                              {src.score}%
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

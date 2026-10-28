@@ -225,6 +225,43 @@ export class VectorStore {
   }
 
   /**
+   * Retrieves all chunks belonging to a specific note.
+   */
+  public getChunksByNote(filePath: string): DocumentChunk[] {
+    const meta = this.manifest.files[filePath];
+    if (!meta) return [];
+    return meta.chunkIds.map(id => this.chunks.get(id)).filter(Boolean) as DocumentChunk[];
+  }
+
+  /**
+   * Retrieves chunks for a note by title (case-insensitive).
+   */
+  public getChunksByTitle(noteTitle: string): DocumentChunk[] {
+    const target = noteTitle.toLowerCase();
+    const results: DocumentChunk[] = [];
+    for (const chunk of this.chunks.values()) {
+      if (chunk.noteTitle.toLowerCase() === target) {
+        results.push(chunk);
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Graph Traversal: Finds all chunks across the vault that explicitly link to a note title.
+   */
+  public findChunksLinkingTo(noteTitle: string): DocumentChunk[] {
+    const target = noteTitle.toLowerCase();
+    const results: DocumentChunk[] = [];
+    for (const chunk of this.chunks.values()) {
+      if (chunk.outlinks && chunk.outlinks.some(l => l.toLowerCase() === target)) {
+        results.push(chunk);
+      }
+    }
+    return results;
+  }
+
+  /**
    * Computes cosine similarity between two normalized vectors.
    */
   private cosineSimilarity(a: number[], b: number[]): number {

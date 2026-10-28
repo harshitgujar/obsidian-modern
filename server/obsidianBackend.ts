@@ -206,6 +206,7 @@ export class ObsidianVaultServer {
   private suppressWatchUntil: number = 0;
   private ragEngine!: RAGEngine;
   private mcpServer!: VaultMCPServer;
+  private ragIndexTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(options?: ObsidianServerOptions) {
     this.rootDir = options?.rootDir || process.env.OBSIDIAN_ROOT_DIR || process.cwd();
@@ -238,13 +239,21 @@ export class ObsidianVaultServer {
 
   public async syncVaultRAG() {
     try {
+      this.ragEngine.setIndexingStatus(true);
       const { files } = this.scanVault();
       const mdFiles = files.filter(f => f.extension === 'md' && !f.isBinary);
+      let count = 0;
       for (const file of mdFiles) {
+        count++;
+        this.ragEngine.setIndexingStatus(true, mdFiles.length - count);
         await this.ragEngine.getVectorStore().indexFile(file.path, file.content, file.updatedAt);
+        // Non-blocking yield to keep event loop and UI smooth
+        await new Promise(resolve => setImmediate(resolve));
       }
     } catch (err) {
       console.warn('Error syncing vault RAG:', err);
+    } finally {
+      this.ragEngine.setIndexingStatus(false, 0);
     }
   }
 
@@ -552,11 +561,17 @@ export class ObsidianVaultServer {
     // Save snapshot in .obsidian/file-recovery if markdown/canvas
     this.recordFileRecoverySnapshot(relPath, content);
 
-    // Auto-update RAG vector store incrementally
+    // Auto-update RAG vector store with a 1200ms debounce to prevent CPU/battery drain during rapid typing
     if (relPath.endsWith('.md')) {
-      this.ragEngine.getVectorStore().indexFile(relPath, content).catch(err => {
-        console.warn('RAG auto-index error:', err);
-      });
+      const existing = this.ragIndexTimers.get(relPath);
+      if (existing) clearTimeout(existing);
+      const timer = setTimeout(() => {
+        this.ragIndexTimers.delete(relPath);
+        this.ragEngine.getVectorStore().indexFile(relPath, content).catch(err => {
+          console.warn('RAG auto-index error:', err);
+        });
+      }, 1200);
+      this.ragIndexTimers.set(relPath, timer);
     }
 
     const stat = fs.statSync(absPath);
@@ -1187,14 +1202,17 @@ export class ObsidianVaultServer {
             'Connection': 'keep-alive'
           });
 
-          // Send citations metadata event first
+          // Send citations metadata event first with GraphRAG connection information
           const sources = searchResults.map(r => ({
             wikilink: r.chunk.wikilink,
             noteTitle: r.chunk.noteTitle,
             filePath: r.chunk.filePath,
             heading: r.chunk.heading,
             score: Math.round(r.score * 100),
-            snippet: r.chunk.content.slice(0, 160)
+            snippet: r.chunk.content.slice(0, 160),
+            matchType: r.matchType,
+            graphSource: r.graphSource,
+            breadcrumbs: r.chunk.breadcrumbs
           }));
           res.write(`event: sources\ndata: ${JSON.stringify(sources)}\n\n`);
 
