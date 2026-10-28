@@ -441,6 +441,23 @@ export class VaultManager {
     return false;
   }
 
+  async pickVaultFolder(): Promise<string | null> {
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.pickVaultFolder) {
+      try {
+        const p = await (window as any).electronAPI.pickVaultFolder();
+        if (p) return p;
+      } catch {}
+    }
+    try {
+      const res = await fetch('/api/vaults/pick-folder', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.path) return data.path;
+      }
+    } catch {}
+    return null;
+  }
+
   getRecentNotePaths(): string[] {
     try {
       const workspace = this.configs.workspace;

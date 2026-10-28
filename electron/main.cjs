@@ -193,6 +193,13 @@ function startEmbeddedServer(distDir, vaultServer) {
 
 function createWindow(targetUrl) {
   const iconPath = path.join(__dirname, '../build/icon.png');
+
+  if (process.platform === 'darwin' && app.dock && fs.existsSync(iconPath)) {
+    try {
+      app.dock.setIcon(iconPath);
+    } catch {}
+  }
+
   const win = new BrowserWindow({
     title: 'Runagon',
     width: 1360,
@@ -204,6 +211,7 @@ function createWindow(targetUrl) {
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 14, y: 14 },
     webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true
     }

@@ -618,6 +618,58 @@ export const App: React.FC = () => {
     }
   }, [handleSelectFile, syncFromVaultManager]);
 
+  // Seamless Vault Switching & Multi-Vault Workspace Transition
+  const handleSwitchVault = useCallback(async (targetPath: string, copySandbox: boolean = false) => {
+    setIsVaultLoaded(false);
+    const success = await vault.openVault(targetPath, copySandbox);
+    if (success) {
+      syncFromVaultManager();
+      const loadedFiles = vault.getFiles();
+      const ws = vault.getConfig('workspace');
+      if (ws && Array.isArray(ws.panes) && ws.panes.length > 0) {
+        const validPanes = ws.panes.map((p: any) => ({
+          ...p,
+          tabs: Array.isArray(p.tabs) ? p.tabs.filter((t: any) => loadedFiles.some(f => f.path === t.filePath)) : []
+        })).filter((p: any) => p.tabs && p.tabs.length > 0);
+
+        if (validPanes.length > 0) {
+          setPanes(validPanes);
+          setActivePaneId(validPanes[0].id);
+        } else if (loadedFiles.length > 0) {
+          const initialTab: TabItem = {
+            id: `tab-${Date.now()}`,
+            filePath: loadedFiles[0].path,
+            viewMode: 'live'
+          };
+          setPanes([{
+            id: 'pane-main',
+            tabs: [initialTab],
+            activeTabId: initialTab.id
+          }]);
+          setActivePaneId('pane-main');
+        } else {
+          setPanes([]);
+        }
+      } else if (loadedFiles.length > 0) {
+        const welcomeFile = loadedFiles.find(f => f.name.toLowerCase().includes('start') || f.name.toLowerCase().includes('welcome')) || loadedFiles[0];
+        const initialTab: TabItem = {
+          id: `tab-${Date.now()}`,
+          filePath: welcomeFile.path,
+          viewMode: 'live'
+        };
+        setPanes([{
+          id: 'pane-main',
+          tabs: [initialTab],
+          activeTabId: initialTab.id
+        }]);
+        setActivePaneId('pane-main');
+      } else {
+        setPanes([]);
+      }
+      setIsVaultLoaded(true);
+    }
+  }, [syncFromVaultManager]);
+
   const handleRevealInNavigation = useCallback((filePath: string) => {
     setIsSidebarOpen(true);
     setActiveSidebarTab('files');
@@ -1418,21 +1470,30 @@ export const App: React.FC = () => {
     handleGoForward
   ]);
 
-  // Synchronize dynamic window title
+  // Synchronize dynamic window title with active note & vault name
   useEffect(() => {
     if (activeFile) {
-      document.title = `${activeFile.name.replace(/\.[^/.]+$/, '')} - Runagon`;
+      const noteTitle = activeFile.name.replace(/\.[^/.]+$/, '');
+      document.title = `${noteTitle} - ${vaultName || 'Vault'} - Runagon`;
     } else {
-      document.title = 'Runagon';
+      document.title = vaultName ? `${vaultName} - Runagon` : 'Runagon';
     }
-  }, [activeFile]);
+  }, [activeFile, vaultName]);
 
   if (!isVaultLoaded) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#121214] text-zinc-400">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-400 animate-pulse" />
-          <span>Loading Runagon Vault from disk...</span>
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#141417] text-zinc-400 gap-4 select-none">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute w-24 h-24 bg-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
+          <img 
+            src="/logo-symbol.png" 
+            alt="Runagon Logo" 
+            className="w-16 h-16 object-contain drop-shadow-[0_0_20px_rgba(68,87,255,0.6)] animate-pulse" 
+          />
+        </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <span className="text-zinc-100 text-base font-bold tracking-wider">RUNAGON</span>
+          <span className="text-xs text-zinc-500 font-medium">Opening vault from disk...</span>
         </div>
       </div>
     );
@@ -1452,6 +1513,8 @@ export const App: React.FC = () => {
           activeSidebarTab={activeSidebarTab}
           isDarkTheme={isDarkTheme}
           vaultName={vaultName}
+          knownVaults={knownVaults}
+          onSwitchVault={handleSwitchVault}
           isRecordingAudio={isRecordingAudio}
           corePluginsConfig={corePluginsConfig}
           isGraphViewActive={isGraphViewActive}
@@ -1829,69 +1892,11 @@ export const App: React.FC = () => {
         knownVaults={knownVaults}
         activeVaultPath={vaultPath}
         onOpenVault={async targetPath => {
-          await vault.openVault(targetPath, false);
-          syncFromVaultManager();
+          await handleSwitchVault(targetPath, false);
           setIsVaultModalOpen(false);
         }}
-        onCreateVault={async targetPath => {
-          await vault.openVault(targetPath, true);
-          syncFromVaultManager();
-          setIsVaultModalOpen(false);
-        }}
-        onResetSandbox={async () => {
-          await vault.resetSandboxVault();
-          syncFromVaultManager();
-          setIsVaultModalOpen(false);
-        }}
-        onRemoveVault={async targetPath => {
-          await vault.removeVaultFromList(targetPath);
-          syncFromVaultManager();
-        }}
-      />
-
-      {/* File Recovery Modal */}
-      <FileRecoveryModal
-        isOpen={isRecoveryModalOpen}
-        onClose={() => setIsRecoveryModalOpen(false)}
-        activeFilePath={activeFilePath}
-        onRestoreSnapshot={async (path, content) => {
-          await handleContentChange(path, content);
-          handleSelectFile(path);
-        }}
-      />
-
-      {/* Template Picker Modal */}
-      <TemplatePickerModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        files={files}
-        onSelectTemplate={handleInsertTemplate}
-      />
-
-      {/* Fullscreen Slide Deck Presentation */}
-      {activeFile && (
-        <SlideDeck
-          file={activeFile}
-          isOpen={isPresentationOpen}
-          onClose={() => setIsPresentationOpen(false)}
-          onNavigateLink={handleNavigateLink}
-        />
-      )}
-
-      {/* Vault Switcher & Manager Modal */}
-      <VaultSwitcherModal
-        isOpen={isVaultModalOpen}
-        onClose={() => setIsVaultModalOpen(false)}
-        knownVaults={knownVaults}
-        activeVaultPath={vaultPath}
-        onOpenVault={async targetPath => {
-          await vault.openVault(targetPath, false);
-          syncFromVaultManager();
-          setIsVaultModalOpen(false);
-        }}
-        onCreateVault={async targetPath => {
-          await vault.openVault(targetPath, true);
-          syncFromVaultManager();
+        onCreateVault={async (targetPath, copySandbox = false) => {
+          await handleSwitchVault(targetPath, copySandbox);
           setIsVaultModalOpen(false);
         }}
         onResetSandbox={async () => {

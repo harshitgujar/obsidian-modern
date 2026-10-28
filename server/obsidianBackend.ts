@@ -14,6 +14,7 @@ export interface VaultEntry {
   name: string;
   ts: number;
   open: boolean;
+  noteCount?: number;
 }
 
 export interface DiskFileEntry {
@@ -292,20 +293,40 @@ export class ObsidianVaultServer {
   public getKnownVaults(): VaultEntry[] {
     try {
       const raw = JSON.parse(fs.readFileSync(this.globalConfigPath, 'utf8'));
-      return Object.entries(raw.vaults || {}).map(([id, v]: [string, any]) => ({
-        id,
-        path: v.path,
-        name: path.basename(v.path),
-        ts: v.ts || Date.now(),
-        open: v.path === this.activeVaultPath
-      }));
+      return Object.entries(raw.vaults || {}).map(([id, v]: [string, any]) => {
+        let noteCount = 0;
+        if (fs.existsSync(v.path)) {
+          try {
+            const countNotes = (dir: string): number => {
+              let total = 0;
+              const entries = fs.readdirSync(dir, { withFileTypes: true });
+              for (const e of entries) {
+                if (e.name.startsWith('.')) continue;
+                if (e.isDirectory()) total += countNotes(path.join(dir, e.name));
+                else if (e.name.endsWith('.md') || e.name.endsWith('.canvas')) total += 1;
+              }
+              return total;
+            };
+            noteCount = countNotes(v.path);
+          } catch {}
+        }
+        return {
+          id,
+          path: v.path,
+          name: path.basename(v.path),
+          ts: v.ts || Date.now(),
+          open: v.path === this.activeVaultPath,
+          noteCount
+        };
+      });
     } catch {
       return [{
         id: 'default',
         path: this.activeVaultPath,
         name: path.basename(this.activeVaultPath),
         ts: Date.now(),
-        open: true
+        open: true,
+        noteCount: 0
       }];
     }
   }
@@ -1217,6 +1238,38 @@ export class ObsidianVaultServer {
           const vaults = this.getKnownVaults().filter(v => v.path !== body.path);
           this.saveKnownVaults(vaults);
           return sendJson(200, { ok: true, vaults });
+        }
+
+        if (pathname === '/api/vaults/pick-folder' && req.method === 'POST') {
+          if (process.platform === 'darwin') {
+            try {
+              const { exec } = await import('node:child_process');
+              const chosenPath = await new Promise<string | null>((resolve) => {
+                exec(`osascript -e 'POSIX path of (choose folder with prompt "Select a Runagon Vault folder:")'`, { timeout: 30000 }, (err, stdout) => {
+                  if (err || !stdout.trim()) return resolve(null);
+                  resolve(stdout.trim());
+                });
+              });
+              if (chosenPath) {
+                return sendJson(200, { ok: true, path: chosenPath });
+              }
+            } catch {}
+          } else if (process.platform === 'linux') {
+            try {
+              const { exec } = await import('node:child_process');
+              const chosenPath = await new Promise<string | null>((resolve) => {
+                exec(`zenity --file-selection --directory --title="Select Runagon Vault folder" 2>/dev/null`, { timeout: 30000 }, (err, stdout) => {
+                  if (err || !stdout.trim()) return resolve(null);
+                  resolve(stdout.trim());
+                });
+              });
+              if (chosenPath) {
+                return sendJson(200, { ok: true, path: chosenPath });
+              }
+            } catch {}
+          }
+          const defaultBase = path.join(os.homedir(), 'Documents', 'RunagonVaults');
+          return sendJson(200, { ok: true, path: null, suggestedBase: defaultBase });
         }
 
         // ==========================================

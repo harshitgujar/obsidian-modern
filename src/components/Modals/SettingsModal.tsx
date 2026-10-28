@@ -1537,11 +1537,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 6: About */}
             {activeSection === 'about' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-800/40 space-y-2">
-                  <div className="text-base font-bold text-purple-300">Runagon Engine</div>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    100% real local-first architecture built on the high-performance Runagon core engine. All notes, canvases, bookmarks, CSS snippets, and configs live on disk without any mock data.
-                  </p>
+                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-950/30 to-purple-950/20 border border-blue-500/30 flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0 shadow-lg">
+                    <img src="/logo-symbol.png" alt="Runagon" className="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(68,87,255,0.6)]" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                      <span>Runagon</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-300 border border-blue-500/30 font-mono">v1.0.0</span>
+                    </div>
+                    <p className="text-zinc-400 text-xs leading-relaxed">
+                      100% private, local-first knowledge base and AI memory engine. All notes, canvases, bookmarks, CSS snippets, and graph indices live directly on your disk.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">

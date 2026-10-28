@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { VaultFile, SidebarTab, BookmarkItem } from '../../types';
+import { VaultFile, SidebarTab, BookmarkItem, VaultInfo } from '../../types';
 import { vault } from '../../services/vault';
 import { FileContextMenu } from '../Common/FileContextMenu';
 import { 
@@ -44,7 +44,8 @@ import {
   Image as ImageIcon,
   Music,
   FileCode,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -55,6 +56,8 @@ interface SidebarProps {
   activeSidebarTab: SidebarTab;
   isDarkTheme: boolean;
   vaultName: string;
+  knownVaults?: VaultInfo[];
+  onSwitchVault?: (targetPath: string) => void;
   isRecordingAudio?: boolean;
   isGraphViewActive?: boolean;
   activeRibbonTab?: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas';
@@ -95,6 +98,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeSidebarTab,
   isDarkTheme,
   vaultName,
+  knownVaults = [],
+  onSwitchVault,
   isRecordingAudio = false,
   isGraphViewActive = false,
   activeRibbonTab,
@@ -131,6 +136,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [editTitleValue, setEditTitleValue] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [isVaultDropdownOpen, setIsVaultDropdownOpen] = useState(false);
+
+  // Close vault dropdown on outside click
+  useEffect(() => {
+    if (!isVaultDropdownOpen) return;
+    const handleCloseDropdown = () => setIsVaultDropdownOpen(false);
+    window.addEventListener('click', handleCloseDropdown);
+    return () => window.removeEventListener('click', handleCloseDropdown);
+  }, [isVaultDropdownOpen]);
 
   // Right-click Context Menu state
   const [contextMenu, setContextMenu] = useState<{
@@ -429,8 +443,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className="flex h-full glass-sidebar select-none shrink-0 relative">
       {/* 1. Left Vertical Ribbon */}
-      <div className="w-12 glass-ribbon flex flex-col items-center pt-8 pb-3 justify-between shrink-0">
+      <div className="w-12 glass-ribbon flex flex-col items-center pt-7 pb-3 justify-between shrink-0">
         <div className="flex flex-col items-center gap-1.5">
+          {/* Runagon Brand & Vault Switcher Button */}
+          <button
+            onClick={onOpenVaultManager}
+            title={`Runagon: ${vaultName}\nClick to switch vaults`}
+            className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-white/[0.08] transition-all mb-1 group relative cursor-pointer"
+          >
+            <img 
+              src="/logo-symbol.png" 
+              alt="Runagon" 
+              className="w-5 h-5 object-contain transition-transform group-hover:scale-115 drop-shadow-[0_0_8px_rgba(68,87,255,0.45)]" 
+            />
+          </button>
+
+          <div className="w-6 h-[1px] bg-white/[0.08] mb-1" />
+
           <button
             onClick={() => {
               if (onOpenFilesView) {
@@ -570,13 +599,87 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* 2. Main Sidebar Drawer Content */}
       <div className="w-64 flex flex-col h-full bg-black/20 backdrop-blur-2xl">
         {/* Tab Header */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.07] bg-white/[0.02]">
-          <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate">
-            {activeSidebarTab === 'files' && vaultName}
-            {activeSidebarTab === 'search' && 'Search Vault'}
-            {activeSidebarTab === 'bookmarks' && 'Bookmarks'}
-            {activeSidebarTab === 'tags' && 'Tags'}
-          </span>
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.07] bg-white/[0.02] relative">
+          {activeSidebarTab === 'files' ? (
+            <div className="relative flex-1 min-w-0 mr-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsVaultDropdownOpen(prev => !prev);
+                }}
+                className="flex items-center gap-1.5 py-1 px-1.5 -ml-1 rounded-lg hover:bg-white/[0.08] transition-colors text-[11px] font-semibold text-zinc-200 uppercase tracking-wider group cursor-pointer max-w-full"
+                title="Switch between vaults"
+              >
+                <img src="/logo-symbol.png" alt="" className="w-3.5 h-3.5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(68,87,255,0.4)]" />
+                <span className="truncate">{vaultName}</span>
+                <ChevronDown className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-transform shrink-0" />
+              </button>
+
+              {/* Quick Vault Switcher Dropdown */}
+              {isVaultDropdownOpen && (
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 top-full mt-1.5 w-60 bg-[#16161a]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-1.5 z-50 text-xs text-zinc-200 space-y-1 select-none"
+                >
+                  <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
+                    <span>Switch Vault</span>
+                    <span className="text-[9px] bg-blue-500/10 text-blue-300 px-1.5 py-0.5 rounded font-mono">{knownVaults?.length || 1}</span>
+                  </div>
+
+                  <div className="max-h-52 overflow-y-auto space-y-0.5">
+                    {knownVaults?.map(v => {
+                      const isCurrent = v.name === vaultName;
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => {
+                            if (!isCurrent && onSwitchVault) {
+                              onSwitchVault(v.path);
+                            }
+                            setIsVaultDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                            isCurrent
+                              ? 'bg-blue-600/30 text-blue-200 font-medium'
+                              : 'hover:bg-white/[0.08] text-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate mr-2">
+                            <Folder className={`w-3.5 h-3.5 shrink-0 ${isCurrent ? 'text-blue-400' : 'text-zinc-500'}`} />
+                            <span className="truncate text-xs">{v.name}</span>
+                          </div>
+                          {isCurrent ? (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-medium">Active</span>
+                          ) : typeof v.noteCount === 'number' && (
+                            <span className="text-[10px] text-zinc-500 font-mono">{v.noteCount}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-1 border-t border-white/10">
+                    <button
+                      onClick={() => {
+                        setIsVaultDropdownOpen(false);
+                        onOpenVaultManager();
+                      }}
+                      className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.08] text-zinc-300 hover:text-white text-[11px] font-medium transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Manage & Create Vaults...</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider truncate">
+              {activeSidebarTab === 'search' && 'Search Vault'}
+              {activeSidebarTab === 'bookmarks' && 'Bookmarks'}
+              {activeSidebarTab === 'tags' && 'Tags'}
+            </span>
+          )}
 
           {activeSidebarTab === 'files' && (
             <div className="flex items-center gap-1">
@@ -1134,9 +1237,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-2.5 py-1.5 border-t border-zinc-800/80 bg-[#121214] flex items-center justify-between text-xs text-zinc-400 select-none shrink-0">
           <button
             onClick={onOpenVaultManager}
-            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-800 text-zinc-300 transition-colors truncate max-w-[140px]"
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-800 text-zinc-300 transition-colors truncate max-w-[150px] group"
             title="Open Vault Switcher"
           >
+            <img src="/logo-symbol.png" alt="" className="w-3.5 h-3.5 object-contain shrink-0 group-hover:scale-110 transition-transform drop-shadow-[0_0_6px_rgba(68,87,255,0.4)]" />
             <span className="truncate font-medium">{vaultName}</span>
             <span className="text-[10px] text-zinc-500">▾</span>
           </button>

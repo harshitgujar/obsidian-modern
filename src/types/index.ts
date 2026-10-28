@@ -150,6 +150,7 @@ export interface VaultInfo {
   path: string;
   ts: number;
   open: boolean;
+  noteCount?: number;
 }
 
 export interface RecoverySnapshot {
