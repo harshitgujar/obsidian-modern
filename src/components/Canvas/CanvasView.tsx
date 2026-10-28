@@ -1100,7 +1100,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     if (!selectedNodeId) return;
     persistCanvas({
       ...canvasData,
-      nodes: canvasData.nodes.map(n => n.id === selectedNodeId ? { ...n, color: colorKey } : n)
+      nodes: canvasData.nodes.map(n => {
+        if (n.id !== selectedNodeId) return n;
+        const nextColor = n.color === colorKey ? undefined : colorKey;
+        return { ...n, color: nextColor };
+      })
     });
   };
 
@@ -1558,7 +1562,21 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           </button>
 
           {/* Color presets dropdown / toggle */}
-          <div className="flex items-center gap-1 px-1.5 border-l border-zinc-700/60">
+          <div className="flex items-center gap-1.5 px-2 border-l border-zinc-700/60">
+            {/* Reset / Default Color */}
+            <button
+              onClick={() => {
+                if (!selectedNodeId) return;
+                persistCanvas({
+                  ...canvasData,
+                  nodes: canvasData.nodes.map(n => n.id === selectedNodeId ? { ...n, color: undefined } : n)
+                });
+              }}
+              className={`w-3.5 h-3.5 rounded-full border border-zinc-600 bg-zinc-800 transition-transform hover:scale-125 ${
+                !selectedNode.color ? 'ring-2 ring-white scale-110' : ''
+              }`}
+              title="Default Color (None)"
+            />
             {Object.entries(COLOR_PRESETS).map(([key, style]) => (
               <button
                 key={key}
@@ -2127,7 +2145,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         {/* Node Cards Layer */}
         {canvasData.nodes.map(node => {
           const isSelected = selectedNodeId === node.id;
-          const colorStyle = COLOR_PRESETS[node.color || '6'] || COLOR_PRESETS['6'];
+          const nodeColorKey = node.color;
+          const customColor = nodeColorKey
+            ? (COLOR_PRESETS[nodeColorKey] || (nodeColorKey.startsWith('#') ? { bg: 'bg-[#18181c]', border: '', text: 'text-zinc-200', hex: nodeColorKey, groupBg: 'bg-white/5' } : null))
+            : null;
+          const cardHex = customColor ? customColor.hex : (isSelected ? '#a855f7' : undefined);
 
           const isGroup = node.type === 'group';
           const isCanvasFile = node.type === 'file' && node.file?.endsWith('.canvas');
@@ -2155,18 +2177,26 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 setSelectedEdgeId(null);
               }}
               onMouseDown={e => startDragNode(node, e)}
-              className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-colors duration-150 select-none ${
+              className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-all duration-150 select-none ${
                 isGroup
-                  ? `${colorStyle.groupBg} ${colorStyle.border} border-dashed border-2 rounded-2xl z-0 p-3`
+                  ? `${customColor ? customColor.groupBg : 'bg-purple-950/20'} border-dashed border-2 rounded-2xl z-0 p-3`
                   : isSelected
-                  ? 'bg-[#18181c] border-2 border-purple-500 ring-2 ring-purple-500/30 rounded-2xl z-20 p-4'
+                  ? `${customColor ? customColor.bg : 'bg-[#18181c]'} border-2 rounded-2xl z-20 p-4`
+                  : customColor
+                  ? `${customColor.bg} border-2 rounded-2xl z-10 p-4`
                   : 'bg-[#18181c] border border-zinc-700/80 hover:border-zinc-500 rounded-2xl z-10 p-4'
               }`}
               style={{
                 left: `${node.x}px`,
                 top: `${node.y}px`,
                 width: `${node.width}px`,
-                height: `${node.height}px`
+                height: `${node.height}px`,
+                borderColor: cardHex || (isSelected ? '#a855f7' : undefined),
+                boxShadow: isSelected
+                  ? `0 0 0 3px ${(cardHex || '#a855f7')}40, 0 20px 30px -10px rgba(0,0,0,0.6)`
+                  : customColor
+                  ? `0 4px 20px -2px ${(cardHex || '#a855f7')}25`
+                  : undefined
               }}
             >
               {/* Group Node Header */}
@@ -2213,7 +2243,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                       ) : isLink ? (
                         <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                       ) : (
-                        <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: cardHex || '#a855f7' }} />
                       )}
                       <span className="font-bold text-sm text-zinc-100 truncate">
                         {isCanvasFile
@@ -2431,12 +2461,17 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                     return (
                       <div
                         key={side}
+                        style={
+                          isHoveredTarget || isSourcePort
+                            ? { backgroundColor: cardHex || '#a855f7', borderColor: '#ffffff' }
+                            : { borderColor: cardHex || '#a855f7' }
+                        }
                         className={`canvas-port absolute ${posClass} w-3.5 h-3.5 rounded-full z-30 transition-transform cursor-crosshair flex items-center justify-center ${
                           isHoveredTarget
-                            ? 'scale-150 bg-purple-500 border-2 border-white ring-4 ring-purple-500/50'
+                            ? 'scale-150 border-2 ring-4 ring-purple-500/50'
                             : isSourcePort
-                            ? 'scale-125 bg-purple-400 border-2 border-white ring-2 ring-purple-400'
-                            : 'bg-zinc-800 border-2 border-purple-400 hover:bg-purple-500 hover:scale-125 shadow-lg'
+                            ? 'scale-125 border-2 ring-2 ring-purple-400'
+                            : 'bg-zinc-800 border-2 hover:scale-125 shadow-lg'
                         }`}
                         onMouseDown={e => handleStartConnection(node.id, side, e)}
                         onMouseEnter={() => {
@@ -2463,40 +2498,48 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 <>
                   <div
                     onMouseDown={e => startResizeNode(node, 'bottom-right', e)}
-                    className="canvas-resizer-handle absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border-2 border-white rounded-full cursor-se-resize z-40 hover:scale-125 shadow-md"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 border-2 border-white rounded-full cursor-se-resize z-40 hover:scale-125 shadow-md transition-transform"
                     title="Resize Card"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'bottom-left', e)}
-                    className="canvas-resizer-handle absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border-2 border-white rounded-full cursor-sw-resize z-40 hover:scale-125 shadow-md"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 border-2 border-white rounded-full cursor-sw-resize z-40 hover:scale-125 shadow-md transition-transform"
                     title="Resize Card"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'top-right', e)}
-                    className="canvas-resizer-handle absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border-2 border-white rounded-full cursor-ne-resize z-40 hover:scale-125 shadow-md"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -top-1.5 -right-1.5 w-3.5 h-3.5 border-2 border-white rounded-full cursor-ne-resize z-40 hover:scale-125 shadow-md transition-transform"
                     title="Resize Card"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'top-left', e)}
-                    className="canvas-resizer-handle absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border-2 border-white rounded-full cursor-nw-resize z-40 hover:scale-125 shadow-md"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -top-1.5 -left-1.5 w-3.5 h-3.5 border-2 border-white rounded-full cursor-nw-resize z-40 hover:scale-125 shadow-md transition-transform"
                     title="Resize Card"
                   />
 
                   <div
                     onMouseDown={e => startResizeNode(node, 'right', e)}
-                    className="canvas-resizer-handle absolute top-1/4 bottom-1/4 -right-1 w-2 cursor-e-resize z-30 hover:bg-purple-500/50 rounded"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute top-1/4 bottom-1/4 -right-1 w-2 cursor-e-resize z-30 opacity-0 hover:opacity-50 rounded"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'bottom', e)}
-                    className="canvas-resizer-handle absolute -bottom-1 left-1/4 right-1/4 h-2 cursor-s-resize z-30 hover:bg-purple-500/50 rounded"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -bottom-1 left-1/4 right-1/4 h-2 cursor-s-resize z-30 opacity-0 hover:opacity-50 rounded"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'left', e)}
-                    className="canvas-resizer-handle absolute top-1/4 bottom-1/4 -left-1 w-2 cursor-w-resize z-30 hover:bg-purple-500/50 rounded"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute top-1/4 bottom-1/4 -left-1 w-2 cursor-w-resize z-30 opacity-0 hover:opacity-50 rounded"
                   />
                   <div
                     onMouseDown={e => startResizeNode(node, 'top', e)}
-                    className="canvas-resizer-handle absolute -top-1 left-1/4 right-1/4 h-2 cursor-n-resize z-30 hover:bg-purple-500/50 rounded"
+                    style={{ backgroundColor: cardHex || '#a855f7' }}
+                    className="canvas-resizer-handle absolute -top-1 left-1/4 right-1/4 h-2 cursor-n-resize z-30 opacity-0 hover:opacity-50 rounded"
                   />
                 </>
               )}
