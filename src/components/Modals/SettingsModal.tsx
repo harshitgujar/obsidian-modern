@@ -247,6 +247,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
       if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
       await fetchAiStatus();
+      window.dispatchEvent(new CustomEvent('runagon-ai-config-changed'));
       window.dispatchEvent(new CustomEvent('obsidian-ai-config-changed'));
 
       const testRes = await fetch('/api/vault/ai/status');
@@ -294,7 +295,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const configSnippet = JSON.stringify(
       {
         mcpServers: {
-          "obsidian-vault": {
+          "runagon-vault": {
             url: "http://localhost:5175/api/vault/ai/mcp"
           }
         }
@@ -662,7 +663,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                     <div>
                       <div className="font-medium text-zinc-200">Base color scheme</div>
-                      <div className="text-zinc-500 text-[11px]">Choose between Dark (Obsidian) and Light (Moonstone)</div>
+                      <div className="text-zinc-500 text-[11px]">Choose between Dark (Runagon) and Light (Moonstone)</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -712,7 +713,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeSection === 'plugins' && (
               <div className="space-y-2">
                 <div className="text-zinc-400 mb-3 text-[11px]">
-                  Obsidian built-in core extensions:
+                  Runagon built-in core extensions:
                 </div>
                 {Object.entries({
                   'canvas': 'Infinite Canvas (.canvas 1.0 JSON format)',
@@ -1494,7 +1495,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </p>
 
                         <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto whitespace-pre-wrap break-all">
-                          {mcpStatus?.claudeCliCommand || 'claude mcp add obsidian-vault-memory node ...'}
+                          {mcpStatus?.claudeCliCommand || 'claude mcp add runagon-vault-memory node ...'}
                         </div>
                       </div>
                     </div>
@@ -1518,7 +1519,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           For custom AI agents and HTTP MCP clients:
                         </p>
                         <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto">
-                          {`{ "mcpServers": { "obsidian-vault": { "url": "http://localhost:${mcpStatus?.port || 5175}/api/vault/ai/mcp" } } }`}
+                          {`{ "mcpServers": { "runagon-vault": { "url": "http://localhost:${mcpStatus?.port || 5175}/api/vault/ai/mcp" } } }`}
                         </div>
                       </div>
                     </div>
@@ -1537,9 +1538,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeSection === 'about' && (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-800/40 space-y-2">
-                  <div className="text-base font-bold text-purple-300">Obsidian 1.13.7 Engine</div>
+                  <div className="text-base font-bold text-purple-300">Runagon Engine</div>
                   <p className="text-zinc-400 text-xs leading-relaxed">
-                    100% real local-first architecture reverse-engineered from genuine <code className="text-purple-300">obsidian-1.13.7.asar</code>. All notes, canvases, bookmarks, CSS snippets, and configs live on disk without any mock data.
+                    100% real local-first architecture built on the high-performance Runagon core engine. All notes, canvases, bookmarks, CSS snippets, and configs live on disk without any mock data.
                   </p>
                 </div>
 

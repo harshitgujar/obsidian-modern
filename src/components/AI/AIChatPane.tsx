@@ -60,7 +60,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
       {
         id: 'welcome',
         role: 'assistant',
-        content: `👋 **Welcome to your Vault Copilot!**\n\nI have full, private access to your notes. Ask me anything, or try:\n* *"What are the core features of Obsidian?"*\n* *"How do plugins enhance note-taking?"*\n* *"Summarize my recent thoughts across all notes."*`,
+        content: `👋 **Welcome to your Vault Copilot!**\n\nI have full, private access to your notes. Ask me anything, or try:\n* *"What are the core features of Runagon?"*\n* *"How do plugins enhance note-taking?"*\n* *"Summarize my recent thoughts across all notes."*`,
         timestamp: Date.now()
       }
     ];
@@ -108,9 +108,11 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
     const interval = setInterval(fetchStatus, 15000);
     const handleConfigChanged = () => fetchStatus();
     window.addEventListener('obsidian-ai-config-changed', handleConfigChanged);
+    window.addEventListener('runagon-ai-config-changed', handleConfigChanged);
     return () => {
       clearInterval(interval);
       window.removeEventListener('obsidian-ai-config-changed', handleConfigChanged);
+      window.removeEventListener('runagon-ai-config-changed', handleConfigChanged);
     };
   }, []);
 

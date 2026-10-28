@@ -1,4 +1,4 @@
-# Obsidian Modern (Minimal, Fast, Local-First)
+# Runagon (Minimal, Fast, Local-First Knowledge Base & AI Memory)
 
 An authentic, modern, and lightweight open-source knowledge base application built with **React**, **TypeScript**, **Tailwind CSS**, and **Vite** with optional **Electron** desktop wrapper.
 
@@ -31,7 +31,7 @@ An authentic, modern, and lightweight open-source knowledge base application bui
 - **Live Preview & Multi-Mode Editor**:
   - **Live Preview**: WYSIWYG Markdown rendering headers, math, code blocks with copy button, tables, and callouts inline.
   - **Interactive Checklists**: Click `- [ ]` checkboxes to toggle `- [x]` directly in the note.
-  - **Obsidian Callouts**: `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!IMPORTANT]`, `> [!QUOTE]`.
+  - **Callout Boxes**: `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!IMPORTANT]`, `> [!QUOTE]`.
   - **Properties Card**: Visual frontmatter inspector for tags, status, created date, and metadata.
   - **Source Mode**: Raw markdown editor with line numbers, indentation, and bracket auto-closing.
   - **Reading View**: Clean document mode.

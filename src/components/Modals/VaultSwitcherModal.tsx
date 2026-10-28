@@ -56,7 +56,7 @@ export const VaultSwitcherModal: React.FC<VaultSwitcherModalProps> = ({
               <Folder className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-zinc-100">Manage Obsidian Vaults</h2>
+              <h2 className="text-sm font-bold text-zinc-100">Manage Runagon Vaults</h2>
               <div className="text-[11px] text-zinc-400">Your vaults stored locally on disk</div>
             </div>
           </div>
@@ -132,7 +132,7 @@ export const VaultSwitcherModal: React.FC<VaultSwitcherModalProps> = ({
                   type="text"
                   value={newVaultPath}
                   onChange={e => setNewVaultPath(e.target.value)}
-                  placeholder="/Users/username/Documents/MyObsidianVault"
+                  placeholder="/Users/username/Documents/MyRunagonVault"
                   autoFocus
                   className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:border-purple-500 focus:outline-none font-mono"
                 />
@@ -163,7 +163,7 @@ export const VaultSwitcherModal: React.FC<VaultSwitcherModalProps> = ({
 
               <button
                 onClick={() => {
-                  if (confirm('Reset to the genuine Obsidian Sandbox vault on disk?')) {
+                  if (confirm('Reset to the genuine Runagon Sandbox vault on disk?')) {
                     onResetSandbox();
                   }
                 }}

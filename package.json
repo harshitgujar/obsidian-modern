@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-modern",
+  "name": "runagon",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -16,11 +16,11 @@
     "package:appimage:arm64": "npm run build:all && electron-builder --linux AppImage --arm64",
     "package:appimage:all": "npm run build:all && electron-builder --linux AppImage --x64 --arm64"
   },
-  "description": "Modern Obsidian Desktop Application",
-  "author": "Obsidian Modern Team",
+  "description": "Runagon - Personal Knowledge Base & AI Memory",
+  "author": "Runagon Team",
   "build": {
-    "appId": "md.obsidian.modern",
-    "productName": "Obsidian",
+    "appId": "com.runagon.app",
+    "productName": "Runagon",
     "directories": {
       "output": "release"
     },
@@ -44,7 +44,7 @@
         "AppImage"
       ],
       "category": "Office",
-      "executableName": "obsidian",
+      "executableName": "runagon",
       "icon": "build/icon.png"
     }
   },

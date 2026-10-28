@@ -6,7 +6,7 @@ function setupAppMenu() {
   const isMac = process.platform === 'darwin';
   const template = [
     ...(isMac ? [{
-      label: 'Obsidian',
+      label: 'Runagon',
       submenu: [
         { role: 'about' },
         { type: 'separator' },
@@ -101,7 +101,7 @@ function setupAppMenu() {
       role: 'help',
       submenu: [
         {
-          label: 'Obsidian Documentation',
+          label: 'Runagon Documentation',
           click: async () => {
             await shell.openExternal('https://help.obsidian.md');
           }
@@ -194,6 +194,7 @@ function startEmbeddedServer(distDir, vaultServer) {
 function createWindow(targetUrl) {
   const iconPath = path.join(__dirname, '../build/icon.png');
   const win = new BrowserWindow({
+    title: 'Runagon',
     width: 1360,
     height: 860,
     minWidth: 800,
@@ -223,7 +224,7 @@ function registerObsidianIpc() {
   });
 
   ipcMain.on('get-sandbox-vault-path', (event) => {
-    event.returnValue = path.join(app.getPath('userData'), 'Obsidian Sandbox');
+    event.returnValue = path.join(app.getPath('userData'), 'Runagon Sandbox');
   });
 
   ipcMain.on('get-default-vault-path', (event) => {
@@ -255,6 +256,7 @@ function registerObsidianIpc() {
 }
 
 app.whenReady().then(async () => {
+  app.setName('Runagon');
   setupAppMenu();
   registerObsidianIpc();
 
@@ -275,7 +277,7 @@ app.whenReady().then(async () => {
       }
 
       const userDataDir = app.getPath('userData');
-      const defaultVaultDir = path.join(app.getPath('documents'), 'ObsidianVault');
+      const defaultVaultDir = path.join(app.getPath('documents'), 'RunagonVault');
 
       const serverPath = path.join(__dirname, '../dist-electron/server.cjs');
       const { ObsidianVaultServer } = require(serverPath);

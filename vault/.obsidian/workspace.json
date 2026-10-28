@@ -4,15 +4,17 @@
     "collapsedFolders": {
       "Daily": false,
       "Adventurer": false,
-      "Attachments": true,
-      "Formatting": false
+      "Attachments": false,
+      "Formatting": false,
+      "Guides": false,
+      "Projects": true
     },
     "activeFilter": "all"
   },
   "leftSidebarOpen": true,
-  "rightSidebarOpen": true,
+  "rightSidebarOpen": false,
   "activeLeftTab": "files",
-  "activeRightTab": "localGraph",
+  "activeRightTab": "aiChat",
   "history": {
     "stack": [
       "Attachments/Recording 2026-10-22T09-45-19.webm",
@@ -119,9 +121,60 @@
       "Adventurer/From plain-text note-taking.md",
       "Plugins make Obsidian special for you.md",
       "Untitled Canvas 25.canvas",
-      "Plugins make Obsidian special for you.md"
+      "Plugins make Obsidian special for you.md",
+      "202610131347 Zettelkasten Note.md",
+      "Untitled Canvas 25.canvas",
+      "Adventurer/From standard note-taking.md",
+      "Attachments/image3.png",
+      "Adventurer/From standard note-taking.md",
+      "Untitled Canvas 25.canvas",
+      "Formatting/Format your notes.md",
+      "Adventurer/From plain-text note-taking.md",
+      "Attachments/Recording 2026-10-16T11-14-02.webm",
+      "Adventurer/No prior experience.md",
+      "Adventurer/From standard note-taking.md",
+      "Adventurer/From plain-text note-taking.md",
+      "Attachments/Recording 2026-10-22T09-52-34.webm",
+      "Daily/2026-10-22.md",
+      "Formatting/Code block.md",
+      "Formatting/Callout.md",
+      "Formatting/Code block.md",
+      "Guides/Create your first note.md",
+      "Guides/Create a vault.md",
+      "Guides/Create your first note.md",
+      "Formatting/Table.md",
+      "Formatting/Strikethrough.md",
+      "Formatting/Math.md",
+      "Formatting/Links.md",
+      "Formatting/Inline code.md",
+      "Formatting/Comment.md",
+      "Untitled Canvas 25.canvas",
+      "Daily/2026-10-28.md",
+      "Formatting/Table.md",
+      "Daily/2026-10-28.md",
+      "Adventurer/No prior experience.md",
+      "Daily/2026-10-28.md",
+      "Formatting/Callout.md",
+      "Daily/2026-10-28.md",
+      "Formatting/Format your notes.md",
+      "202610221509 Zettelkasten Note.md",
+      "Formatting/Table.md",
+      "Daily/2026-10-28.md",
+      "Attachments/image4.png",
+      "Adventurer/No prior experience.md",
+      "Adventurer/From standard note-taking.md",
+      "Adventurer/From plain-text note-taking.md",
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md",
+      "Attachments/image2.png",
+      "Adventurer/From standard note-taking.md",
+      "Guides/Get started with Obsidian.md",
+      "AI Summary - 2026-10-28.md",
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md",
+      "Untitled Canvas 25.canvas"
     ],
-    "index": 104
+    "index": 155
   },
   "panes": [
     {
@@ -135,7 +188,7 @@
         {
           "id": "tab-1792661937200-ft6",
           "filePath": "Plugins make Obsidian special for you.md",
-          "viewMode": "reading"
+          "viewMode": "live"
         },
         {
           "id": "tab-1792661940189-9hp",
@@ -396,32 +449,82 @@
           "id": "tab-1792910888228-01n",
           "filePath": "Formatting/Blockquote.md",
           "viewMode": "live"
+        },
+        {
+          "id": "tab-1793136592842-l1r",
+          "filePath": "202610131347 Zettelkasten Note.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793176452292-u6p",
+          "filePath": "Formatting/Format your notes.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793181326326-39h",
+          "filePath": "Attachments/Recording 2026-10-22T09-52-34.webm",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793181352352-ff1",
+          "filePath": "Guides/Create your first note.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793181352861-4z0",
+          "filePath": "Guides/Create a vault.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793181355215-vm6",
+          "filePath": "Formatting/Table.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793181356207-h1h",
+          "filePath": "Formatting/Math.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793183257906-ws2",
+          "filePath": "Daily/2026-10-28.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793185937255-h9z",
+          "filePath": "Guides/Get started with Obsidian.md",
+          "viewMode": "live"
+        },
+        {
+          "id": "tab-1793209194227-588",
+          "filePath": "AI Summary - 2026-10-28.md",
+          "viewMode": "live"
         }
       ],
-      "activeTabId": "tab-1792661937200-ft6"
+      "activeTabId": "tab-1792665350534-844"
     }
   ],
   "activePaneId": "pane-main",
   "lastOpenFiles": [
-    "Plugins make Obsidian special for you.md",
-    "Adventurer/From plain-text note-taking.md",
-    "Formatting/Blockquote.md",
+    "AI Summary - 2026-10-28.md",
+    "Guides/Get started with Obsidian.md",
     "Adventurer/From standard note-taking.md",
+    "Attachments/image2.png",
+    "Adventurer/From plain-text note-taking.md",
     "Adventurer/No prior experience.md",
-    "Attachments/image1.png",
-    "Formatting/Heading.md",
-    "Formatting/Diagram.md",
-    "Formatting/Code block.md",
-    "Formatting/Images.md",
-    "Formatting/Horizontal divider.md",
+    "Attachments/image4.png",
+    "Daily/2026-10-28.md",
+    "Formatting/Table.md",
+    "202610221509 Zettelkasten Note.md",
+    "Formatting/Format your notes.md",
+    "Formatting/Callout.md",
+    "Formatting/Comment.md",
     "Formatting/Inline code.md",
     "Formatting/Links.md",
-    "Formatting/Lists.md",
+    "Formatting/Math.md",
     "Formatting/Strikethrough.md",
-    "==There are plenty of note-taking apps out there, so congratulations on finding Obsidian! You may have heard that Obsidian is really hard to use, but we assure you the basics are easy to learn!==.md",
-    "Attachments/Recording 2026-10-16T11-14-02.webm",
-    "Attachments/image2.png",
-    "Attachments/image4.png",
-    "Attachments/image5.png"
+    "Guides/Create your first note.md",
+    "Guides/Create a vault.md",
+    "Formatting/Code block.md"
   ]
 }

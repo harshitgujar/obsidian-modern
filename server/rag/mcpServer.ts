@@ -14,7 +14,7 @@ export class VaultMCPServer {
     return [
       {
         name: 'search_vault_memory',
-        description: 'Searches the user\'s personal Obsidian knowledge base using semantic hybrid retrieval. Returns grounded note sections with wikilinks.',
+        description: 'Searches the user\'s personal Runagon knowledge base using semantic hybrid retrieval. Returns grounded note sections with wikilinks.',
         inputSchema: {
           type: 'object',
           properties: {

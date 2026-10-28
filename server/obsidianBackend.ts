@@ -211,10 +211,10 @@ export class ObsidianVaultServer {
   private ragIndexTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(options?: ObsidianServerOptions) {
-    this.rootDir = options?.rootDir || process.env.OBSIDIAN_ROOT_DIR || process.cwd();
+    this.rootDir = options?.rootDir || process.env.RUNAGON_ROOT_DIR || process.env.OBSIDIAN_ROOT_DIR || process.cwd();
     this.globalConfigPath = path.join(this.rootDir, '.obsidian-global.json');
-    this.defaultVaultDir = options?.defaultVaultDir || process.env.OBSIDIAN_DEFAULT_VAULT_DIR || path.join(this.rootDir, 'vault');
-    this.sandboxTemplateDir = options?.sandboxTemplateDir || process.env.OBSIDIAN_SANDBOX_DIR || path.join(process.cwd(), 'resources', 'sandbox');
+    this.defaultVaultDir = options?.defaultVaultDir || process.env.RUNAGON_DEFAULT_VAULT_DIR || process.env.OBSIDIAN_DEFAULT_VAULT_DIR || path.join(this.rootDir, 'vault');
+    this.sandboxTemplateDir = options?.sandboxTemplateDir || process.env.RUNAGON_SANDBOX_DIR || process.env.OBSIDIAN_SANDBOX_DIR || path.join(process.cwd(), 'resources', 'sandbox');
     this.activeVaultPath = this.defaultVaultDir;
 
     this.initGlobalRegistry();
@@ -871,7 +871,7 @@ export class ObsidianVaultServer {
     } catch {}
 
     // 2. If running under normal Node, process.execPath is the exact node binary
-    if (process.execPath && !process.execPath.toLowerCase().includes('electron') && !process.execPath.toLowerCase().includes('obsidian')) {
+    if (process.execPath && !process.execPath.toLowerCase().includes('electron') && !process.execPath.toLowerCase().includes('runagon') && !process.execPath.toLowerCase().includes('obsidian')) {
       return process.execPath;
     }
 
@@ -1349,9 +1349,10 @@ export class ObsidianVaultServer {
               const raw = fs.readFileSync(configPath, 'utf8');
               const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
               const parsed = JSON.parse(clean);
-              if (parsed.mcpServers?.['obsidian-vault-memory']) {
+              const mcpEntry = parsed.mcpServers?.['runagon-vault-memory'] || parsed.mcpServers?.['obsidian-vault-memory'];
+              if (mcpEntry) {
                 isClaudeConnected = true;
-                connectedVaultPath = parsed.mcpServers['obsidian-vault-memory']?.args?.[1];
+                connectedVaultPath = mcpEntry?.args?.[1];
               }
               if (parsed.mcpServers) {
                 existingServers = Object.keys(parsed.mcpServers);
@@ -1365,21 +1366,21 @@ export class ObsidianVaultServer {
           const port = this.currentServerPort;
 
           const cursorConfig = {
-            name: 'obsidian-vault-memory',
+            name: 'runagon-vault-memory',
             command: nodeBinary,
             args: [bridgePath, vaultPath, String(port)]
           };
 
           const claudeDesktopSnippet = {
             mcpServers: {
-              'obsidian-vault-memory': {
+              'runagon-vault-memory': {
                 command: nodeBinary,
                 args: [bridgePath, vaultPath, String(port)]
               }
             }
           };
 
-          const claudeCliCommand = `claude mcp add obsidian-vault-memory ${nodeBinary} "${bridgePath}" "${vaultPath}" "${port}"`;
+          const claudeCliCommand = `claude mcp add runagon-vault-memory ${nodeBinary} "${bridgePath}" "${vaultPath}" "${port}"`;
 
           return sendJson(200, {
             ok: true,
@@ -1420,23 +1421,26 @@ export class ObsidianVaultServer {
           const vaultPath = this.activeVaultPath;
 
           const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
-          if (fs.existsSync(bridgePath) && !fs.existsSync(vaultBridge)) {
+          if (fs.existsSync(bridgePath)) {
             try {
               fs.mkdirSync(path.join(this.activeVaultPath, '.obsidian'), { recursive: true });
               fs.copyFileSync(bridgePath, vaultBridge);
             } catch {}
           }
 
-          config.mcpServers['obsidian-vault-memory'] = {
+          config.mcpServers['runagon-vault-memory'] = {
             command: nodeBinary,
             args: [bridgePath, vaultPath, String(this.currentServerPort)]
           };
+          if (config.mcpServers['obsidian-vault-memory']) {
+            delete config.mcpServers['obsidian-vault-memory'];
+          }
 
           fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
 
           return sendJson(200, {
             ok: true,
-            message: 'Successfully connected Obsidian Vault Memory to Claude Desktop!',
+            message: 'Successfully connected Runagon Vault Memory to Claude Desktop!',
             configPath,
             isClaudeConnected: true
           });
@@ -1447,15 +1451,23 @@ export class ObsidianVaultServer {
           if (fs.existsSync(configPath)) {
             try {
               const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              let changed = false;
+              if (config.mcpServers?.['runagon-vault-memory']) {
+                delete config.mcpServers['runagon-vault-memory'];
+                changed = true;
+              }
               if (config.mcpServers?.['obsidian-vault-memory']) {
                 delete config.mcpServers['obsidian-vault-memory'];
+                changed = true;
+              }
+              if (changed) {
                 fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
               }
             } catch {}
           }
           return sendJson(200, {
             ok: true,
-            message: 'Disconnected Obsidian Vault Memory from Claude Desktop.',
+            message: 'Disconnected Runagon Vault Memory from Claude Desktop.',
             isClaudeConnected: false
           });
         }

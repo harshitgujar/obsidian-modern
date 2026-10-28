@@ -447,7 +447,7 @@ export class VaultManager {
       if (workspace && Array.isArray(workspace.lastOpenFiles)) {
         return workspace.lastOpenFiles;
       }
-      const data = localStorage.getItem('obsidian_recent_notes');
+      const data = localStorage.getItem('runagon_recent_notes') || localStorage.getItem('obsidian_recent_notes');
       return data ? JSON.parse(data) : [];
     } catch {
       return [];
@@ -461,7 +461,7 @@ export class VaultManager {
       const ws = this.configs.workspace || {};
       ws.lastOpenFiles = recents;
       this.saveConfig('workspace', ws);
-      localStorage.setItem('obsidian_recent_notes', JSON.stringify(recents));
+      localStorage.setItem('runagon_recent_notes', JSON.stringify(recents));
     } catch {}
   }
 
@@ -469,7 +469,7 @@ export class VaultManager {
     try {
       const a = document.createElement('a');
       a.href = '/api/vault/export-zip';
-      a.download = `${this.activeVaultName || 'Obsidian-Vault'}-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.download = `${this.activeVaultName || 'Runagon-Vault'}-${new Date().toISOString().slice(0, 10)}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -486,7 +486,7 @@ export class VaultManager {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${this.activeVaultName || 'Obsidian-Vault'}-${new Date().toISOString().slice(0, 10)}.zip`;
+    a.download = `${this.activeVaultName || 'Runagon-Vault'}-${new Date().toISOString().slice(0, 10)}.zip`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

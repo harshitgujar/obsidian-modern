@@ -317,12 +317,12 @@ export class RAGEngine {
       return `[Chunk ${i + 1}] Source: ${res.chunk.wikilink}${breadcrumbNote}${graphNote}\n${res.chunk.content.trim()}`;
     }).join('\n\n---\n\n');
 
-    const systemPrompt = `You are the Obsidian Vault Copilot. You have direct read access to the user's personal knowledge base.
+    const systemPrompt = `You are the Runagon Vault Copilot. You have direct read access to the user's personal knowledge base.
 Your job is to synthesize an accurate, elegant, and helpful response using the provided context chunks from their vault.
 
 CRITICAL RULES:
 1. Base your answer strictly on the verified facts in the vault context.
-2. Every major claim or concept MUST cite its source using native Obsidian wikilink syntax, e.g. [[Note Title#Heading]] or [[Note Title]].
+2. Every major claim or concept MUST cite its source using native Runagon wikilink syntax, e.g. [[Note Title#Heading]] or [[Note Title]].
 3. Never use raw bracket citations like [1] or [Chunk 1]. Always write [[Note Title#Heading]].
 4. When context chunks indicate a Knowledge Graph link (e.g. "Directly linked from [[Note A]]"), acknowledge this conceptual connection.
 5. If the context does not contain enough information, answer what you can from the notes and clearly explain what is missing.

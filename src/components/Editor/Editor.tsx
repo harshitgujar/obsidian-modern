@@ -875,7 +875,7 @@ export const Editor: React.FC<EditorProps> = ({
                 { label: 'Numbered List', desc: 'Create a list with numbering', icon: <ListOrdered className="w-4 h-4 text-amber-400" />, template: '\n1. First step\n2. Second step\n' },
                 { label: 'Callout Box', desc: 'Make writing stand out with an icon', icon: <Info className="w-4 h-4 text-blue-400" />, template: '\n> [!note]\n> Important highlight or insight goes here.\n' },
                 { label: 'Table', desc: 'Add a clean markdown table', icon: <TableIcon className="w-4 h-4 text-orange-400" />, template: '\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n' },
-                { label: 'Code Block', desc: 'Syntax highlighted code', icon: <Code className="w-4 h-4 text-pink-400" />, template: '\n```ts\nconsole.log("Hello, Obsidian!");\n```\n' }
+                { label: 'Code Block', desc: 'Syntax highlighted code', icon: <Code className="w-4 h-4 text-pink-400" />, template: '\n```ts\nconsole.log("Hello, Runagon!");\n```\n' }
               ].map((item, idx) => (
                 <button
                   key={idx}

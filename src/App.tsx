@@ -1418,12 +1418,21 @@ export const App: React.FC = () => {
     handleGoForward
   ]);
 
+  // Synchronize dynamic window title
+  useEffect(() => {
+    if (activeFile) {
+      document.title = `${activeFile.name.replace(/\.[^/.]+$/, '')} - Runagon`;
+    } else {
+      document.title = 'Runagon';
+    }
+  }, [activeFile]);
+
   if (!isVaultLoaded) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#121214] text-zinc-400">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-400 animate-pulse" />
-          <span>Loading Obsidian Vault from disk...</span>
+          <span>Loading Runagon Vault from disk...</span>
         </div>
       </div>
     );

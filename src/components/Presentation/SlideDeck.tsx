@@ -483,7 +483,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
         <div className="flex items-center gap-3">
           <div className="px-2.5 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>OBSIDIAN SLIDES</span>
+            <span>RUNAGON SLIDES</span>
           </div>
           <span className="text-xs text-zinc-400 font-medium truncate max-w-sm hidden sm:inline">
             {file.name.replace(/\.md$/, '')}

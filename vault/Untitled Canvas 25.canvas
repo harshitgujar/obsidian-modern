@@ -1,6 +1,26 @@
 {
   "nodes": [
     {
+      "id": "node-1793168362636",
+      "type": "group",
+      "label": "New Group",
+      "x": 194,
+      "y": 164,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793168358924",
+      "type": "group",
+      "label": "New Group",
+      "x": 814,
+      "y": 353,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
       "id": "node-1792665352723",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
@@ -14,10 +34,20 @@
       "id": "node-1792665355248",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": -98,
-      "y": -44,
+      "x": 1836,
+      "y": 873,
       "width": 804,
       "height": 961,
+      "color": "4"
+    },
+    {
+      "id": "node-1793168370295",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 486,
+      "y": 819,
+      "width": 280,
+      "height": 180,
       "color": "6"
     }
   ],

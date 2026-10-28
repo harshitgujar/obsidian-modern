@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Obsidian Modern - Model Context Protocol (MCP) Stdio Bridge
- * Connects Claude Desktop, Cursor, and other external MCP AI clients to Obsidian Vault Memory.
+ * Runagon - Model Context Protocol (MCP) Stdio Bridge
+ * Connects Claude Desktop, Cursor, and other external MCP AI clients to Runagon Vault Memory.
  *
  * Usage:
  *   node mcpBridge.cjs [vaultPath] [port]
@@ -15,7 +15,7 @@ const readline = require('readline');
 // Command line arguments with intelligent defaults
 const rawVault = (process.argv[2] || '').replace(/^["']|["']$/g, '').trim();
 const vaultPath = rawVault ? path.resolve(rawVault) : path.resolve(__dirname, '../../vault');
-const serverHost = process.env.OBSIDIAN_HOST || '127.0.0.1';
+const serverHost = process.env.RUNAGON_HOST || process.env.OBSIDIAN_HOST || '127.0.0.1';
 
 /**
  * Auto-healing dynamic port discovery:
@@ -33,17 +33,17 @@ function getEffectivePort() {
     const p = parseInt(process.argv[3].replace(/^["']|["']$/g, ''), 10);
     if (!isNaN(p) && p > 0) return p;
   }
-  if (process.env.OBSIDIAN_PORT) {
-    const p = parseInt(process.env.OBSIDIAN_PORT, 10);
+  if (process.env.RUNAGON_PORT || process.env.OBSIDIAN_PORT) {
+    const p = parseInt(process.env.RUNAGON_PORT || process.env.OBSIDIAN_PORT, 10);
     if (!isNaN(p) && p > 0) return p;
   }
   return 5175;
 }
 
 /**
- * Sends an HTTP request to the running Obsidian server.
+ * Sends an HTTP request to the running Runagon server.
  */
-function callObsidianMcp(method, params = {}) {
+function callVaultMcp(method, params = {}) {
   return new Promise((resolve, reject) => {
     const activePort = getEffectivePort();
     const payload = JSON.stringify({ method, params });
@@ -69,7 +69,7 @@ function callObsidianMcp(method, params = {}) {
             const parsed = JSON.parse(data);
             resolve(parsed);
           } catch (err) {
-            reject(new Error(`Invalid JSON from Obsidian server: ${data.slice(0, 100)}`));
+            reject(new Error(`Invalid JSON from Runagon server: ${data.slice(0, 100)}`));
           }
         });
       }
@@ -81,7 +81,7 @@ function callObsidianMcp(method, params = {}) {
 
     req.on('timeout', () => {
       req.destroy();
-      reject(new Error('Obsidian server request timed out'));
+      reject(new Error('Runagon server request timed out'));
     });
 
     req.write(payload);
@@ -90,7 +90,7 @@ function callObsidianMcp(method, params = {}) {
 }
 
 /**
- * Offline fallback retrieval when Obsidian app is closed:
+ * Offline fallback retrieval when Runagon app is closed:
  * Performs lexical search directly over the vault's cached .obsidian/ai-index/chunks.json.
  */
 function searchVaultOffline(query, topK = 5) {
@@ -98,10 +98,10 @@ function searchVaultOffline(query, topK = 5) {
   if (!fs.existsSync(chunksPath)) {
     return [
       {
-        source: '[[Obsidian]]',
-        noteTitle: 'Obsidian App Closed',
+        source: '[[Runagon]]',
+        noteTitle: 'Runagon App Closed',
         score: 100,
-        content: 'Obsidian Modern is not currently open, and no offline index was found. Please launch Obsidian Modern to initialize and search your vault memory.'
+        content: 'Runagon is not currently open, and no offline index was found. Please launch Runagon to initialize and search your vault memory.'
       }
     ];
   }
@@ -191,7 +191,7 @@ function sendJsonRpc(id, result, error) {
 const TOOLS = [
   {
     name: 'search_vault_memory',
-    description: 'Searches the user\'s personal Obsidian knowledge base using semantic hybrid retrieval (GraphRAG). Returns grounded notes with [[wikilinks]], headings, and relevance scores.',
+    description: 'Searches the user\'s personal Runagon knowledge base using semantic hybrid retrieval (GraphRAG). Returns grounded notes with [[wikilinks]], headings, and relevance scores.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -260,7 +260,7 @@ rl.on('line', async line => {
         tools: {}
       },
       serverInfo: {
-        name: 'obsidian-vault-memory',
+        name: 'runagon-vault-memory',
         version: '1.0.0'
       }
     });
@@ -302,7 +302,7 @@ rl.on('line', async line => {
 
     try {
       // First try live server for real-time 60 FPS GraphRAG
-      const res = await callObsidianMcp('tools/call', { name: toolName, arguments: toolArgs });
+      const res = await callVaultMcp('tools/call', { name: toolName, arguments: toolArgs });
       sendJsonRpc(id, res);
     } catch (serverErr) {
       // Graceful offline fallback: if server is down, retrieve from cached vault index
@@ -314,7 +314,7 @@ rl.on('line', async line => {
               type: 'text',
               text: JSON.stringify(
                 {
-                  notice: 'Obsidian app is offline. Results retrieved from local cached vault index.',
+                  notice: 'Runagon app is offline. Results retrieved from local cached vault index.',
                   results: offlineResults
                 },
                 null,
@@ -331,7 +331,7 @@ rl.on('line', async line => {
               type: 'text',
               text: JSON.stringify(
                 {
-                  notice: 'Obsidian app is offline. Related notes derived from static outlinks.',
+                  notice: 'Runagon app is offline. Related notes derived from static outlinks.',
                   related: offlineRelated
                 },
                 null,
@@ -348,7 +348,7 @@ rl.on('line', async line => {
               text: JSON.stringify(
                 {
                   status: 'offline',
-                  notice: 'Obsidian desktop app is currently closed. Launch the app to access live embeddings and real-time updates.'
+                  notice: 'Runagon desktop app is currently closed. Launch the app to access live embeddings and real-time updates.'
                 },
                 null,
                 2
@@ -361,7 +361,7 @@ rl.on('line', async line => {
           content: [
             {
               type: 'text',
-              text: `Tool ${toolName} requires Obsidian Modern app to be open.`
+              text: `Tool ${toolName} requires Runagon app to be open.`
             }
           ]
         });
