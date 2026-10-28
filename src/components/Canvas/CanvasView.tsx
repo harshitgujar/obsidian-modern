@@ -31,7 +31,9 @@ import {
   X,
   Upload,
   Video,
-  Volume2
+  Volume2,
+  Square,
+  CheckSquare
 } from 'lucide-react';
 
 interface CanvasViewProps {
@@ -233,6 +235,132 @@ const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFil
   );
 };
 
+// Markdown Parser & Renderer for Canvas Text Cards (Production WYSIWYG)
+function parseCanvasInline(text: string, onNavigateFile: (path: string) => void): React.ReactNode[] {
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|\[\[[^\]]+\]\]|==[^=]+==|~~[^~]+~~)/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, idx) => {
+    if (!part) return null;
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
+      return (
+        <code key={idx} className="px-1.5 py-0.5 rounded bg-white/[0.08] text-purple-300 font-mono text-[10px] mx-0.5 border border-white/5">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return <strong key={idx} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
+    }
+    if ((part.startsWith('*') && part.endsWith('*') && part.length > 2) ||
+        (part.startsWith('_') && part.endsWith('_') && part.length > 2)) {
+      return <em key={idx} className="italic text-zinc-300">{part.slice(1, -1)}</em>;
+    }
+    if (part.startsWith('[[') && part.endsWith(']]') && part.length > 4) {
+      const linkContent = part.slice(2, -2);
+      const [target, alias] = linkContent.split('|');
+      return (
+        <span
+          key={idx}
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigateFile(target.trim());
+          }}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#705dcf] text-white text-[10.5px] font-medium cursor-pointer hover:bg-[#5e4db5] transition-colors mx-0.5 select-none"
+        >
+          {alias ? alias.trim() : target.trim()}
+        </span>
+      );
+    }
+    if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
+      return (
+        <mark key={idx} className="bg-amber-500/25 text-amber-200 px-1 py-0.5 rounded text-[11px] mx-0.5">
+          {part.slice(2, -2)}
+        </mark>
+      );
+    }
+    if (part.startsWith('~~') && part.endsWith('~~') && part.length > 4) {
+      return <del key={idx} className="line-through text-zinc-500">{part.slice(2, -2)}</del>;
+    }
+    return <span key={idx}>{part}</span>;
+  });
+}
+
+function renderCanvasMarkdown(text: string, onNavigateFile: (path: string) => void): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split('\n');
+
+  return (
+    <div className="space-y-1 font-sans text-xs leading-relaxed select-text">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1.5" />;
+        }
+
+        if (line.startsWith('# ')) {
+          return (
+            <h1 key={idx} className="text-sm font-bold text-white pt-1 pb-0.5 border-b border-white/10 tracking-tight">
+              {parseCanvasInline(line.slice(2), onNavigateFile)}
+            </h1>
+          );
+        }
+        if (line.startsWith('## ')) {
+          return (
+            <h2 key={idx} className="text-[13px] font-semibold text-zinc-100 pt-0.5 tracking-tight">
+              {parseCanvasInline(line.slice(3), onNavigateFile)}
+            </h2>
+          );
+        }
+        if (line.startsWith('### ')) {
+          return (
+            <h3 key={idx} className="text-xs font-semibold text-zinc-200 tracking-tight">
+              {parseCanvasInline(line.slice(4), onNavigateFile)}
+            </h3>
+          );
+        }
+        if (/^[-*]\s+\[ \]\s+/.test(trimmed)) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 text-zinc-300">
+              <Square className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
+              <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+\[ \]\s+/, ''), onNavigateFile)}</span>
+            </div>
+          );
+        }
+        if (/^[-*]\s+\[[xX]\]\s+/.test(trimmed)) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 text-zinc-400 line-through">
+              <CheckSquare className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+              <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+\[[xX]\]\s+/, ''), onNavigateFile)}</span>
+            </div>
+          );
+        }
+        if (/^[-*]\s+/.test(trimmed)) {
+          return (
+            <div key={idx} className="flex items-start gap-2 text-zinc-300 pl-1">
+              <span className="text-purple-400 font-bold text-xs select-none">•</span>
+              <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+/, ''), onNavigateFile)}</span>
+            </div>
+          );
+        }
+        if (trimmed.startsWith('>')) {
+          return (
+            <blockquote key={idx} className="border-l-2 border-purple-400/70 pl-2 text-zinc-400 italic text-[11px] my-1">
+              {parseCanvasInline(trimmed.replace(/^>\s*/, ''), onNavigateFile)}
+            </blockquote>
+          );
+        }
+
+        return (
+          <p key={idx} className="text-zinc-200">
+            {parseCanvasInline(line, onNavigateFile)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export const CanvasView: React.FC<CanvasViewProps> = ({
   file,
   allFiles,
@@ -308,6 +436,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   // Notation editing
   const [editingEdgeLabelId, setEditingEdgeLabelId] = useState<string | null>(null);
   const [edgeLabelText, setEdgeLabelText] = useState<string>('');
+
+  // Card text editing
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
   // File Suggestion Popover (matching the Table ▾ popover in user screenshot!)
   const [showFileSuggestPopover, setShowFileSuggestPopover] = useState(false);
@@ -2244,19 +2375,42 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <textarea
-                      value={node.text || ''}
-                      onChange={e => {
-                        const newText = e.target.value;
-                        setCanvasData(prev => ({
-                          ...prev,
-                          nodes: prev.nodes.map(n => n.id === node.id ? { ...n, text: newText } : n)
-                        }));
-                      }}
-                      onBlur={() => persistCanvas(canvasData)}
-                      className="w-full h-full bg-transparent resize-none focus:outline-none text-zinc-200 font-mono text-[11px] leading-relaxed"
-                      placeholder="Enter card markdown..."
-                    />
+                    editingNodeId === node.id ? (
+                      <textarea
+                        autoFocus
+                        value={node.text || ''}
+                        onChange={e => {
+                          const newText = e.target.value;
+                          setCanvasData(prev => ({
+                            ...prev,
+                            nodes: prev.nodes.map(n => n.id === node.id ? { ...n, text: newText } : n)
+                          }));
+                        }}
+                        onBlur={() => {
+                          setEditingNodeId(null);
+                          persistCanvas(canvasData);
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            setEditingNodeId(null);
+                            persistCanvas(canvasData);
+                          }
+                        }}
+                        className="w-full h-full bg-transparent resize-none focus:outline-none text-zinc-100 font-sans text-xs leading-relaxed selection:bg-purple-600/40 p-1"
+                        placeholder="Enter card markdown..."
+                      />
+                    ) : (
+                      <div
+                        onDoubleClick={e => {
+                          e.stopPropagation();
+                          setEditingNodeId(node.id);
+                        }}
+                        title="Double-click to edit card"
+                        className="w-full h-full overflow-y-auto cursor-text text-zinc-200 select-text font-sans p-1 hover:bg-white/[0.02] rounded-lg transition-colors"
+                      >
+                        {renderCanvasMarkdown(node.text || 'Double-click to edit this card in markdown.', onNavigateFile)}
+                      </div>
+                    )
                   )}
                 </div>
               )}

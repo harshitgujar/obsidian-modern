@@ -207,7 +207,7 @@ class ImageEmbedWidget extends WidgetType {
     frame.appendChild(img);
     container.appendChild(frame);
 
-    if (this.alt) {
+    if (this.alt && this.alt !== this.src) {
       const caption = document.createElement('div');
       caption.className = 'text-xs text-zinc-400 mt-2 italic';
       caption.textContent = this.alt;
@@ -229,15 +229,245 @@ class ImageEmbedWidget extends WidgetType {
   }
 }
 
+// 5. Note Transclusion (Note Embed) Widget: ![[Note Title]] or ![[Note#Heading]]
+class NoteEmbedWidget extends WidgetType {
+  constructor(
+    readonly targetTitle: string,
+    readonly fragment: string | undefined,
+    readonly rawText: string,
+    readonly onNavigate?: (target: string) => void,
+    readonly allFiles?: VaultFile[],
+    readonly getAllFiles?: () => VaultFile[]
+  ) {
+    super();
+  }
+
+  eq(other: NoteEmbedWidget) {
+    return this.targetTitle === other.targetTitle && this.fragment === other.fragment && this.rawText === other.rawText;
+  }
+
+  toDOM() {
+    const container = document.createElement('div');
+    container.className =
+      'cm-note-embed-widget my-3 rounded-xl border border-white/[0.08] bg-black/25 backdrop-blur-xl overflow-hidden shadow-lg select-none hover:border-purple-500/40 transition-colors cursor-default';
+
+    const header = document.createElement('div');
+    header.className =
+      'flex items-center justify-between px-3.5 py-2 bg-white/[0.03] border-b border-white/[0.06] text-xs font-medium text-zinc-300';
+
+    const titleGroup = document.createElement('div');
+    titleGroup.className = 'flex items-center gap-2 truncate cursor-pointer hover:text-white transition-colors';
+    const subHeading = this.fragment ? ` > ${this.fragment.replace(/^[#^]/, '')}` : '';
+    titleGroup.innerHTML = `
+      <svg class="w-3.5 h-3.5 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      <span class="font-semibold text-zinc-100">${this.targetTitle}</span>
+      <span class="text-zinc-500 text-[11px]">${subHeading}</span>
+    `;
+    titleGroup.onclick = (e) => {
+      e.stopPropagation();
+      this.onNavigate?.(this.targetTitle);
+    };
+
+    const badge = document.createElement('span');
+    badge.className = 'text-[9px] font-mono px-2 py-0.5 rounded bg-purple-900/40 text-purple-300 border border-purple-500/30';
+    badge.textContent = 'Transclusion';
+
+    header.appendChild(titleGroup);
+    header.appendChild(badge);
+    container.appendChild(header);
+
+    // Body content resolution
+    const files = this.getAllFiles ? this.getAllFiles() : (this.allFiles || []);
+    const cleanTitle = this.targetTitle.trim().replace(/\.md$/, '');
+    const targetFile = files.find(f => 
+      f.path === cleanTitle || 
+      f.path === `${cleanTitle}.md` || 
+      f.name === cleanTitle || 
+      f.name === `${cleanTitle}.md` ||
+      f.name.replace(/\.md$/, '') === cleanTitle
+    );
+
+    const body = document.createElement('div');
+    body.className = 'p-3.5 text-xs text-zinc-300 leading-relaxed font-sans space-y-2 border-l-2 border-[#705dcf] bg-white/[0.01]';
+
+    if (targetFile) {
+      let contentToShow = targetFile.content.replace(/^---[\s\S]*?---\n*/, '').trim();
+
+      if (this.fragment) {
+        const cleanHeading = this.fragment.replace(/^[#^]/, '').trim().toLowerCase();
+        const lines = contentToShow.split('\n');
+        let found = false;
+        let headingLevel = 0;
+        const sectionLines: string[] = [];
+
+        for (const line of lines) {
+          const hMatch = line.match(/^(#{1,6})\s+(.*)$/);
+          if (hMatch) {
+            const hText = hMatch[2].replace(/[*_~`#\[\]]/g, '').trim().toLowerCase();
+            if (!found && hText.includes(cleanHeading)) {
+              found = true;
+              headingLevel = hMatch[1].length;
+              continue;
+            } else if (found) {
+              const currentLevel = hMatch[1].length;
+              if (currentLevel <= headingLevel) break;
+            }
+          }
+          if (found) {
+            sectionLines.push(line);
+          }
+        }
+        if (found) {
+          contentToShow = sectionLines.join('\n').trim();
+        }
+      }
+
+      const displayLines = contentToShow.split('\n').slice(0, 16);
+      const renderedHtml = displayLines.map(l => {
+        const trimmed = l.trim();
+        if (!trimmed) return '<div class="h-1"></div>';
+        if (trimmed.startsWith('#')) return `<div class="font-bold text-zinc-100 mt-1">${trimmed.replace(/^#+\s*/, '')}</div>`;
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return `<div class="flex items-start gap-1.5 pl-1"><span class="text-[#705dcf]">•</span><span>${trimmed.slice(2)}</span></div>`;
+        }
+        return `<div>${trimmed}</div>`;
+      }).join('');
+
+      body.innerHTML = renderedHtml || '<span class="italic text-zinc-500">Note has no content.</span>';
+    } else {
+      body.innerHTML = `<span class="italic text-zinc-500">Note "${this.targetTitle}" not found in vault.</span>`;
+    }
+
+    container.appendChild(body);
+    return container;
+  }
+}
+
+// 6. Audio Embed Widget
+class AudioEmbedWidget extends WidgetType {
+  constructor(readonly src: string, readonly filename: string) {
+    super();
+  }
+  eq(other: AudioEmbedWidget) {
+    return this.src === other.src;
+  }
+  toDOM() {
+    const container = document.createElement('div');
+    container.className = 'cm-audio-widget my-3 p-3 rounded-xl bg-black/30 border border-white/[0.08] shadow-md flex flex-col gap-2 max-w-md';
+    const header = document.createElement('div');
+    header.className = 'text-xs font-medium text-zinc-300 flex items-center gap-1.5';
+    header.innerHTML = `
+      <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+      <span>${this.filename}</span>
+    `;
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.src = this.src;
+    audio.className = 'w-full h-8';
+    container.appendChild(header);
+    container.appendChild(audio);
+    return container;
+  }
+}
+
+// 7. Bold Format Widget (**text** or __text__)
+class BoldWidget extends WidgetType {
+  constructor(readonly text: string, readonly pos: number) {
+    super();
+  }
+  eq(other: BoldWidget) {
+    return this.text === other.text && this.pos === other.pos;
+  }
+  toDOM(view: EditorView) {
+    const strong = document.createElement('strong');
+    strong.className = 'cm-bold-mark font-bold text-white cursor-text select-text';
+    strong.textContent = this.text;
+    strong.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      view.dispatch({ selection: { anchor: this.pos + 2 } });
+      view.focus();
+    });
+    return strong;
+  }
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// 8. Italic Format Widget (*text* or _text_)
+class ItalicWidget extends WidgetType {
+  constructor(readonly text: string, readonly pos: number) {
+    super();
+  }
+  eq(other: ItalicWidget) {
+    return this.text === other.text && this.pos === other.pos;
+  }
+  toDOM(view: EditorView) {
+    const em = document.createElement('em');
+    em.className = 'cm-italic-mark italic text-zinc-200 cursor-text select-text';
+    em.textContent = this.text;
+    em.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      view.dispatch({ selection: { anchor: this.pos + 1 } });
+      view.focus();
+    });
+    return em;
+  }
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// 9. Inline Code Widget (`code`)
+class InlineCodeWidget extends WidgetType {
+  constructor(readonly text: string, readonly pos: number) {
+    super();
+  }
+  eq(other: InlineCodeWidget) {
+    return this.text === other.text && this.pos === other.pos;
+  }
+  toDOM(view: EditorView) {
+    const code = document.createElement('code');
+    code.className = 'cm-inline-code font-mono text-[13px] bg-black/40 text-purple-300 px-1.5 py-0.5 rounded border border-white/[0.08] cursor-text select-text';
+    code.textContent = this.text;
+    code.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      view.dispatch({ selection: { anchor: this.pos + 1 } });
+      view.focus();
+    });
+    return code;
+  }
+  ignoreEvent() {
+    return false;
+  }
+}
+
+// Fast helper to detect if a position is inside a fenced code block
+function isPosInsideCodeBlock(doc: any, pos: number): boolean {
+  try {
+    const line = doc.lineAt(pos);
+    if (line.text.trim().startsWith('```')) return true;
+    let inCode = false;
+    for (let i = 1; i < line.number; i++) {
+      if (doc.line(i).text.trim().startsWith('```')) {
+        inCode = !inCode;
+      }
+    }
+    return inCode;
+  } catch {
+    return false;
+  }
+}
+
 export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Extension {
   // Wikilink Match Decorator
   const wikilinkDecorator = new MatchDecorator({
     regexp: /(?<!\!)\[\[([^\]\n]+)\]\]/g,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
-      // If cursor touches or is inside wikilink, uncollapse to allow direct editing
       if (from >= matchFrom && to <= matchTo) {
         return null;
       }
@@ -263,10 +493,112 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     { decorations: v => v.decorations }
   );
 
+  // Bold Match Decorator: **text** or __text__
+  const boldDecorator = new MatchDecorator({
+    regexp: /(?<!\*)\*\*([^*\n]+)\*\*(?!\*)|(?<!_)__([^_\n]+)__(?!_)/g,
+    decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
+      const { from, to } = view.state.selection.main;
+      const matchFrom = pos;
+      const matchTo = pos + match[0].length;
+      if (from >= matchFrom && to <= matchTo) {
+        return null;
+      }
+      const boldText = match[1] || match[2];
+      return Decoration.replace({
+        widget: new BoldWidget(boldText, pos)
+      });
+    }
+  });
+
+  const boldPlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+      constructor(view: EditorView) {
+        this.decorations = boldDecorator.createDeco(view);
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+          this.decorations = boldDecorator.updateDeco(update, this.decorations);
+        }
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
+  // Italic Match Decorator: *text* or _text_
+  const italicDecorator = new MatchDecorator({
+    regexp: /(?<!\*)\*([^*\n]+)\*(?!\*)|(?<!_)_([^_\n]+)_(?!_)/g,
+    decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
+      const fullText = view.state.doc.sliceString(Math.max(0, pos - 1), Math.min(view.state.doc.length, pos + match[0].length + 1));
+      if (fullText.includes('**') || fullText.includes('__')) return null;
+
+      const { from, to } = view.state.selection.main;
+      const matchFrom = pos;
+      const matchTo = pos + match[0].length;
+      if (from >= matchFrom && to <= matchTo) {
+        return null;
+      }
+      const italicText = match[1] || match[2];
+      return Decoration.replace({
+        widget: new ItalicWidget(italicText, pos)
+      });
+    }
+  });
+
+  const italicPlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+      constructor(view: EditorView) {
+        this.decorations = italicDecorator.createDeco(view);
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+          this.decorations = italicDecorator.updateDeco(update, this.decorations);
+        }
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
+  // Inline Code Match Decorator: `code`
+  const inlineCodeDecorator = new MatchDecorator({
+    regexp: /(?<!`)`([^`\n]+)`(?!`)/g,
+    decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
+      const { from, to } = view.state.selection.main;
+      const matchFrom = pos;
+      const matchTo = pos + match[0].length;
+      if (from >= matchFrom && to <= matchTo) {
+        return null;
+      }
+      return Decoration.replace({
+        widget: new InlineCodeWidget(match[1], pos)
+      });
+    }
+  });
+
+  const inlineCodePlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+      constructor(view: EditorView) {
+        this.decorations = inlineCodeDecorator.createDeco(view);
+      }
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.selectionSet || update.viewportChanged) {
+          this.decorations = inlineCodeDecorator.updateDeco(update, this.decorations);
+        }
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
   // Highlight Match Decorator: ==text==
   const highlightDecorator = new MatchDecorator({
     regexp: /(?<!=)==([^=\n]+)==(?!=)/g,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
@@ -298,6 +630,7 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
   const strikethroughDecorator = new MatchDecorator({
     regexp: /(?<!~)~~([^~\n]+)~~(?!~)/g,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
@@ -329,6 +662,7 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
   const checkboxDecorator = new MatchDecorator({
     regexp: /(?<=^\s*[-*+]\s+)\[([ xX])\](?=\s+)/gm,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
@@ -357,10 +691,11 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     { decorations: v => v.decorations }
   );
 
-  // Divider (---) Decorator
+  // Horizontal Rule Decorator
   const hrDecorator = new MatchDecorator({
-    regexp: /^(?:---|___|\*\*\*)\s*$/gm,
+    regexp: /^(?:---|\*\*\*|___)\s*$/gm,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
@@ -388,10 +723,12 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     { decorations: v => v.decorations }
   );
 
-  // Image Embed Decorator: ![[file.png]] or ![alt](url)
-  const imageDecorator = new MatchDecorator({
+  // Universal Embed Decorator: Images, Audio, and Note Transclusions
+  const embedDecorator = new MatchDecorator({
     regexp: /!\[\[([^\]\n]+)\]\]|!\[([^\]\n]*)\]\(([^)\n]+)\)/g,
     decoration: (match, view, pos) => {
+      if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
+
       const { from, to } = view.state.selection.main;
       const matchFrom = pos;
       const matchTo = pos + match[0].length;
@@ -399,45 +736,64 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
         return null;
       }
 
-      let src = '';
-      let alt = '';
       if (match[1]) {
-        // ![[wiki-image.png|300]]
         const parts = match[1].split('|');
-        const filename = parts[0].trim();
-        alt = parts[1]?.trim() || filename;
-        src = `/api/vault/file/raw?path=${encodeURIComponent(filename)}`;
+        const rawTarget = parts[0].trim();
+        const [targetPath, fragment] = rawTarget.split('#');
+        const alias = parts[1]?.trim();
+
+        // 1. Audio Embed
+        if (/\.(mp3|wav|ogg|m4a|aac|webm)$/i.test(targetPath)) {
+          const src = `/api/vault/file/raw?path=${encodeURIComponent(targetPath)}`;
+          return Decoration.replace({
+            widget: new AudioEmbedWidget(src, targetPath)
+          });
+        }
+
+        // 2. Image Embed
+        if (/\.(png|jpe?g|gif|svg|webp|bmp|ico)$/i.test(targetPath)) {
+          const src = `/api/vault/file/raw?path=${encodeURIComponent(targetPath)}`;
+          return Decoration.replace({
+            widget: new ImageEmbedWidget(src, alias || targetPath, match[0], options.onMediaContextMenu, options.allFiles, options.getAllFiles)
+          });
+        }
+
+        // 3. Markdown Note Transclusion (Note Embed)
+        return Decoration.replace({
+          widget: new NoteEmbedWidget(targetPath, fragment, match[0], options.onNavigateLink, options.allFiles, options.getAllFiles)
+        });
       } else if (match[3]) {
         // ![alt](src)
-        alt = match[2]?.trim() || '';
-        src = match[3].trim();
+        const alt = match[2]?.trim() || '';
+        let src = match[3].trim();
         if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('data:')) {
           src = `/api/vault/file/raw?path=${encodeURIComponent(src)}`;
         }
+        return Decoration.replace({
+          widget: new ImageEmbedWidget(src, alt, match[0], options.onMediaContextMenu, options.allFiles, options.getAllFiles)
+        });
       }
 
-      return Decoration.replace({
-        widget: new ImageEmbedWidget(src, alt, match[0], options.onMediaContextMenu, options.allFiles, options.getAllFiles)
-      });
+      return null;
     }
   });
 
-  const imagePlugin = ViewPlugin.fromClass(
+  const embedPlugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
       constructor(view: EditorView) {
-        this.decorations = imageDecorator.createDeco(view);
+        this.decorations = embedDecorator.createDeco(view);
       }
       update(update: ViewUpdate) {
         if (update.docChanged || update.selectionSet || update.viewportChanged) {
-          this.decorations = imageDecorator.updateDeco(update, this.decorations);
+          this.decorations = embedDecorator.updateDeco(update, this.decorations);
         }
       }
     },
     { decorations: v => v.decorations }
   );
 
-  // Heading & Line Styling ViewPlugin
+  // Line & CodeBlock Styling ViewPlugin
   const headingLinePlugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
@@ -455,59 +811,77 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
       buildDecorations(view: EditorView): DecorationSet {
         const builder = new RangeSetBuilder<Decoration>();
         const { from: selFrom, to: selTo } = view.state.selection.main;
-        const activeLine = view.state.doc.lineAt(selFrom);
 
         for (const { from, to } of view.visibleRanges) {
           let pos = from;
+          let inCodeBlock = false;
+          const startLine = view.state.doc.lineAt(from).number;
+          for (let l = 1; l < startLine; l++) {
+            if (view.state.doc.line(l).text.trim().startsWith('```')) {
+              inCodeBlock = !inCodeBlock;
+            }
+          }
+
           while (pos <= to) {
             const line = view.state.doc.lineAt(pos);
             const lineText = line.text;
+            const trimmed = lineText.trim();
 
-            // Check Heading: # H1, ## H2, etc.
-            const hMatch = lineText.match(/^(#{1,6})\s+/);
-            if (hMatch) {
-              const level = hMatch[1].length;
-              const isCursorOnLine = line.from <= selTo && line.to >= selFrom;
-
-              // Line-level styling
+            if (trimmed.startsWith('```')) {
+              inCodeBlock = !inCodeBlock;
               builder.add(
                 line.from,
                 line.from,
-                Decoration.line({
-                  class: `cm-line-heading cm-line-h${level}`
-                })
+                Decoration.line({ class: 'cm-codeblock-delimiter' })
               );
+            } else if (inCodeBlock) {
+              builder.add(
+                line.from,
+                line.from,
+                Decoration.line({ class: 'cm-codeblock-line' })
+              );
+            } else {
+              // Check Heading: # H1, ## H2, etc.
+              const hMatch = lineText.match(/^(#{1,6})\s+/);
+              if (hMatch) {
+                const level = hMatch[1].length;
+                const isCursorOnLine = line.from <= selTo && line.to >= selFrom;
 
-              // Prefix decoration (#, ##, ###)
-              const prefixLen = hMatch[0].length;
-              if (!isCursorOnLine) {
-                // Hide the # prefix when not editing that heading
                 builder.add(
                   line.from,
-                  line.from + prefixLen,
-                  Decoration.mark({
-                    class: 'cm-heading-prefix-hidden'
+                  line.from,
+                  Decoration.line({
+                    class: `cm-line-heading cm-line-h${level}`
                   })
                 );
-              } else {
-                // Reveal subtle prefix when cursor is on the line
+
+                const prefixLen = hMatch[0].length;
+                if (!isCursorOnLine) {
+                  builder.add(
+                    line.from,
+                    line.from + prefixLen,
+                    Decoration.mark({
+                      class: 'cm-heading-prefix-hidden'
+                    })
+                  );
+                } else {
+                  builder.add(
+                    line.from,
+                    line.from + prefixLen,
+                    Decoration.mark({
+                      class: 'cm-heading-prefix-active'
+                    })
+                  );
+                }
+              } else if (trimmed.startsWith('>')) {
                 builder.add(
                   line.from,
-                  line.from + prefixLen,
-                  Decoration.mark({
-                    class: 'cm-heading-prefix-active'
+                  line.from,
+                  Decoration.line({
+                    class: 'cm-line-blockquote'
                   })
                 );
               }
-            } else if (lineText.trim().startsWith('>')) {
-              // Blockquote line
-              builder.add(
-                line.from,
-                line.from,
-                Decoration.line({
-                  class: 'cm-line-blockquote'
-                })
-              );
             }
 
             pos = line.to + 1;
@@ -522,11 +896,14 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
 
   return [
     wikilinkPlugin,
+    boldPlugin,
+    italicPlugin,
+    inlineCodePlugin,
     highlightPlugin,
     strikethroughPlugin,
     checkboxPlugin,
     hrPlugin,
-    imagePlugin,
+    embedPlugin,
     headingLinePlugin
   ];
 }

@@ -537,6 +537,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Sparkles className="w-4 h-4" />
             </button>
           )}
+
+          <div className="w-6 h-[1px] bg-white/[0.08] my-1" />
+
+          {/* Core Daily Note & Productivity Actions */}
+          <button
+            onClick={onOpenDailyNote}
+            title="Open today's daily note"
+            className="p-2 rounded-lg text-zinc-400 hover:text-cyan-300 hover:bg-white/[0.06] transition-all duration-200 border-none"
+          >
+            <Calendar className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={onOpenRandomNote}
+            title="Open random note"
+            className="p-2 rounded-lg text-zinc-400 hover:text-amber-300 hover:bg-white/[0.06] transition-all duration-200 border-none"
+          >
+            <Shuffle className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={onToggleAudioRecording}
+            title={isRecordingAudio ? "Stop audio recording" : "Record audio note"}
+            className={`p-2 rounded-lg transition-all duration-200 border-none relative ${
+              isRecordingAudio
+                ? 'bg-rose-600 text-white animate-pulse shadow-md shadow-rose-900/50'
+                : 'text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06]'
+            }`}
+          >
+            <Mic className="w-4 h-4" />
+            {isRecordingAudio && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-white animate-ping" />
+            )}
+          </button>
         </div>
 
         {/* Bottom Ribbon Utilities */}

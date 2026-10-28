@@ -28,7 +28,7 @@ const obsidianHighlightStyle = HighlightStyle.define([
   { tag: t.strikethrough, textDecoration: 'line-through', color: 'var(--cm-strikethrough, #71717a)' },
   { tag: t.link, color: 'var(--cm-link, #c084fc)', textDecoration: 'underline' },
   { tag: t.url, color: 'var(--cm-url, #a855f7)' },
-  { tag: t.monospace, color: 'var(--cm-code, #f43f5e)', backgroundColor: 'var(--cm-code-bg, rgba(244, 63, 94, 0.08))', borderRadius: '3px' },
+  { tag: t.monospace, color: 'var(--cm-code, #e2e8f0)', backgroundColor: 'var(--cm-code-bg, rgba(255, 255, 255, 0.06))', borderRadius: '3px' },
   { tag: t.comment, color: 'var(--cm-comment, #71717a)', fontStyle: 'italic' },
   { tag: t.meta, color: 'var(--cm-meta, #94a3b8)' },
   { tag: t.processingInstruction, color: 'var(--cm-link, #a855f7)' },

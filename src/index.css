@@ -23,8 +23,8 @@
     --cm-strikethrough: #71717a;
     --cm-link: #c084fc;
     --cm-url: #a855f7;
-    --cm-code: #f43f5e;
-    --cm-code-bg: rgba(244, 63, 94, 0.08);
+    --cm-code: #e2e8f0;
+    --cm-code-bg: rgba(255, 255, 255, 0.06);
     --cm-comment: #71717a;
     --cm-meta: #94a3b8;
     --cm-keyword: #c084fc;
@@ -59,8 +59,8 @@
     --cm-strikethrough: #a1a1aa;
     --cm-link: #6d28d9;
     --cm-url: #7c3aed;
-    --cm-code: #dc2626;
-    --cm-code-bg: rgba(220, 38, 38, 0.06);
+    --cm-code: #1e293b;
+    --cm-code-bg: rgba(0, 0, 0, 0.05);
     --cm-comment: #71717a;
     --cm-meta: #52525b;
     --cm-keyword: #7c3aed;
@@ -1260,4 +1260,73 @@
   background-color: rgba(245, 158, 11, 0.28) !important;
   color: #854d0e !important;
 }
+
+/* Bold & Italic Live Preview marks */
+.cm-bold-mark {
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .cm-bold-mark {
+  color: #09090b !important;
+}
+
+.cm-italic-mark {
+  font-style: italic !important;
+  color: #e4e4e7 !important;
+}
+
+[data-theme="light"] .cm-italic-mark {
+  color: #27272a !important;
+}
+
+/* Inline Code badge */
+.cm-inline-code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e2e8f0 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  font-size: 0.88em !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] .cm-inline-code {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #1e293b !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Fenced Code Block styling in Live Preview */
+.cm-codeblock-delimiter {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.85em !important;
+  background-color: rgba(18, 18, 24, 0.6) !important;
+  color: #818cf8 !important;
+  padding-left: 14px !important;
+  border-left: 3px solid rgba(129, 140, 248, 0.5) !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+.cm-codeblock-line {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.88em !important;
+  background-color: rgba(18, 18, 24, 0.6) !important;
+  color: #e2e8f0 !important;
+  padding-left: 14px !important;
+  border-left: 3px solid rgba(129, 140, 248, 0.5) !important;
+}
+
+[data-theme="light"] .cm-codeblock-delimiter,
+[data-theme="light"] .cm-codeblock-line {
+  background-color: rgba(243, 244, 246, 0.9) !important;
+  color: #1f2937 !important;
+  border-left-color: #6366f1 !important;
+}
+
+/* Note Transclusion Embed Card */
+.cm-note-embed-widget {
+  max-width: 100%;
+}
+
 
