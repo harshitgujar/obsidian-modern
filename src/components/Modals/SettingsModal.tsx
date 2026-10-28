@@ -38,6 +38,7 @@ import { vault } from '../../services/vault';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSection?: SettingsSection;
   appConfig: Record<string, any>;
   appearanceConfig: Record<string, any>;
   corePluginsConfig: Record<string, any>;
@@ -54,7 +55,7 @@ interface SettingsModalProps {
   onSaveCurrentWorkspace?: (name: string) => void;
 }
 
-type SettingsSection = 
+export type SettingsSection = 
   | 'editor' 
   | 'files' 
   | 'appearance' 
@@ -69,6 +70,7 @@ type SettingsSection =
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
+  initialSection,
   appConfig,
   appearanceConfig,
   corePluginsConfig,
@@ -84,7 +86,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onLoadWorkspace,
   onSaveCurrentWorkspace
 }) => {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('editor');
+  const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection || 'editor');
+
+  useEffect(() => {
+    if (isOpen && initialSection) {
+      setActiveSection(initialSection);
+    }
+  }, [isOpen, initialSection]);
 
   // Hotkeys state
   const [hotkeySearch, setHotkeySearch] = useState('');
@@ -151,6 +159,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
       if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
       await fetchAiStatus();
+      window.dispatchEvent(new CustomEvent('obsidian-ai-config-changed'));
 
       const testRes = await fetch('/api/vault/ai/status');
       const testData = await testRes.json();

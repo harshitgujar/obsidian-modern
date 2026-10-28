@@ -15,7 +15,8 @@ import {
   Bot,
   ChevronDown,
   Share2,
-  Cpu
+  Cpu,
+  Settings
 } from 'lucide-react';
 import { VaultFile } from '../../types';
 
@@ -44,13 +45,15 @@ interface AIChatPaneProps {
   onNavigateFile: (filePath: string) => void;
   onInsertTextAtCursor?: (text: string) => void;
   onCreateNoteFromResponse?: (title: string, content: string) => void;
+  onOpenSettings?: () => void;
 }
 
 export const AIChatPane: React.FC<AIChatPaneProps> = ({
   activeFile,
   onNavigateFile,
   onInsertTextAtCursor,
-  onCreateNoteFromResponse
+  onCreateNoteFromResponse,
+  onOpenSettings
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     return [
@@ -103,7 +106,12 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
   useEffect(() => {
     fetchStatus();
     const interval = setInterval(fetchStatus, 15000);
-    return () => clearInterval(interval);
+    const handleConfigChanged = () => fetchStatus();
+    window.addEventListener('obsidian-ai-config-changed', handleConfigChanged);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('obsidian-ai-config-changed', handleConfigChanged);
+    };
   }, []);
 
   const handleReindex = async () => {
@@ -419,8 +427,9 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           {/* Model Status Pill */}
           {aiStatus && (
             <div
-              title={`Provider: ${aiStatus.provider} • Engine: GraphRAG (BM25 + Semantic + 1-Hop) • Model: ${aiStatus.embeddingModel || 'default'}`}
-              className="flex items-center gap-1.5 bg-[#202028] px-2 py-0.5 rounded-full text-[10px] text-zinc-300 border-none shadow-sm"
+              onClick={onOpenSettings}
+              title={`Provider: ${aiStatus.provider} • Engine: GraphRAG (BM25 + Semantic + 1-Hop) • Model: ${aiStatus.embeddingModel || 'default'} (Click to configure)`}
+              className="flex items-center gap-1.5 bg-[#202028] hover:bg-[#2c2d3a] cursor-pointer px-2 py-0.5 rounded-full text-[10px] text-zinc-300 border-none shadow-sm transition-colors"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -458,6 +467,15 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              title="Open AI & Memory Settings"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

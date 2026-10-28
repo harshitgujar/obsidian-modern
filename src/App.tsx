@@ -123,6 +123,7 @@ export const App: React.FC = () => {
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialSection, setSettingsInitialSection] = useState<'editor' | 'files' | 'appearance' | 'plugins' | 'hotkeys' | 'daily-notes' | 'templates' | 'file-recovery' | 'ai' | 'about'>('editor');
   const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -1717,6 +1718,10 @@ export const App: React.FC = () => {
           onSelectTab={setInspectorActiveTab}
           onInsertTextAtCursor={handleInsertTextAtCursor}
           onCreateNoteFromResponse={handleCreateNoteFromResponse}
+          onOpenSettings={() => {
+            setSettingsInitialSection('ai');
+            setIsSettingsOpen(true);
+          }}
         />
       )}
       </div>
@@ -1770,6 +1775,7 @@ export const App: React.FC = () => {
       {/* Settings Modal (Ctrl+,) */}
       <SettingsModal
         isOpen={isSettingsOpen}
+        initialSection={settingsInitialSection}
         onClose={() => setIsSettingsOpen(false)}
         appConfig={appConfig}
         appearanceConfig={appearanceConfig}

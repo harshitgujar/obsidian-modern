@@ -322,15 +322,23 @@ class NoteEmbedWidget extends WidgetType {
         }
       }
 
+      const escapeHtml = (str: string) =>
+        str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+
       const displayLines = contentToShow.split('\n').slice(0, 16);
       const renderedHtml = displayLines.map(l => {
         const trimmed = l.trim();
         if (!trimmed) return '<div class="h-1"></div>';
-        if (trimmed.startsWith('#')) return `<div class="font-bold text-zinc-100 mt-1">${trimmed.replace(/^#+\s*/, '')}</div>`;
+        if (trimmed.startsWith('#')) return `<div class="font-bold text-zinc-100 mt-1">${escapeHtml(trimmed.replace(/^#+\s*/, ''))}</div>`;
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          return `<div class="flex items-start gap-1.5 pl-1"><span class="text-[#705dcf]">•</span><span>${trimmed.slice(2)}</span></div>`;
+          return `<div class="flex items-start gap-1.5 pl-1"><span class="text-[#705dcf]">•</span><span>${escapeHtml(trimmed.slice(2))}</span></div>`;
         }
-        return `<div>${trimmed}</div>`;
+        return `<div>${escapeHtml(trimmed)}</div>`;
       }).join('');
 
       body.innerHTML = renderedHtml || '<span class="italic text-zinc-500">Note has no content.</span>';

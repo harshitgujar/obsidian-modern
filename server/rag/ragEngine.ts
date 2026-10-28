@@ -401,6 +401,15 @@ CRITICAL RULES:
                 } catch {}
               }
             }
+
+            if (buffer.trim()) {
+              try {
+                const parsed = JSON.parse(buffer);
+                if (parsed.message?.content) {
+                  yield parsed.message.content;
+                }
+              } catch {}
+            }
             return;
           }
         }
@@ -452,6 +461,17 @@ CRITICAL RULES:
               for (const line of lines) {
                 const clean = line.replace(/^data:\s*/, '').trim();
                 if (!clean || clean === '[DONE]') continue;
+                try {
+                  const parsed = JSON.parse(clean);
+                  const token = parsed.choices?.[0]?.delta?.content;
+                  if (token) yield token;
+                } catch {}
+              }
+            }
+
+            if (buffer.trim()) {
+              const clean = buffer.replace(/^data:\s*/, '').trim();
+              if (clean && clean !== '[DONE]') {
                 try {
                   const parsed = JSON.parse(clean);
                   const token = parsed.choices?.[0]?.delta?.content;

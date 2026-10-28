@@ -27,6 +27,7 @@ interface InspectorProps {
   onSelectTab?: (tab: InspectorTab) => void;
   onInsertTextAtCursor?: (text: string) => void;
   onCreateNoteFromResponse?: (title: string, content: string) => void;
+  onOpenSettings?: () => void;
 }
 
 export const Inspector: React.FC<InspectorProps> = ({
@@ -41,7 +42,8 @@ export const Inspector: React.FC<InspectorProps> = ({
   activeTab: externalActiveTab,
   onSelectTab,
   onInsertTextAtCursor,
-  onCreateNoteFromResponse
+  onCreateNoteFromResponse,
+  onOpenSettings
 }) => {
   const showBacklinks = corePluginsConfig['backlink'] !== false;
   const showOutlinks = corePluginsConfig['outgoing-link'] !== false;
@@ -161,6 +163,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           onNavigateFile={onNavigateFile}
           onInsertTextAtCursor={onInsertTextAtCursor}
           onCreateNoteFromResponse={onCreateNoteFromResponse}
+          onOpenSettings={onOpenSettings}
         />
       )}
 

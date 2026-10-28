@@ -358,6 +358,20 @@ export class ObsidianVaultServer {
         }
         this.sseDebounceTimer = setTimeout(() => {
           this.broadcastSSE({ type: 'vault-changed', path: normalized, ts: Date.now() });
+          if (normalized.endsWith('.md') && this.ragEngine) {
+            const abs = path.join(this.activeVaultPath, normalized);
+            if (fs.existsSync(abs)) {
+              try {
+                const stat = fs.statSync(abs);
+                if (stat.isFile() && stat.size < 5 * 1024 * 1024) {
+                  const content = fs.readFileSync(abs, 'utf8');
+                  this.ragEngine.getVectorStore().indexFile(normalized, content, stat.mtimeMs).catch(() => {});
+                }
+              } catch {}
+            } else {
+              this.ragEngine.getVectorStore().removeFile(normalized);
+            }
+          }
         }, 300);
       });
     } catch (e) {
@@ -1183,11 +1197,32 @@ export class ObsidianVaultServer {
           return sendJson(200, { ok: true, related });
         }
 
+        if (pathname === '/api/vault/ai/config' && req.method === 'GET') {
+          const cfg = this.ragEngine.getEmbeddingProvider().getConfig();
+          const safeCfg = {
+            ...cfg,
+            apiKey: cfg.apiKey ? '••••••••' + cfg.apiKey.slice(-4) : '',
+            hasApiKey: Boolean(cfg.apiKey)
+          };
+          return sendJson(200, { ok: true, config: safeCfg });
+        }
+
         if (pathname === '/api/vault/ai/config' && req.method === 'POST') {
           const body = await readJsonBody();
-          this.ragEngine.getEmbeddingProvider().updateConfig(body);
           const configPath = path.join(this.activeVaultPath, '.obsidian', 'ai-config.json');
-          fs.writeFileSync(configPath, JSON.stringify(body, null, 2), 'utf8');
+          let existingConfig: any = {};
+          if (fs.existsSync(configPath)) {
+            try {
+              existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            } catch {}
+          }
+          const merged = { ...existingConfig, ...body };
+          // Preserve existing API key if incoming body didn't provide a new one
+          if (!body.apiKey && existingConfig.apiKey) {
+            merged.apiKey = existingConfig.apiKey;
+          }
+          this.ragEngine.getEmbeddingProvider().updateConfig(merged);
+          fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf8');
           return sendJson(200, { ok: true, config: this.ragEngine.getEmbeddingProvider().getConfig() });
         }
 

@@ -1661,6 +1661,28 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
               )}
             </button>
 
+            {/* Edge Color Picker */}
+            <div className="flex items-center gap-1 px-1.5 border-l border-zinc-700/60">
+              <button
+                onClick={() => handleChangeEdgeColor('')}
+                className={`w-3 h-3 rounded-full border border-zinc-600 bg-zinc-800 transition-transform hover:scale-125 ${
+                  !selectedEdge.color ? 'ring-2 ring-white scale-110' : ''
+                }`}
+                title="Default Color"
+              />
+              {Object.entries(COLOR_PRESETS).map(([key, style]) => (
+                <button
+                  key={key}
+                  onClick={() => handleChangeEdgeColor(key)}
+                  className={`w-3 h-3 rounded-full border border-white/20 transition-transform hover:scale-125 ${
+                    selectedEdge.color === key ? 'ring-2 ring-white scale-110' : ''
+                  }`}
+                  style={{ backgroundColor: style.hex }}
+                  title={`Color ${key}`}
+                />
+              ))}
+            </div>
+
             <button
               onClick={handleDeleteSelectedEdge}
               className="p-1 rounded text-rose-400 hover:bg-rose-950/60"
@@ -2179,11 +2201,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
               onMouseDown={e => startDragNode(node, e)}
               className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-all duration-150 select-none ${
                 isGroup
-                  ? `${customColor ? customColor.groupBg : 'bg-purple-950/20'} border-dashed border-2 rounded-2xl z-0 p-3`
+                  ? 'border-dashed border-2 rounded-2xl z-0 p-3'
                   : isSelected
-                  ? `${customColor ? customColor.bg : 'bg-[#18181c]'} border-2 rounded-2xl z-20 p-4`
+                  ? 'border-2 rounded-2xl z-20 p-4'
                   : customColor
-                  ? `${customColor.bg} border-2 rounded-2xl z-10 p-4`
+                  ? 'border-2 rounded-2xl z-10 p-4'
                   : 'bg-[#18181c] border border-zinc-700/80 hover:border-zinc-500 rounded-2xl z-10 p-4'
               }`}
               style={{
@@ -2192,10 +2214,13 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 width: `${node.width}px`,
                 height: `${node.height}px`,
                 borderColor: cardHex || (isSelected ? '#a855f7' : undefined),
+                backgroundColor: isGroup
+                  ? (customColor ? `${customColor.hex}18` : 'rgba(112, 93, 207, 0.08)')
+                  : (customColor ? `${customColor.hex}15` : '#18181c'),
                 boxShadow: isSelected
                   ? `0 0 0 3px ${(cardHex || '#a855f7')}40, 0 20px 30px -10px rgba(0,0,0,0.6)`
                   : customColor
-                  ? `0 4px 20px -2px ${(cardHex || '#a855f7')}25`
+                  ? `0 4px 20px -2px ${(cardHex || '#a855f7')}30`
                   : undefined
               }}
             >
