@@ -46,7 +46,12 @@ export class RAGEngine {
       isProviderAvailable: health.available,
       providerError: health.error,
       lastIndexTime: stats.lastUpdated,
-      queueLength: this.indexingQueueCount
+      queueLength: this.indexingQueueCount,
+      availableModels: health.models || [],
+      chatModel: config.chatModel,
+      ollamaUrl: config.ollamaUrl,
+      apiUrl: config.apiUrl,
+      hasApiKey: Boolean(config.apiKey)
     };
   }
 

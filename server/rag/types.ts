@@ -64,4 +64,9 @@ export interface RAGStatus {
   lastIndexTime: number;
   queueLength?: number;
   progressPercent?: number;
+  availableModels?: string[];
+  chatModel?: string;
+  ollamaUrl?: string;
+  apiUrl?: string;
+  hasApiKey?: boolean;
 }

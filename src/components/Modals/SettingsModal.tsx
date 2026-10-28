@@ -17,7 +17,20 @@ import {
   Clock,
   History,
   Layout,
-  Sliders
+  Sliders,
+  Sparkles,
+  Cpu,
+  Globe,
+  Check,
+  Copy,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Database,
+  CheckCircle2,
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { VaultFile, CommandItem } from '../../types';
 import { vault } from '../../services/vault';
@@ -50,6 +63,7 @@ type SettingsSection =
   | 'daily-notes' 
   | 'templates' 
   | 'file-recovery' 
+  | 'ai'
   | 'about';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -80,11 +94,128 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [dailyConfig, setDailyConfig] = useState<Record<string, any>>(() => vault.getConfig('daily-notes') || {});
   const [templatesConfig, setTemplatesConfig] = useState<Record<string, any>>(() => vault.getConfig('templates') || {});
 
+  // AI & RAG Memory State
+  const [aiStatus, setAiStatus] = useState<any>(null);
+  const [aiProvider, setAiProvider] = useState<'ollama' | 'openai'>('ollama');
+  const [ollamaUrl, setOllamaUrl] = useState('http://127.0.0.1:11434');
+  const [chatModel, setChatModel] = useState('qwen2.5:7b');
+  const [embeddingModel, setEmbeddingModel] = useState('nomic-embed-text:latest');
+  const [apiKey, setApiKey] = useState('');
+  const [apiUrl, setApiUrl] = useState('https://api.openai.com/v1/chat/completions');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isSavingAi, setIsSavingAi] = useState(false);
+  const [aiTestResult, setAiTestResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
+  const [isReindexingAi, setIsReindexingAi] = useState(false);
+  const [reindexSuccess, setReindexSuccess] = useState(false);
+  const [copiedMcp, setCopiedMcp] = useState(false);
+
+  const fetchAiStatus = async () => {
+    try {
+      const res = await fetch('/api/vault/ai/status');
+      if (res.ok) {
+        const data = await res.json();
+        const s = data.status;
+        setAiStatus(s);
+        if (s.provider) setAiProvider(s.provider);
+        if (s.ollamaUrl) setOllamaUrl(s.ollamaUrl);
+        if (s.chatModel) setChatModel(s.chatModel);
+        if (s.embeddingModel) setEmbeddingModel(s.embeddingModel);
+        if (s.apiUrl) setApiUrl(s.apiUrl);
+      }
+    } catch {}
+  };
+
+  const handleSaveAndTestAiConfig = async () => {
+    setIsSavingAi(true);
+    setAiTestResult(null);
+
+    const payload: any = {
+      provider: aiProvider,
+      chatModel,
+      embeddingModel
+    };
+
+    if (aiProvider === 'ollama') {
+      payload.ollamaUrl = ollamaUrl;
+    } else {
+      payload.apiUrl = apiUrl;
+      if (apiKey) payload.apiKey = apiKey;
+    }
+
+    try {
+      const res = await fetch('/api/vault/ai/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+      await fetchAiStatus();
+
+      const testRes = await fetch('/api/vault/ai/status');
+      const testData = await testRes.json();
+      if (testData.status?.isProviderAvailable) {
+        setAiTestResult({
+          status: 'success',
+          message: aiProvider === 'ollama' 
+            ? `Connected to local Ollama! Model "${chatModel}" is ready.`
+            : 'Connected to Cloud AI API successfully!'
+        });
+      } else {
+        setAiTestResult({
+          status: 'error',
+          message: testData.status?.providerError || 'Could not connect to the specified AI model. Please check the address.'
+        });
+      }
+    } catch (err: any) {
+      setAiTestResult({
+        status: 'error',
+        message: err.message || 'Failed to save configuration.'
+      });
+    } finally {
+      setIsSavingAi(false);
+    }
+  };
+
+  const handleTriggerReindex = async () => {
+    setIsReindexingAi(true);
+    setReindexSuccess(false);
+    try {
+      const res = await fetch('/api/vault/ai/index', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setAiStatus(data.status);
+        setReindexSuccess(true);
+        setTimeout(() => setReindexSuccess(false), 4000);
+      }
+    } catch {} finally {
+      setIsReindexingAi(false);
+    }
+  };
+
+  const handleCopyMcpConfig = () => {
+    const configSnippet = JSON.stringify(
+      {
+        mcpServers: {
+          "obsidian-vault": {
+            url: "http://localhost:5175/api/vault/ai/mcp"
+          }
+        }
+      },
+      null,
+      2
+    );
+    navigator.clipboard.writeText(configSnippet);
+    setCopiedMcp(true);
+    setTimeout(() => setCopiedMcp(false), 2500);
+  };
+
   // Load configs on open or section switch
   useEffect(() => {
     if (isOpen) {
       setDailyConfig(vault.getConfig('daily-notes') || { folder: 'Daily', format: 'YYYY-MM-DD', template: 'Templates/Daily Note Template.md' });
       setTemplatesConfig(vault.getConfig('templates') || { folder: 'Templates', dateFormat: 'YYYY-MM-DD', timeFormat: 'HH:mm' });
+      fetchAiStatus();
     }
   }, [isOpen, activeSection]);
 
@@ -266,6 +397,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <span>File Recovery</span>
               </button>
             )}
+
+            {/* AI & Memory Settings */}
+            <button
+              onClick={() => setActiveSection('ai')}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+                activeSection === 'ai'
+                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
+                  : 'text-zinc-400 hover:text-purple-300 hover:bg-zinc-800/50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <span>AI & Memory (RAG)</span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-200 border border-purple-500/30 font-medium">
+                PRO
+              </span>
+            </button>
           </div>
 
           <div className="pt-4 border-t border-zinc-850">
@@ -722,6 +871,340 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     >
                       Clear History
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section: AI & Memory (RAG) */}
+            {activeSection === 'ai' && (
+              <div className="space-y-6">
+                {/* Header Banner */}
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
+                  <div>
+                    <div className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <span>AI & Vault Memory (GraphRAG)</span>
+                    </div>
+                    <div className="text-zinc-400 text-xs mt-0.5">
+                      Ground every response in your private notes using hybrid semantic retrieval.
+                    </div>
+                  </div>
+                  {aiStatus && (
+                    <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
+                      aiStatus.isProviderAvailable
+                        ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${aiStatus.isProviderAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                      <span>{aiStatus.isProviderAvailable ? 'Engine Connected' : 'Engine Offline'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 1. Provider Choice Cards */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">AI Intelligence Provider</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div
+                      onClick={() => setAiProvider('ollama')}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                        aiProvider === 'ollama'
+                          ? 'bg-purple-950/30 border-purple-500/80 ring-2 ring-purple-500/20'
+                          : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2 font-medium text-zinc-100 text-xs">
+                          <Cpu className="w-4 h-4 text-purple-400" />
+                          <span>Local Ollama</span>
+                        </div>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 font-medium">
+                          100% Private
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Runs directly on your machine. Zero data sent to the cloud. Free forever.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => setAiProvider('openai')}
+                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                        aiProvider === 'openai'
+                          ? 'bg-purple-950/30 border-purple-500/80 ring-2 ring-purple-500/20'
+                          : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2 font-medium text-zinc-100 text-xs">
+                          <Globe className="w-4 h-4 text-cyan-400" />
+                          <span>Cloud AI (API Key)</span>
+                        </div>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 font-medium">
+                          Fastest
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        Connect OpenAI, Google Gemini, Claude, DeepSeek, or OpenRouter with an API key.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Provider Specific Settings Form */}
+                {aiProvider === 'ollama' ? (
+                  <div className="space-y-3.5 bg-black/20 p-4 rounded-xl border border-white/[0.06]">
+                    {/* Ollama Status Alert */}
+                    {aiStatus?.isProviderAvailable ? (
+                      <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Ollama is detected and responding locally ({aiStatus.availableModels?.length || 0} models detected).</span>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300">
+                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>Ollama not detected at {ollamaUrl}. Make sure the Ollama application is running.</span>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-zinc-200">Ollama Server Address</label>
+                      <input
+                        type="text"
+                        value={ollamaUrl}
+                        onChange={e => setOllamaUrl(e.target.value)}
+                        placeholder="http://127.0.0.1:11434"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-medium text-zinc-200">Chat & Reasoning Model</label>
+                          <button
+                            onClick={fetchAiStatus}
+                            title="Refresh detected models"
+                            className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                          >
+                            <RefreshCw className="w-2.5 h-2.5" />
+                            <span>Refresh</span>
+                          </button>
+                        </div>
+                        {aiStatus?.availableModels && aiStatus.availableModels.length > 0 ? (
+                          <select
+                            value={chatModel}
+                            onChange={e => setChatModel(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
+                          >
+                            {aiStatus.availableModels.map((m: string) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={chatModel}
+                            onChange={e => setChatModel(e.target.value)}
+                            placeholder="qwen2.5:7b or llama3.2"
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                          />
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-zinc-200">Embedding Model</label>
+                        <input
+                          type="text"
+                          value={embeddingModel}
+                          onChange={e => setEmbeddingModel(e.target.value)}
+                          placeholder="nomic-embed-text:latest"
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5 bg-black/20 p-4 rounded-xl border border-white/[0.06]">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-zinc-200">API Key</label>
+                        <span className="text-[10px] text-zinc-500">Stored locally in .obsidian/ai-config.json</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showApiKey ? 'text' : 'password'}
+                          value={apiKey}
+                          onChange={e => setApiKey(e.target.value)}
+                          placeholder={aiStatus?.hasApiKey ? '•••••••••••••••• (API key configured)' : 'sk-...'}
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 pr-8 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(prev => !prev)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                        >
+                          {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-zinc-200">API Base URL</label>
+                        <input
+                          type="text"
+                          value={apiUrl}
+                          onChange={e => setApiUrl(e.target.value)}
+                          placeholder="https://api.openai.com/v1/chat/completions"
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-zinc-200">Chat Model Name</label>
+                        <input
+                          type="text"
+                          value={chatModel}
+                          onChange={e => setChatModel(e.target.value)}
+                          placeholder="gpt-4o-mini"
+                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex items-center gap-1.5 pt-1 text-[11px] text-zinc-400">
+                      <span>Presets:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApiUrl('https://api.openai.com/v1/chat/completions');
+                          setChatModel('gpt-4o-mini');
+                        }}
+                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                      >
+                        OpenAI (GPT-4o Mini)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApiUrl('https://openrouter.ai/api/v1/chat/completions');
+                          setChatModel('anthropic/claude-3.5-sonnet');
+                        }}
+                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                      >
+                        OpenRouter (Claude 3.5)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApiUrl('https://api.groq.com/openai/v1/chat/completions');
+                          setChatModel('llama-3.3-70b-versatile');
+                        }}
+                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                      >
+                        Groq (Llama 3.3)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Save & Test Button */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSaveAndTestAiConfig}
+                      disabled={isSavingAi}
+                      className="px-4 py-2 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] text-white font-medium text-xs flex items-center gap-2 transition-all shadow-md disabled:opacity-50"
+                    >
+                      <Zap className={`w-3.5 h-3.5 ${isSavingAi ? 'animate-bounce' : ''}`} />
+                      <span>{isSavingAi ? 'Testing Connection...' : 'Save & Test Connection'}</span>
+                    </button>
+                  </div>
+
+                  {aiTestResult && (
+                    <div className={`p-2.5 rounded-lg text-xs flex items-center gap-2 transition-all ${
+                      aiTestResult.status === 'success'
+                        ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200'
+                        : 'bg-rose-950/40 border border-rose-500/40 text-rose-200'
+                    }`}>
+                      {aiTestResult.status === 'success' ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                      )}
+                      <span>{aiTestResult.message}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Vault Memory Index Status */}
+                <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Database className="w-4 h-4 text-purple-400" />
+                      <span className="font-semibold text-zinc-100 text-xs">Vault Vector Index Health</span>
+                    </div>
+                    <button
+                      onClick={handleTriggerReindex}
+                      disabled={isReindexingAi}
+                      className="px-2.5 py-1 rounded-md bg-purple-900/50 hover:bg-purple-900/80 text-purple-200 border border-purple-500/40 text-[11px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isReindexingAi ? 'animate-spin' : ''}`} />
+                      <span>{isReindexingAi ? 'Re-indexing...' : 'Re-index Vault'}</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
+                      <div className="text-[10px] text-zinc-400">Indexed Notes</div>
+                      <div className="text-sm font-bold text-white mt-0.5">
+                        {aiStatus?.indexedFiles ?? 0} / {aiStatus?.totalFiles ?? 0}
+                      </div>
+                    </div>
+                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
+                      <div className="text-[10px] text-zinc-400">Memory Chunks</div>
+                      <div className="text-sm font-bold text-white mt-0.5">
+                        {aiStatus?.totalChunks ?? 0} chunks
+                      </div>
+                    </div>
+                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
+                      <div className="text-[10px] text-zinc-400">Active Embedding</div>
+                      <div className="text-xs font-semibold text-purple-300 mt-1 truncate" title={aiStatus?.embeddingModel}>
+                        {aiStatus?.embeddingModel ? aiStatus.embeddingModel.split(':')[0] : 'Local Hash'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {reindexSuccess && (
+                    <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-1">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Vault index refreshed successfully! All notes are synchronized into RAG memory.</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. External Tool Integration Hub (Claude Desktop & Cursor MCP) */}
+                <div className="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold text-zinc-200 text-xs flex items-center gap-2">
+                      <ExternalLink className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Connect Claude Desktop & Cursor (MCP Server)</span>
+                    </div>
+                    <button
+                      onClick={handleCopyMcpConfig}
+                      className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] flex items-center gap-1.5 transition-colors border border-zinc-700"
+                    >
+                      {copiedMcp ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedMcp ? 'Copied Config!' : 'Copy MCP Config'}</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    This vault runs an embedded Model Context Protocol (MCP) server. External AI assistants can search your notes natively as a tool.
+                  </p>
+                  <div className="bg-black/40 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto">
+                    {`{ "mcpServers": { "obsidian-vault": { "url": "http://localhost:5175/api/vault/ai/mcp" } } }`}
                   </div>
                 </div>
               </div>
