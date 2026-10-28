@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import crypto from 'node:crypto';
 import { exec } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -204,6 +205,7 @@ export class ObsidianVaultServer {
   private watchers: Set<ServerResponse> = new Set();
   private fsWatcher: fs.FSWatcher | null = null;
   private suppressWatchUntil: number = 0;
+  private currentServerPort: number = 5175;
   private ragEngine!: RAGEngine;
   private mcpServer!: VaultMCPServer;
   private ragIndexTimers = new Map<string, NodeJS.Timeout>();
@@ -849,10 +851,51 @@ export class ObsidianVaultServer {
     return this.activeVaultPath;
   }
 
+  public getClaudeConfigPath(): string {
+    const home = os.homedir();
+    if (process.platform === 'darwin') {
+      return path.join(home, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+    }
+    if (process.platform === 'win32') {
+      return path.join(process.env.APPDATA || path.join(home, 'AppData', 'Roaming'), 'Claude', 'claude_desktop_config.json');
+    }
+    return path.join(home, '.config', 'Claude', 'claude_desktop_config.json');
+  }
+
+  public getNodeBinary(): string {
+    if (process.execPath && !process.execPath.toLowerCase().includes('electron')) {
+      return process.execPath;
+    }
+    const candidates = [
+      path.join(os.homedir(), '.local', 'bin', 'node'),
+      '/opt/homebrew/bin/node',
+      '/usr/local/bin/node',
+      '/usr/bin/node'
+    ];
+    for (const c of candidates) {
+      if (fs.existsSync(c)) return c;
+    }
+    return 'node';
+  }
+
+  public getBridgeScriptPath(): string {
+    const repoBridge = path.resolve(__dirname, 'rag', 'mcpBridge.cjs');
+    if (fs.existsSync(repoBridge)) return repoBridge;
+
+    const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
+    return vaultBridge;
+  }
+
   public handleRequest(req: IncomingMessage, res: ServerResponse, next: () => void) {
     const urlStr = req.url || '';
     if (!urlStr.startsWith('/api/vault')) {
       return next();
+    }
+
+    const host = req.headers.host || '127.0.0.1:5175';
+    if (host.includes(':')) {
+      const p = parseInt(host.split(':')[1], 10);
+      if (!isNaN(p)) this.currentServerPort = p;
     }
 
     const parsedUrl = new URL(urlStr, 'http://localhost');
@@ -1277,6 +1320,122 @@ export class ObsidianVaultServer {
         }
 
         // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Agents)
+        if (pathname === '/api/vault/ai/mcp/status' && req.method === 'GET') {
+          const configPath = this.getClaudeConfigPath();
+          const isConfigPresent = fs.existsSync(configPath);
+          let isClaudeConnected = false;
+          let existingServers: string[] = [];
+
+          if (isConfigPresent) {
+            try {
+              const raw = fs.readFileSync(configPath, 'utf8');
+              const parsed = JSON.parse(raw);
+              if (parsed.mcpServers?.['obsidian-vault-memory']) {
+                isClaudeConnected = true;
+              }
+              if (parsed.mcpServers) {
+                existingServers = Object.keys(parsed.mcpServers);
+              }
+            } catch {}
+          }
+
+          const nodeBinary = this.getNodeBinary();
+          const bridgePath = this.getBridgeScriptPath();
+          const vaultPath = this.activeVaultPath;
+          const port = this.currentServerPort;
+
+          const cursorConfig = {
+            name: 'obsidian-vault-memory',
+            command: nodeBinary,
+            args: [bridgePath, vaultPath, String(port)]
+          };
+
+          const claudeDesktopSnippet = {
+            mcpServers: {
+              'obsidian-vault-memory': {
+                command: nodeBinary,
+                args: [bridgePath, vaultPath, String(port)]
+              }
+            }
+          };
+
+          const claudeCliCommand = `claude mcp add obsidian-vault-memory ${nodeBinary} "${bridgePath}" "${vaultPath}" "${port}"`;
+
+          return sendJson(200, {
+            ok: true,
+            claudeConfigPath: configPath,
+            isConfigPresent,
+            isClaudeConnected,
+            existingServers,
+            nodeBinary,
+            bridgePath,
+            vaultPath,
+            port,
+            cursorConfig,
+            claudeDesktopSnippet,
+            claudeCliCommand
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/install-claude' && req.method === 'POST') {
+          const configPath = this.getClaudeConfigPath();
+          const configDir = path.dirname(configPath);
+          fs.mkdirSync(configDir, { recursive: true });
+
+          let config: any = { mcpServers: {} };
+          if (fs.existsSync(configPath)) {
+            try {
+              config = JSON.parse(fs.readFileSync(configPath, 'utf8')) || { mcpServers: {} };
+              if (!config.mcpServers) config.mcpServers = {};
+              fs.writeFileSync(`${configPath}.bak`, JSON.stringify(config, null, 2), 'utf8');
+            } catch {}
+          }
+
+          const nodeBinary = this.getNodeBinary();
+          const bridgePath = this.getBridgeScriptPath();
+          const vaultPath = this.activeVaultPath;
+
+          const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
+          if (fs.existsSync(bridgePath) && !fs.existsSync(vaultBridge)) {
+            try {
+              fs.mkdirSync(path.join(this.activeVaultPath, '.obsidian'), { recursive: true });
+              fs.copyFileSync(bridgePath, vaultBridge);
+            } catch {}
+          }
+
+          config.mcpServers['obsidian-vault-memory'] = {
+            command: nodeBinary,
+            args: [bridgePath, vaultPath, String(this.currentServerPort)]
+          };
+
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+
+          return sendJson(200, {
+            ok: true,
+            message: 'Successfully connected Obsidian Vault Memory to Claude Desktop!',
+            configPath,
+            isClaudeConnected: true
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/uninstall-claude' && req.method === 'POST') {
+          const configPath = this.getClaudeConfigPath();
+          if (fs.existsSync(configPath)) {
+            try {
+              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              if (config.mcpServers?.['obsidian-vault-memory']) {
+                delete config.mcpServers['obsidian-vault-memory'];
+                fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+              }
+            } catch {}
+          }
+          return sendJson(200, {
+            ok: true,
+            message: 'Disconnected Obsidian Vault Memory from Claude Desktop.',
+            isClaudeConnected: false
+          });
+        }
+
         if (pathname === '/api/vault/ai/mcp' && req.method === 'POST') {
           const body = await readJsonBody();
           if (body.method === 'tools/list') {

@@ -30,7 +30,11 @@ import {
   Database,
   CheckCircle2,
   AlertCircle,
-  Zap
+  Zap,
+  Terminal,
+  Bot,
+  Code2,
+  ShieldCheck
 } from 'lucide-react';
 import { VaultFile, CommandItem } from '../../types';
 import { vault } from '../../services/vault';
@@ -117,6 +121,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [reindexSuccess, setReindexSuccess] = useState(false);
   const [copiedMcp, setCopiedMcp] = useState(false);
 
+  // MCP External Hub State
+  const [mcpStatus, setMcpStatus] = useState<any>(null);
+  const [activeMcpTab, setActiveMcpTab] = useState<'claude' | 'cursor' | 'cli' | 'raw'>('claude');
+  const [isInstallingClaude, setIsInstallingClaude] = useState(false);
+  const [claudeFeedback, setClaudeFeedback] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
+  const [copiedCursor, setCopiedCursor] = useState(false);
+  const [copiedCli, setCopiedCli] = useState(false);
+
   const fetchAiStatus = async () => {
     try {
       const res = await fetch('/api/vault/ai/status');
@@ -131,6 +143,73 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (s.apiUrl) setApiUrl(s.apiUrl);
       }
     } catch {}
+  };
+
+  const fetchMcpStatus = async () => {
+    try {
+      const res = await fetch('/api/vault/ai/mcp/status');
+      if (res.ok) {
+        const data = await res.json();
+        setMcpStatus(data);
+      }
+    } catch {}
+  };
+
+  const handleInstallClaude = async () => {
+    setIsInstallingClaude(true);
+    setClaudeFeedback(null);
+    try {
+      const res = await fetch('/api/vault/ai/mcp/install-claude', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to install MCP server into Claude Desktop');
+      await fetchMcpStatus();
+      setClaudeFeedback({
+        status: 'success',
+        message: 'Connected to Claude Desktop! Please restart Claude Desktop so it detects your vault memory.'
+      });
+    } catch (err: any) {
+      setClaudeFeedback({
+        status: 'error',
+        message: err.message || 'Failed to connect to Claude Desktop.'
+      });
+    } finally {
+      setIsInstallingClaude(false);
+    }
+  };
+
+  const handleUninstallClaude = async () => {
+    setIsInstallingClaude(true);
+    setClaudeFeedback(null);
+    try {
+      const res = await fetch('/api/vault/ai/mcp/uninstall-claude', { method: 'POST' });
+      const data = await res.json();
+      await fetchMcpStatus();
+      setClaudeFeedback({
+        status: 'success',
+        message: 'Disconnected from Claude Desktop.'
+      });
+    } catch (err: any) {
+      setClaudeFeedback({
+        status: 'error',
+        message: err.message || 'Failed to disconnect.'
+      });
+    } finally {
+      setIsInstallingClaude(false);
+    }
+  };
+
+  const handleCopyCursorConfig = () => {
+    if (!mcpStatus?.cursorConfig) return;
+    navigator.clipboard.writeText(JSON.stringify(mcpStatus.cursorConfig, null, 2));
+    setCopiedCursor(true);
+    setTimeout(() => setCopiedCursor(false), 2000);
+  };
+
+  const handleCopyCliCommand = () => {
+    if (!mcpStatus?.claudeCliCommand) return;
+    navigator.clipboard.writeText(mcpStatus.claudeCliCommand);
+    setCopiedCli(true);
+    setTimeout(() => setCopiedCli(false), 2000);
   };
 
   const handleSaveAndTestAiConfig = async () => {
@@ -224,7 +303,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (isOpen) {
       setDailyConfig(vault.getConfig('daily-notes') || { folder: 'Daily', format: 'YYYY-MM-DD', template: 'Templates/Daily Note Template.md' });
       setTemplatesConfig(vault.getConfig('templates') || { folder: 'Templates', dateFormat: 'YYYY-MM-DD', timeFormat: 'HH:mm' });
-      fetchAiStatus();
+      if (activeSection === 'ai') {
+        fetchAiStatus();
+        fetchMcpStatus();
+      }
     }
   }, [isOpen, activeSection]);
 
@@ -1194,26 +1276,227 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   )}
                 </div>
 
-                {/* 5. External Tool Integration Hub (Claude Desktop & Cursor MCP) */}
-                <div className="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-2.5">
+                {/* 5. 1-Click External AI Hub (Claude Desktop & Cursor MCP) */}
+                <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <div className="font-semibold text-zinc-200 text-xs flex items-center gap-2">
-                      <ExternalLink className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Connect Claude Desktop & Cursor (MCP Server)</span>
+                    <div>
+                      <div className="font-semibold text-zinc-100 text-xs flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-purple-400" />
+                        <span>1-Click External AI Hub (Model Context Protocol)</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                        Connect Claude Desktop, Cursor, or terminal assistants to your vault memory seamlessly.
+                      </p>
                     </div>
+
+                    {/* Claude status pill */}
+                    {mcpStatus && (
+                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1.5 ${
+                        mcpStatus.isClaudeConnected 
+                          ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40' 
+                          : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                        <span>{mcpStatus.isClaudeConnected ? 'Claude Connected' : 'Claude Ready'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hub Tabs */}
+                  <div className="flex items-center gap-1.5 border-b border-zinc-800 pb-2">
                     <button
-                      onClick={handleCopyMcpConfig}
-                      className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] flex items-center gap-1.5 transition-colors border border-zinc-700"
+                      type="button"
+                      onClick={() => setActiveMcpTab('claude')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        activeMcpTab === 'claude' 
+                          ? 'bg-[#705dcf] text-white shadow-sm' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                      }`}
                     >
-                      {copiedMcp ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedMcp ? 'Copied Config!' : 'Copy MCP Config'}</span>
+                      <Bot className="w-3.5 h-3.5" />
+                      <span>Claude Desktop</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMcpTab('cursor')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        activeMcpTab === 'cursor' 
+                          ? 'bg-[#705dcf] text-white shadow-sm' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                      }`}
+                    >
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span>Cursor IDE</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMcpTab('cli')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        activeMcpTab === 'cli' 
+                          ? 'bg-[#705dcf] text-white shadow-sm' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                      }`}
+                    >
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Claude Code CLI</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMcpTab('raw')}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        activeMcpTab === 'raw' 
+                          ? 'bg-[#705dcf] text-white shadow-sm' 
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                      }`}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Direct Spec</span>
                     </button>
                   </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    This vault runs an embedded Model Context Protocol (MCP) server. External AI assistants can search your notes natively as a tool.
-                  </p>
-                  <div className="bg-black/40 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto">
-                    {`{ "mcpServers": { "obsidian-vault": { "url": "http://localhost:5175/api/vault/ai/mcp" } } }`}
+
+                  {/* Tab 1: Claude Desktop (1-Click Auto Installer) */}
+                  {activeMcpTab === 'claude' && (
+                    <div className="space-y-3 pt-1">
+                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="font-semibold text-zinc-200 text-xs">
+                              {mcpStatus?.isClaudeConnected 
+                                ? '✓ Connected to Claude Desktop' 
+                                : '1-Click Claude Desktop Integration'}
+                            </div>
+                            <p className="text-[11px] text-zinc-400 leading-relaxed">
+                              {mcpStatus?.isClaudeConnected
+                                ? 'Claude Desktop is configured to query your notes using standard MCP tools. If Claude was open, restart it to load the memory tools.'
+                                : 'Click below to automatically configure Claude Desktop. No manual JSON editing or terminal commands required.'}
+                            </p>
+                          </div>
+
+                          {mcpStatus?.isClaudeConnected ? (
+                            <button
+                              onClick={handleUninstallClaude}
+                              disabled={isInstallingClaude}
+                              className="px-3 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/40 text-xs font-medium transition-all shrink-0 disabled:opacity-50"
+                            >
+                              {isInstallingClaude ? 'Disconnecting...' : 'Disconnect'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleInstallClaude}
+                              disabled={isInstallingClaude}
+                              className="px-3.5 py-1.5 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] text-white text-xs font-medium flex items-center gap-1.5 transition-all shadow-md shrink-0 disabled:opacity-50"
+                            >
+                              <Zap className={`w-3.5 h-3.5 ${isInstallingClaude ? 'animate-bounce' : ''}`} />
+                              <span>{isInstallingClaude ? 'Connecting...' : 'Connect to Claude Desktop'}</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {claudeFeedback && (
+                          <div className={`p-2 rounded text-xs flex items-center gap-2 ${
+                            claudeFeedback.status === 'success' 
+                              ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200' 
+                              : 'bg-rose-950/40 border border-rose-500/40 text-rose-200'
+                          }`}>
+                            {claudeFeedback.status === 'success' ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            ) : (
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            )}
+                            <span>{claudeFeedback.message}</span>
+                          </div>
+                        )}
+
+                        <div className="text-[10px] text-zinc-500 font-mono break-all pt-1">
+                          Config target: {mcpStatus?.claudeConfigPath || '~/Library/Application Support/Claude/claude_desktop_config.json'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 2: Cursor IDE */}
+                  {activeMcpTab === 'cursor' && (
+                    <div className="space-y-3 pt-1">
+                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-zinc-200">Cursor MCP Setup</span>
+                          <button
+                            onClick={handleCopyCursorConfig}
+                            className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                          >
+                            {copiedCursor ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedCursor ? 'Copied to Clipboard!' : 'Copy Cursor Config'}</span>
+                          </button>
+                        </div>
+
+                        <ol className="list-decimal pl-4 space-y-1 text-[11px] text-zinc-400 leading-relaxed">
+                          <li>Open Cursor Settings (<kbd className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">Cmd+,</kbd> or <kbd className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">Ctrl+,</kbd>) &gt; <strong>Features</strong> &gt; <strong>MCP</strong>.</li>
+                          <li>Click <strong>Add New MCP Server</strong> and paste this configuration:</li>
+                        </ol>
+
+                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-purple-200 select-all overflow-x-auto">
+                          {mcpStatus?.cursorConfig 
+                            ? JSON.stringify(mcpStatus.cursorConfig, null, 2)
+                            : 'Loading configuration...'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 3: Claude Code CLI */}
+                  {activeMcpTab === 'cli' && (
+                    <div className="space-y-3 pt-1">
+                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-zinc-200">Claude Code CLI Terminal Command</span>
+                          <button
+                            onClick={handleCopyCliCommand}
+                            className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                          >
+                            {copiedCli ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedCli ? 'Copied Command!' : 'Copy Command'}</span>
+                          </button>
+                        </div>
+
+                        <p className="text-[11px] text-zinc-400">
+                          Run this single command in your terminal to enable vault memory in Claude Code:
+                        </p>
+
+                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto whitespace-pre-wrap break-all">
+                          {mcpStatus?.claudeCliCommand || 'claude mcp add obsidian-vault-memory node ...'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 4: Direct Spec / HTTP */}
+                  {activeMcpTab === 'raw' && (
+                    <div className="space-y-3 pt-1">
+                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-zinc-200">Direct HTTP Endpoint</span>
+                          <button
+                            onClick={handleCopyMcpConfig}
+                            className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] flex items-center gap-1.5 transition-colors border border-zinc-700"
+                          >
+                            {copiedMcp ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedMcp ? 'Copied!' : 'Copy URL Config'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          For custom AI agents and HTTP MCP clients:
+                        </p>
+                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto">
+                          {`{ "mcpServers": { "obsidian-vault": { "url": "http://localhost:${mcpStatus?.port || 5175}/api/vault/ai/mcp" } } }`}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Privacy & Local Security Notice */}
+                  <div className="pt-1 flex items-center gap-2 text-[10.5px] text-zinc-500">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>100% Private & Local: All queries are executed directly on 127.0.0.1. Your notes never leave your computer.</span>
                   </div>
                 </div>
               </div>
