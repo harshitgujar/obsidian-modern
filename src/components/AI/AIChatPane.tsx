@@ -288,7 +288,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
               e.stopPropagation();
               onNavigateFile(targetNav);
             }}
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] border border-black/[0.06] text-[#1c1c1e] font-medium text-[11px] align-baseline transition-all select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] border border-black/[0.06] text-[#1c1c1e] font-medium text-[11px] align-baseline transition-all select-none shadow-xs cursor-pointer"
             title={`Open ${targetWithHeading}`}
           >
             <span>{label}</span>
@@ -492,7 +492,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             onClick={() => setSearchScope('vault')}
             className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
               searchScope === 'vault'
-                ? 'bg-white text-[#384cff] shadow-xs border border-[rgba(56,76,255,0.2)]'
+                ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
                 : 'text-[#585860] hover:text-[#111113]'
             }`}
           >
@@ -503,7 +503,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
               onClick={() => setSearchScope('activeNote')}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
                 searchScope === 'activeNote'
-                  ? 'bg-white text-[#384cff] shadow-xs border border-[rgba(56,76,255,0.2)]'
+                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
@@ -527,7 +527,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                 className={`max-w-[94%] rounded-2xl px-4 py-3 leading-relaxed text-xs ${
                   isUser
                     ? 'bg-[#18181b] text-white shadow-xs rounded-tr-sm'
-                    : 'bg-white text-[#111113] border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] rounded-tl-sm w-full'
+                    : 'bg-white text-[#111113] border border-black/[0.08] shadow-xs rounded-tl-sm w-full'
                 }`}
               >
                 {/* Text Content */}

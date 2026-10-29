@@ -12,7 +12,7 @@
     "activeFilter": "all"
   },
   "leftSidebarOpen": true,
-  "rightSidebarOpen": false,
+  "rightSidebarOpen": true,
   "activeLeftTab": "files",
   "activeRightTab": "aiChat",
   "history": {
@@ -172,9 +172,14 @@
       "AI Summary - 2026-10-28.md",
       "Untitled Canvas 25.canvas",
       "wikilinks.md",
-      "Untitled Canvas 25.canvas"
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md",
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md",
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md"
     ],
-    "index": 155
+    "index": 160
   },
   "panes": [
     {
@@ -183,7 +188,7 @@
         {
           "id": "tab-1792661914002-8hx",
           "filePath": "wikilinks.md",
-          "viewMode": "reading"
+          "viewMode": "live"
         },
         {
           "id": "tab-1792661937200-ft6",
@@ -223,7 +228,7 @@
         {
           "id": "tab-1792665350534-844",
           "filePath": "Untitled Canvas 25.canvas",
-          "viewMode": "live"
+          "viewMode": "reading"
         },
         {
           "id": "tab-1792665409316-y3a",
@@ -501,7 +506,7 @@
           "viewMode": "live"
         }
       ],
-      "activeTabId": "tab-1792665350534-844"
+      "activeTabId": "tab-1792661914002-8hx"
     }
   ],
   "activePaneId": "pane-main",

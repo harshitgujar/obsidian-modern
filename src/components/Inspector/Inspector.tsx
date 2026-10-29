@@ -77,7 +77,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title={backlinks.length > 0 ? `Backlinks (${backlinks.length})` : 'Backlinks'}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'backlinks'
-                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -98,7 +98,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title={outlinks.length > 0 ? `Outgoing Links (${outlinks.length})` : 'Outgoing Links'}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outgoing'
-                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -119,7 +119,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title="Document Outline"
               className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outline'
-                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -133,7 +133,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title="Local Graph"
               className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'localGraph'
-                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -147,7 +147,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             title="AI Vault Assistant (RAG Memory)"
             className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
               activeTab === 'aiChat'
-                ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
+                ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
                 : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
             }`}
           >

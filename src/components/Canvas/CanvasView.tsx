@@ -266,7 +266,7 @@ function parseCanvasInline(text: string, onNavigateFile: (path: string) => void)
             e.stopPropagation();
             onNavigateFile(target.trim());
           }}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[10.5px] font-medium cursor-pointer border border-black/[0.06] transition-colors mx-0.5 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[10.5px] font-medium cursor-pointer border border-black/[0.06] transition-colors mx-0.5 select-none shadow-xs"
         >
           {alias ? alias.trim() : target.trim()}
         </span>
@@ -874,17 +874,18 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     }
   }, [persistCanvas]);
 
-  // Window-level listeners to prevent stuck drag states and guarantee silky smooth movement
+  // Window-level listeners to prevent stuck drag states and guarantee instantaneous silky smooth movement
   useEffect(() => {
-    const isInteracting = draggingNodeId !== null || isPanning || resizingState !== null || connectingState !== null;
-    if (!isInteracting) return;
-
     const onGlobalMouseMove = (e: MouseEvent) => {
-      handleMouseMove(e);
+      if (draggingNodeIdRef.current || isPanningRef.current || resizingStateRef.current || connectingStateRef.current) {
+        handleMouseMove(e);
+      }
     };
 
     const onGlobalMouseUp = (e: MouseEvent) => {
-      handleMouseUp(e);
+      if (draggingNodeIdRef.current || isPanningRef.current || resizingStateRef.current || connectingStateRef.current) {
+        handleMouseUp(e);
+      }
     };
 
     window.addEventListener('mousemove', onGlobalMouseMove, { passive: true });
@@ -898,7 +899,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         rafIdRef.current = null;
       }
     };
-  }, [draggingNodeId, isPanning, resizingState, connectingState, handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -1695,7 +1696,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       })()}
 
       {/* 4. Right Vertical Toolbar on Canvas (`canvas-controls` in user screenshot!) */}
-      <div className="canvas-controls absolute top-4 right-4 z-40 flex flex-col gap-1 p-1 bg-white border border-black/[0.08] rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] text-[#585860]">
+      <div className="canvas-controls absolute top-4 right-4 z-40 flex flex-col gap-1 p-1 bg-white border border-black/[0.08] rounded-2xl shadow-md text-[#585860]">
         <button
           onClick={() => setShowFileSuggestPopover(prev => !prev)}
           className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
@@ -1760,7 +1761,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       </div>
 
       {/* 5. Bottom Center Floating Dock Toolbar matching Obsidian Canvas dock in media_1792147243199.png */}
-      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-2xl px-2.5 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] text-[#585860]">
+      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-2xl px-2.5 py-1.5 shadow-md text-[#585860]">
         {/* 1. Card / Text Card (Folded card outline) */}
         <button
           onClick={handleAddTextCard}
@@ -2154,7 +2155,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
               userSelect: 'none',
               zIndex: 10
             }}
-            className="bg-white border border-black/[0.08] rounded-2xl px-8 py-6 text-center shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)]"
+            className="bg-white border border-black/[0.08] rounded-2xl px-8 py-6 text-center shadow-md"
           >
             <div className="space-y-1.5 text-center">
               <div className="text-[#111113] font-semibold text-sm">Drag from below or double click</div>
@@ -2199,14 +2200,14 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 setSelectedEdgeId(null);
               }}
               onMouseDown={e => startDragNode(node, e)}
-              className={`canvas-node absolute pointer-events-auto flex flex-col transition-all duration-150 select-none ${
+              className={`canvas-node absolute pointer-events-auto flex flex-col transition-[box-shadow,border-color] duration-150 select-none ${
                 isGroup
                   ? 'border-dashed border-2 rounded-2xl z-0 p-3'
                   : isSelected
                   ? 'border-2 rounded-2xl z-20 p-4'
                   : customColor
                   ? 'border-2 rounded-2xl z-10 p-4'
-                  : 'bg-white border border-black/[0.08] hover:border-black/[0.18] rounded-2xl z-10 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] text-[#111113]'
+                  : 'bg-white border border-black/[0.08] hover:border-black/[0.18] rounded-2xl z-10 p-4 shadow-sm text-[#111113]'
               }`}
               style={{
                 left: `${node.x}px`,
@@ -2216,7 +2217,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 borderColor: cardHex || (isSelected ? '#18181b' : undefined),
                 backgroundColor: isGroup
                   ? (customColor ? `${customColor.hex}18` : 'rgba(0, 0, 0, 0.03)')
-                  : (customColor ? `${customColor.hex}15` : '#ffffff'),
+                  : (customColor ? `${customColor.hex}15` : undefined),
                 boxShadow: isSelected
                   ? '0 0 0 2px #18181b, 0 12px 24px -6px rgba(0,0,0,0.1)'
                   : customColor

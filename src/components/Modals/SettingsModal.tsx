@@ -392,7 +392,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('editor')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'editor'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -404,7 +404,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('files')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'files'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -416,7 +416,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('appearance')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'appearance'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -428,7 +428,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('hotkeys')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'hotkeys'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -444,7 +444,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('plugins')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'plugins'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -462,7 +462,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('daily-notes')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'daily-notes'
-                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                     : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
@@ -476,7 +476,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('templates')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'templates'
-                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                     : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
@@ -490,7 +490,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('file-recovery')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'file-recovery'
-                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                     : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
@@ -504,7 +504,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('ai')}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'ai'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -523,7 +523,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('about')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'about'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -1011,7 +1011,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       onClick={() => setAiProvider('ollama')}
                       className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                         aiProvider === 'ollama'
-                          ? 'bg-white border-black/[0.18] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] ring-1 ring-black/[0.08]'
+                          ? 'bg-white border-black/[0.18] shadow-sm ring-1 ring-black/[0.08]'
                           : 'bg-[#f8f8fa] border-black/[0.06] hover:border-black/[0.12]'
                       }`}
                     >
@@ -1033,7 +1033,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       onClick={() => setAiProvider('openai')}
                       className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                         aiProvider === 'openai'
-                          ? 'bg-white border-black/[0.18] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] ring-1 ring-black/[0.08]'
+                          ? 'bg-white border-black/[0.18] shadow-sm ring-1 ring-black/[0.08]'
                           : 'bg-[#f8f8fa] border-black/[0.06] hover:border-black/[0.12]'
                       }`}
                     >
@@ -1538,7 +1538,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeSection === 'about' && (
               <div className="space-y-4">
                 <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-black/[0.08] shadow-sm flex items-center justify-center shrink-0">
                     <img src="/logo-symbol.png" alt="Runagon" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="space-y-1">

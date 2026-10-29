@@ -140,7 +140,7 @@ export const VaultSwitcherModal: React.FC<VaultSwitcherModalProps> = ({
                 }}
                 className={`group flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer border ${
                   isActive
-                    ? 'bg-white border-black/[0.12] text-[#111113] shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.95)]'
+                    ? 'bg-white border-black/[0.12] text-[#111113] shadow-sm'
                     : 'bg-[#f8f8fa] hover:bg-white hover:shadow-sm border-black/[0.05] text-[#585860] hover:text-[#111113]'
                 }`}
               >

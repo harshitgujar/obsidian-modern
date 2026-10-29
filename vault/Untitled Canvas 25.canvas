@@ -4,8 +4,8 @@
       "id": "node-1793168362636",
       "type": "group",
       "label": "New Group",
-      "x": 194,
-      "y": 164,
+      "x": -5,
+      "y": -375,
       "width": 480,
       "height": 360,
       "color": "6"
@@ -14,8 +14,8 @@
       "id": "node-1793168358924",
       "type": "group",
       "label": "New Group",
-      "x": 814,
-      "y": 353,
+      "x": 422,
+      "y": 417,
       "width": 480,
       "height": 360,
       "color": "6"
@@ -34,8 +34,8 @@
       "id": "node-1792665355248",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": 1836,
-      "y": 873,
+      "x": 1478,
+      "y": 201,
       "width": 804,
       "height": 961,
       "color": "4"
@@ -44,10 +44,30 @@
       "id": "node-1793168370295",
       "type": "text",
       "text": "### New Idea\nDouble-click to edit this card in markdown.",
-      "x": 486,
-      "y": 819,
+      "x": 1012,
+      "y": 347,
       "width": 280,
       "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793259784034",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 983,
+      "y": 617,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793259787802",
+      "type": "file",
+      "file": "202610131644 Zettelkasten Note.md",
+      "x": 126,
+      "y": 173,
+      "width": 300,
+      "height": 220,
       "color": "6"
     }
   ],

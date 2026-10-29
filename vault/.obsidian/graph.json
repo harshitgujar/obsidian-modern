@@ -5,12 +5,12 @@
   "hideUnresolved": true,
   "showOrphans": true,
   "showArrow": true,
-  "textFadeMultiplier": 1.5,
-  "nodeSizeMultiplier": 1.7,
-  "lineSizeMultiplier": 2.1,
+  "textFadeMultiplier": 1.9,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1.5,
   "centerStrength": 0.05,
   "repelStrength": 2500,
-  "linkStrength": 0.9,
+  "linkStrength": 2,
   "linkDistance": 300,
   "colorGroups": [
     {

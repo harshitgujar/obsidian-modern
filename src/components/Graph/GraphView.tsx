@@ -990,7 +990,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
               value={settings.search}
               onChange={e => updateSetting('search', e.target.value)}
               placeholder="Search graph..."
-              className="graph-control-input bg-white text-xs text-[#111113] pl-8 pr-6 py-1.5 rounded-xl border border-black/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] focus:outline-none focus:border-zinc-400 w-48"
+              className="graph-control-input bg-white text-xs text-[#111113] pl-8 pr-6 py-1.5 rounded-xl border border-black/[0.08] shadow-sm focus:outline-none focus:border-zinc-400 w-48"
             />
             {settings.search && (
               <button
@@ -1443,7 +1443,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Floating Zoom & Camera Controls */}
-      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white border border-black/[0.08] rounded-xl p-1 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)]">
+      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white border border-black/[0.08] rounded-xl p-1 shadow-sm">
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
           className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"

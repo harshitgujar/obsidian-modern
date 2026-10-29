@@ -269,7 +269,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     }}
                     className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[rgba(56,76,255,0.08)] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-[rgba(56,76,255,0.25)]'
+                        ? 'bg-[rgba(56,76,255,0.08)] text-[#111113] font-medium shadow-xs border border-[rgba(56,76,255,0.2)]'
                         : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
@@ -321,7 +321,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     }}
                     className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-xs border-black/[0.05]'
                         : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
@@ -360,7 +360,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     }}
                     className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-xs border-black/[0.05]'
                         : 'border-transparent text-[#18181b] hover:bg-[#f4f4f6]'
                     }`}
                   >
@@ -393,7 +393,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     }}
                     className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-xs border-black/[0.05]'
                         : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >

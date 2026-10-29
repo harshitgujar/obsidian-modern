@@ -178,7 +178,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer transition-all max-w-[200px] shrink-0 border ${
                 isActive
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
+                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-[#e4e4e9]'
               }`}
             >
@@ -229,7 +229,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onOpenQuickSwitcher}
             title="Quick Switcher (Ctrl+O / Cmd+O)"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white hover:bg-[#fafafc] text-[#111113] border border-black/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_1px_2px_rgba(0,0,0,0.04)] transition-all text-[11px]"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white hover:bg-[#fafafc] text-[#111113] border border-black/[0.08] shadow-xs transition-all text-[11px]"
           >
             <Search className="w-3 h-3 text-[#585860]" />
             <span className="text-[11px] font-medium">Jump to...</span>
@@ -295,10 +295,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('live')}
               title="Live Preview Mode: Interactive editing with live styled formatting"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
                 activeViewMode === 'live'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
-                  : 'text-[#585860] hover:text-[#111113]'
+                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -307,10 +307,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('source')}
               title="Source Mode: Raw Markdown code editor with line numbers"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
                 activeViewMode === 'source'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
-                  : 'text-[#585860] hover:text-[#111113]'
+                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113]'
               }`}
             >
               <Code className="w-3.5 h-3.5" />
@@ -319,10 +319,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('reading')}
               title="Reading View: Pristine read-only publication reader"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
                 activeViewMode === 'reading'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
-                  : 'text-[#585860] hover:text-[#111113]'
+                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113]'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
