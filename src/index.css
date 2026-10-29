@@ -746,48 +746,48 @@
 
 [data-theme="light"] .graph-control-btn.bg-purple-950\/80,
 [data-theme="light"] .graph-control-btn.bg-purple-600\/30 {
-  background-color: #f5f3ff !important;
-  border-color: #c4b5fd !important;
-  color: #6d28d9 !important;
+  background-color: #18181b !important;
+  border-color: #111113 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .graph-control-btn.bg-purple-950\/80 svg,
 [data-theme="light"] .graph-control-btn.bg-purple-600\/30 svg {
-  color: #7c3aed !important;
-  fill: #7c3aed !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 [data-theme="light"] .text-purple-200,
 [data-theme="light"] .text-purple-300,
 [data-theme="light"] .text-purple-400 {
-  color: #6d28d9 !important;
+  color: #18181b !important;
 }
 
 [data-theme="light"] .hover\:text-purple-100:hover,
 [data-theme="light"] .hover\:text-purple-200:hover,
 [data-theme="light"] .hover\:text-purple-300:hover {
-  color: #5b21b6 !important;
+  color: #09090b !important;
 }
 
 [data-theme="light"] .border-purple-800,
 [data-theme="light"] .border-purple-800\/40,
 [data-theme="light"] .border-purple-800\/30,
 [data-theme="light"] .border-purple-700 {
-  border-color: rgba(124, 58, 237, 0.3) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
 [data-theme="light"] .bg-purple-600\/20,
 [data-theme="light"] .bg-purple-600\/25,
 [data-theme="light"] .bg-purple-600\/30 {
-  background-color: rgba(124, 58, 237, 0.12) !important;
-  color: #6d28d9 !important;
+  background-color: #ebebef !important;
+  color: #18181b !important;
 }
 
 [data-theme="light"] .hover\:bg-purple-600\/20:hover,
 [data-theme="light"] .hover\:bg-purple-600\/30:hover,
 [data-theme="light"] .hover\:bg-purple-600\/40:hover {
-  background-color: rgba(124, 58, 237, 0.18) !important;
-  color: #5b21b6 !important;
+  background-color: #e4e4e9 !important;
+  color: #111113 !important;
 }
 
 /* 7b. Secondary Color Text Inversion for Canvas & Badges */

@@ -69,11 +69,11 @@ const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   linkStrength: 0.8,
   linkDistance: 210,
   colorGroups: [
-    { query: 'path:Formatting', color: '#a855f7' },
-    { query: 'path:Guides', color: '#10b981' },
-    { query: 'path:Adventurer', color: '#f59e0b' },
-    { query: 'path:Templates', color: '#06b6d4' },
-    { query: 'path:Daily', color: '#ec4899' }
+    { query: 'path:Formatting', color: '#27272a' },
+    { query: 'path:Guides', color: '#3f3f46' },
+    { query: 'path:Adventurer', color: '#52525b' },
+    { query: 'path:Templates', color: '#71717a' },
+    { query: 'path:Daily', color: '#8e8e93' }
   ],
   localJumps: 1
 };
@@ -105,7 +105,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     forces: true
   });
   const [newGroupQuery, setNewGroupQuery] = useState('');
-  const [newGroupColor, setNewGroupColor] = useState('#8b5cf6');
+  const [newGroupColor, setNewGroupColor] = useState('#27272a');
   const [isAddingGroup, setIsAddingGroup] = useState(false);
 
   // Viewport transformation
@@ -487,8 +487,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       ctx.translate(width / 2 + transform.x, height / 2 + transform.y);
       ctx.scale(transform.k, transform.k);
 
-      // 1. Draw subtle Obsidian Dot Grid
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      // 1. Draw subtle minimal skeuomorphic dot grid on light background
       if (!isMini) {
         const gridSize = 40;
         const left = (-width / 2 - transform.x) / transform.k;
@@ -501,8 +500,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const startY = Math.floor(top / gridSize) * gridSize;
         const endY = Math.ceil(bottom / gridSize) * gridSize;
 
-        ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.035)';
-        const dotRadius = Math.max(0.6, 1.2 / transform.k);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        const dotRadius = Math.max(0.7, 1.3 / transform.k);
         for (let gx = startX; gx <= endX; gx += gridSize) {
           for (let gy = startY; gy <= endY; gy += gridSize) {
             ctx.beginPath();
@@ -585,25 +584,25 @@ export const GraphView: React.FC<GraphViewProps> = ({
           // Outgoing edge: carbon
           ctx.strokeStyle = '#18181b';
           ctx.lineWidth = baseEdgeWidth * 2.2;
-          ctx.globalAlpha = 0.95;
+          ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (isTargetOfHovered) {
           // Incoming edge: slate
           ctx.strokeStyle = '#52525b';
           ctx.lineWidth = baseEdgeWidth * 2.2;
-          ctx.globalAlpha = 0.95;
+          ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (activeOrHovered) {
           // Dimmed non-connected edge
-          ctx.strokeStyle = isLight ? '#d4d4d8' : '#3f3f46';
+          ctx.strokeStyle = '#d4d4d8';
           ctx.lineWidth = baseEdgeWidth * 0.5;
-          ctx.globalAlpha = 0.05;
+          ctx.globalAlpha = 0.12;
           ctx.stroke();
         } else {
-          // Resting state edge
-          ctx.strokeStyle = isLight ? '#a1a1aa' : '#71717a';
+          // Resting state edge: clean soft hairline slate on light background
+          ctx.strokeStyle = '#c4c4c8';
           ctx.lineWidth = baseEdgeWidth;
-          ctx.globalAlpha = isLight ? 0.35 : 0.22;
+          ctx.globalAlpha = 0.6;
           ctx.stroke();
         }
 
@@ -636,8 +635,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
               : isTargetOfHovered
               ? '#585860'
               : activeOrHovered
-              ? (isLight ? 'rgba(200, 200, 210, 0.2)' : 'rgba(113, 113, 122, 0.1)')
-              : (isLight ? 'rgba(100, 100, 115, 0.4)' : 'rgba(161, 161, 170, 0.45)');
+              ? 'rgba(180, 180, 190, 0.2)'
+              : 'rgba(120, 120, 130, 0.6)';
             ctx.fill();
           }
         }
@@ -700,14 +699,14 @@ export const GraphView: React.FC<GraphViewProps> = ({
         ctx.fillStyle = node.color || '#18181b';
         ctx.fill();
 
-        // Node border
-        ctx.lineWidth = 1.4 / transform.k;
+        // Node border: Crisp white rim gives a tactile, beveled physical pebble effect on light bg
+        ctx.lineWidth = isTarget ? (2.2 / transform.k) : (1.6 / transform.k);
         if (node.nodeType === 'unresolved') {
           ctx.setLineDash([3 / transform.k, 2 / transform.k]);
           ctx.strokeStyle = '#94a3b8';
         } else {
           ctx.setLineDash([]);
-          ctx.strokeStyle = isTarget ? '#ffffff' : 'rgba(18, 18, 22, 0.9)';
+          ctx.strokeStyle = isTarget ? '#18181b' : '#ffffff';
         }
         ctx.stroke();
         ctx.restore();
@@ -753,26 +752,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const pillX = node.x - textWidth / 2 - padding;
         const pillW = textWidth + padding * 2;
         const pillH = textHeight;
-        const pillR = 3 / transform.k;
+        const pillR = 4 / transform.k;
 
-        // Translucent Pill Background
+        // Elevated Crisp White Pill Background with soft tactile shadow
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-        ctx.fillStyle = isLight
-          ? (isTarget ? 'rgba(255, 255, 255, 0.98)' : 'rgba(240, 240, 243, 0.92)')
-          : (isTarget ? 'rgba(15, 15, 20, 0.95)' : 'rgba(24, 24, 28, 0.88)');
+        ctx.fillStyle = isTarget ? '#ffffff' : 'rgba(255, 255, 255, 0.95)';
         ctx.fill();
 
-        if (isTarget) {
-          ctx.strokeStyle = isLight ? 'rgba(124, 58, 237, 0.5)' : 'rgba(168, 85, 247, 0.6)';
-          ctx.lineWidth = 1 / transform.k;
-          ctx.stroke();
-        }
+        // Pill hairline border
+        ctx.strokeStyle = isTarget ? '#18181b' : 'rgba(0, 0, 0, 0.08)';
+        ctx.lineWidth = 1 / transform.k;
+        ctx.stroke();
 
         // Label Text
-        ctx.fillStyle = isLight
-          ? (isTarget ? '#09090b' : (isDimmed ? '#a1a1aa' : '#18181b'))
-          : (isTarget ? '#ffffff' : (isDimmed ? '#71717a' : '#e4e4e7'));
+        ctx.fillStyle = isTarget ? '#111113' : (isDimmed ? '#8e8e93' : '#18181b');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, node.x, pillY + pillH / 2);
@@ -969,7 +963,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   };
 
   return (
-    <div className={`relative w-full h-full bg-[#141417] overflow-hidden select-none ${isMini ? 'rounded-lg border border-zinc-800' : ''}`}>
+    <div className={`relative w-full h-full bg-[#f4f4f6] overflow-hidden select-none ${isMini ? 'rounded-xl border border-black/[0.08]' : ''}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-full cursor-grab active:cursor-grabbing block"
@@ -1193,7 +1187,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
-                        {['#18181b', '#52525b', '#71717a', '#a1a1aa', '#10b981', '#f59e0b'].map(c => (
+                        {['#18181b', '#27272a', '#3f3f46', '#52525b', '#71717a', '#8e8e93'].map(c => (
                           <button
                             key={c}
                             type="button"
@@ -1442,24 +1436,24 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Floating Zoom & Camera Controls */}
-      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1.5 z-10 bg-zinc-900/85 backdrop-blur-md border border-zinc-700/60 rounded-lg p-1 shadow-lg">
+      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white border border-black/[0.08] rounded-xl p-1 shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)]">
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
-          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.max(0.15, t.k * 0.8) }))}
-          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleResetView}
-          className="graph-control-btn p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
           title="Reset Camera"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -1467,7 +1461,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       </div>
 
       {/* Bottom Left Node Count */}
-      <div className="absolute bottom-3 left-3 text-[11px] text-zinc-500 font-medium select-none pointer-events-none">
+      <div className="absolute bottom-3 left-3 text-[11px] text-[#8e8e93] font-medium select-none pointer-events-none">
         {isTimelapseRunning || (animProgress < filteredData.nodes.length && animProgress > 0)
           ? `${animProgress} of ${filteredData.nodes.length} nodes`
           : `${filteredData.nodes.length} nodes`} · {simEdgesRef.current.length} links

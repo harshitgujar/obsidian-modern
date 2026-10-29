@@ -27,18 +27,19 @@ export class GraphIndexer {
     }
   }
 
-  indexVault(files: VaultFile[], options: GraphIndexOptions = {}): GraphData {
+  indexVault(files: VaultFile[], options: GraphIndexOptions | Array<{ query: string; color: string }> = {}): GraphData {
     this.metadataCache.clear();
     this.backlinksCache.clear();
     this.unlinkedMentionsCache.clear();
 
+    const normalizedOptions: GraphIndexOptions = Array.isArray(options) ? { colorGroups: options } : (options || {});
     const {
       showTags = false,
       showAttachments = false,
       hideUnresolved = false,
       showOrphans = true,
       colorGroups = []
-    } = options;
+    } = normalizedOptions;
 
     const mdAndCanvasFiles = files.filter(f => !f.isBinary);
     const binaryFiles = files.filter(f => f.isBinary);
@@ -62,17 +63,17 @@ export class GraphIndexer {
 
     const defaultFolderColors: Record<string, string> = {
       '': '#18181b',
-      'Formatting': '#3f3f46',
-      'Guides': '#52525b',
-      'Adventurer': '#71717a',
-      'Templates': '#27272a',
-      'Daily': '#09090b',
+      'Formatting': '#27272a',
+      'Guides': '#3f3f46',
+      'Adventurer': '#52525b',
+      'Templates': '#71717a',
+      'Daily': '#8e8e93',
       'Projects': '#18181b'
     };
 
     // Helper to compute node color from color groups or folder
     const computeFileColor = (file: VaultFile, meta?: NoteMetadata): string => {
-      if (file.extension === 'canvas') return '#52525b';
+      if (file.extension === 'canvas') return '#3f3f46';
       if (colorGroups && colorGroups.length > 0) {
         for (const cg of colorGroups) {
           if (!cg.query) continue;
@@ -215,7 +216,7 @@ export class GraphIndexer {
               label: `#${tag}`,
               path: tagId,
               val: 5,
-              color: '#10b981', // Emerald green for tag nodes in Obsidian
+              color: '#3f3f46', // Deep slate for tag nodes in Obsidian
               folder: '',
               tags: [tag],
               nodeType: 'tag',
@@ -242,7 +243,7 @@ export class GraphIndexer {
                 label: bin.name,
                 path: bin.path,
                 val: 4.5,
-                color: '#f59e0b', // Amber yellow for attachment nodes
+                color: '#71717a', // Slate for attachment nodes
                 folder: bin.folder,
                 tags: [],
                 nodeType: 'attachment',

@@ -116,11 +116,11 @@ const DEFAULT_CONFIGS: Record<string, any> = {
     showOrphans: true,
     'collapse-color-groups': false,
     colorGroups: [
-      { query: 'path:Formatting', color: '#8b5cf6' },
-      { query: 'path:Guides', color: '#10b981' },
-      { query: 'path:Adventurer', color: '#f59e0b' },
-      { query: 'path:Templates', color: '#06b6d4' },
-      { query: 'path:Daily', color: '#ec4899' }
+      { query: 'path:Formatting', color: '#27272a' },
+      { query: 'path:Guides', color: '#3f3f46' },
+      { query: 'path:Adventurer', color: '#52525b' },
+      { query: 'path:Templates', color: '#71717a' },
+      { query: 'path:Daily', color: '#8e8e93' }
     ],
     'collapse-display': false,
     showArrow: true,

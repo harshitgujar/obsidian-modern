@@ -327,10 +327,10 @@ export const Inspector: React.FC<InspectorProps> = ({
       {/* Tab 4: Local Graph */}
       {activeFile && activeTab === 'localGraph' && (
         <div className="flex-1 p-2 flex flex-col">
-          <div className="text-[11px] text-zinc-400 mb-2 font-medium">
-            Local connections for <span className="text-purple-400">{activeFile.name.replace(/\.md$/, '')}</span>
+          <div className="text-[11px] text-[#585860] mb-2 font-medium">
+            Local connections for <span className="text-[#111113] font-semibold">{activeFile.name.replace(/\.md$/, '')}</span>
           </div>
-          <div className="flex-1 rounded-lg overflow-hidden border border-zinc-800">
+          <div className="flex-1 rounded-xl overflow-hidden border border-black/[0.08] bg-[#f4f4f6]">
             <GraphView
               data={graphData}
               activeFileId={activeFile.path}

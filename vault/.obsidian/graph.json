@@ -15,23 +15,23 @@
   "colorGroups": [
     {
       "query": "path:Formatting",
-      "color": "#8b5cf6"
+      "color": "#27272a"
     },
     {
       "query": "path:Guides",
-      "color": "#10b981"
+      "color": "#3f3f46"
     },
     {
       "query": "path:Adventurer",
-      "color": "#f59e0b"
+      "color": "#52525b"
     },
     {
       "query": "path:Templates",
-      "color": "#06b6d4"
+      "color": "#71717a"
     },
     {
       "query": "path:Daily",
-      "color": "#ec4899"
+      "color": "#8e8e93"
     }
   ],
   "localJumps": 1,
