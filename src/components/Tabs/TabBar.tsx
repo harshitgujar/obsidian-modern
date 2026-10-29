@@ -289,48 +289,6 @@ export const TabBar: React.FC<TabBarProps> = ({
           </button>
         )}
 
-        {/* View Mode Segmented Switcher (Live / Source / Reading) */}
-        {onToggleViewMode && (
-          <div className="flex items-center p-0.5 rounded-full bg-[#e4e4e9] border border-black/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
-            <button
-              onClick={() => onToggleViewMode('live')}
-              title="Live Preview Mode: Interactive editing with live styled formatting"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
-                activeViewMode === 'live'
-                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113]'
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Live</span>
-            </button>
-            <button
-              onClick={() => onToggleViewMode('source')}
-              title="Source Mode: Raw Markdown code editor with line numbers"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
-                activeViewMode === 'source'
-                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113]'
-              }`}
-            >
-              <Code className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Source</span>
-            </button>
-            <button
-              onClick={() => onToggleViewMode('reading')}
-              title="Reading View: Pristine read-only publication reader"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium border ${
-                activeViewMode === 'reading'
-                  ? 'bg-white text-[#111113] shadow-xs border-black/[0.06]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113]'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Reading</span>
-            </button>
-          </div>
-        )}
-
         {/* Split Pane Control */}
         {onSplitRight && (
           <button

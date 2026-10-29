@@ -120,15 +120,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
                 <span>{charCount.toLocaleString()} characters</span>
               </div>
             )}
-
-            {/* View mode toggle */}
-            <button
-              onClick={onCycleViewMode}
-              className="px-2 py-0.5 rounded-md bg-[#384cff] hover:bg-[#2e41ea] text-[10px] font-medium text-white transition-all cursor-pointer capitalize shadow-xs"
-              title="Click to Switch View Mode (Live Preview / Source / Reading)"
-            >
-              {activeViewMode === 'live' ? 'Live Preview' : activeViewMode === 'source' ? 'Source Mode' : 'Reading View'}
-            </button>
           </>
         ) : null}
       </div>

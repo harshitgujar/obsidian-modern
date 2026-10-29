@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { VaultFile, NoteMetadata, BacklinkMention } from '../../types';
 import { FileContextMenu } from '../Common/FileContextMenu';
 import { InteractiveTable } from './InteractiveTable';
@@ -163,6 +163,87 @@ const QuerySearchBlock: React.FC<QuerySearchBlockProps> = ({ query, allFiles, on
   );
 };
 
+interface AutoResizeBlockTextareaProps {
+  initialValue: string;
+  onCommit: (val: string) => void;
+  onEnter: () => void;
+  onBackspaceEmpty: () => void;
+  onArrowUp?: () => void;
+  onArrowDown?: () => void;
+  placeholder?: string;
+  className?: string;
+}
+
+const AutoResizeBlockTextarea: React.FC<AutoResizeBlockTextareaProps> = ({
+  initialValue,
+  onCommit,
+  onEnter,
+  onBackspaceEmpty,
+  onArrowUp,
+  onArrowDown,
+  placeholder = 'Type here...',
+  className = ''
+}) => {
+  const [value, setValue] = useState(initialValue);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.max(24, textareaRef.current.scrollHeight)}px`;
+      textareaRef.current.focus();
+      const len = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setValue(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${Math.max(24, e.target.scrollHeight)}px`;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onCommit(value);
+      onEnter();
+    } else if (e.key === 'Backspace' && value === '') {
+      e.preventDefault();
+      onBackspaceEmpty();
+    } else if (e.key === 'ArrowUp' && onArrowUp && textareaRef.current?.selectionStart === 0) {
+      e.preventDefault();
+      onCommit(value);
+      onArrowUp();
+    } else if (e.key === 'ArrowDown' && onArrowDown && textareaRef.current?.selectionEnd === value.length) {
+      e.preventDefault();
+      onCommit(value);
+      onArrowDown();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCommit(value);
+      textareaRef.current?.blur();
+    }
+  };
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={handleChange}
+      onBlur={() => onCommit(value)}
+      onKeyDown={handleKeyDown}
+      placeholder={placeholder}
+      rows={1}
+      className={`w-full bg-transparent border-0 outline-none resize-none overflow-hidden p-0 m-0 focus:ring-0 ${className}`}
+    />
+  );
+};
+
 interface LivePreviewProps {
   file: VaultFile;
   allFiles: VaultFile[];
@@ -310,12 +391,23 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       lines[realLineIndex] = newText;
       onContentChange?.(lines.join('\n'));
     }
+  };
+
+  const deleteBlock = (lineIdx: number) => {
+    const realLineIdx = startLineOffset + lineIdx;
+    const lines = file.content.split('\n');
+    if (realLineIdx >= 0 && realLineIdx < lines.length) {
+      lines.splice(realLineIdx, 1);
+      onContentChange?.(lines.join('\n'));
+    }
     setEditingBlockIndex(null);
   };
 
   const insertNewBlock = (blockTemplate: string, afterIndex?: number | null) => {
     const lines = file.content.split('\n');
-    const targetIdx = afterIndex !== undefined && afterIndex !== null ? afterIndex + 1 : lines.length;
+    const targetIdx = afterIndex !== undefined && afterIndex !== null 
+      ? startLineOffset + afterIndex + 1 
+      : lines.length;
     lines.splice(targetIdx, 0, blockTemplate);
     const newContent = lines.join('\n');
     onContentChange?.(newContent);
@@ -1003,25 +1095,79 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         const isDone = taskMatch[2].toLowerCase() === 'x';
         const taskText = taskMatch[3];
 
-        blocks.push(
-          <div
-            key={`task-${i}`}
-            className="flex items-start gap-2.5 my-1.5 group cursor-pointer"
-            style={{ paddingLeft: `${indent * 12}px` }}
-            onClick={() => onToggleTask(realLineIndex)}
-          >
-            <button className="mt-1 text-zinc-400 group-hover:text-purple-400 transition-colors">
-              {isDone ? (
-                <CheckSquare className="w-4 h-4 text-purple-500 fill-purple-500/20" />
-              ) : (
-                <Square className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
-              )}
-            </button>
-            <span className={`text-[15px] select-text ${isDone ? 'line-through text-zinc-500' : 'text-zinc-200'}`}>
-              {renderInline(taskText)}
-            </span>
-          </div>
-        );
+        if (editingBlockIndex === i && isEditable) {
+          blocks.push(
+            <div
+              key={`task-edit-${i}`}
+              className="flex items-start gap-2.5 my-1.5 px-2 py-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]"
+              style={{ paddingLeft: `${indent * 12 + 8}px` }}
+            >
+              <button
+                type="button"
+                onClick={() => onToggleTask(realLineIndex)}
+                className="mt-1 text-zinc-400 hover:text-[#384cff] dark:hover:text-[#6372ff] transition-colors shrink-0"
+              >
+                {isDone ? (
+                  <CheckSquare className="w-4 h-4 text-[#384cff] dark:text-[#6372ff] fill-current/20" />
+                ) : (
+                  <Square className="w-4 h-4 text-zinc-500" />
+                )}
+              </button>
+              <AutoResizeBlockTextarea
+                initialValue={taskText}
+                onCommit={newVal => commitBlockEdit(realLineIndex, `${' '.repeat(indent)}- [${isDone ? 'x' : ' '}] ${newVal}`)}
+                onEnter={() => {
+                  commitBlockEdit(realLineIndex, `${' '.repeat(indent)}- [${isDone ? 'x' : ' '}] ${editingBlockText}`);
+                  insertNewBlock(`${' '.repeat(indent)}- [ ] `, i);
+                  setEditingBlockIndex(i + 1);
+                  setEditingBlockText('');
+                }}
+                onBackspaceEmpty={() => {
+                  deleteBlock(i);
+                  const prevIdx = Math.max(0, i - 1);
+                  setEditingBlockIndex(prevIdx);
+                  setEditingBlockText(bodyLines[prevIdx] || '');
+                }}
+                placeholder="To-do..."
+                className="text-[15px] text-[#111113] dark:text-[#f4f4f6]"
+              />
+            </div>
+          );
+        } else {
+          blocks.push(
+            <div
+              key={`task-${i}`}
+              className="flex items-start gap-2.5 my-1.5 group cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded px-1 -mx-1 transition-colors"
+              style={{ paddingLeft: `${indent * 12}px` }}
+            >
+              <button
+                type="button"
+                className="mt-1 text-zinc-400 group-hover:text-[#384cff] dark:group-hover:text-[#6372ff] transition-colors shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleTask(realLineIndex);
+                }}
+              >
+                {isDone ? (
+                  <CheckSquare className="w-4 h-4 text-[#384cff] dark:text-[#6372ff] fill-current/20" />
+                ) : (
+                  <Square className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+                )}
+              </button>
+              <span
+                onClick={() => {
+                  if (isEditable) {
+                    setEditingBlockIndex(i);
+                    setEditingBlockText(taskText);
+                  }
+                }}
+                className={`text-[15px] select-text flex-1 ${isDone ? 'line-through text-[#8e8e93] dark:text-[#71717a]' : 'text-[#111113] dark:text-[#f4f4f6]'}`}
+              >
+                {renderInline(taskText)}
+              </span>
+            </div>
+          );
+        }
         i++;
         continue;
       }
@@ -1041,8 +1187,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           <div className="group flex items-center gap-1.5">
             {foldHeading && (
               <button
-                onClick={() => setFoldedHeadings(prev => ({ ...prev, [i]: !prev[i] }))}
-                className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 transition-opacity -ml-5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFoldedHeadings(prev => ({ ...prev, [i]: !prev[i] }));
+                }}
+                className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 transition-opacity -ml-5 shrink-0"
                 title={isFolded ? 'Unfold heading' : 'Fold heading'}
               >
                 {isFolded ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -1066,14 +1215,47 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           continue;
         }
 
-        if (level === 1) {
-          blocks.push(<h1 key={`h1-${i}`} id={id}>{headingContent}</h1>);
-        } else if (level === 2) {
-          blocks.push(<h2 key={`h2-${i}`} id={id}>{headingContent}</h2>);
-        } else if (level === 3) {
-          blocks.push(<h3 key={`h3-${i}`} id={id}>{headingContent}</h3>);
+        if (editingBlockIndex === i && isEditable) {
+          blocks.push(
+            <div key={`h-edit-${i}`} className="my-2 px-2 py-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]">
+              <AutoResizeBlockTextarea
+                initialValue={hText}
+                onCommit={newVal => commitBlockEdit(realLineIndex, `${'#'.repeat(level)} ${newVal}`)}
+                onEnter={() => {
+                  commitBlockEdit(realLineIndex, `${'#'.repeat(level)} ${editingBlockText}`);
+                  insertNewBlock('', i);
+                  setEditingBlockIndex(i + 1);
+                  setEditingBlockText('');
+                }}
+                onBackspaceEmpty={() => {
+                  deleteBlock(i);
+                  const prevIdx = Math.max(0, i - 1);
+                  setEditingBlockIndex(prevIdx);
+                  setEditingBlockText(bodyLines[prevIdx] || '');
+                }}
+                placeholder="Heading..."
+                className={`${
+                  level === 1 ? 'text-3xl font-bold' : level === 2 ? 'text-2xl font-bold' : 'text-xl font-semibold'
+                } text-[#111113] dark:text-[#f4f4f6]`}
+              />
+            </div>
+          );
         } else {
-          blocks.push(<h4 key={`h4-${i}`} id={id} className="text-base font-semibold text-zinc-300 my-2">{headingContent}</h4>);
+          const hProps = {
+            key: `h${level}-${i}`,
+            id,
+            onClick: () => {
+              if (isEditable) {
+                setEditingBlockIndex(i);
+                setEditingBlockText(hText);
+              }
+            },
+            className: 'cursor-text hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded px-1 -mx-1 transition-colors'
+          };
+          if (level === 1) blocks.push(<h1 {...hProps}>{headingContent}</h1>);
+          else if (level === 2) blocks.push(<h2 {...hProps}>{headingContent}</h2>);
+          else if (level === 3) blocks.push(<h3 {...hProps}>{headingContent}</h3>);
+          else blocks.push(<h4 {...hProps} className="text-base font-semibold text-[#111113] dark:text-[#f4f4f6] my-2">{headingContent}</h4>);
         }
         i++;
         continue;
@@ -1120,11 +1302,45 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       // 8. Blockquote
       if (line.trim().startsWith('>')) {
         const bqText = line.replace(/^>\s?/, '');
-        blocks.push(
-          <blockquote key={`bq-${i}`}>
-            {renderInline(bqText)}
-          </blockquote>
-        );
+        if (editingBlockIndex === i && isEditable) {
+          blocks.push(
+            <blockquote key={`bq-edit-${i}`} className="my-2 pl-3 border-l-2 border-[#384cff] dark:border-[#6372ff] bg-black/[0.02] dark:bg-white/[0.03] rounded-r-lg p-1.5">
+              <AutoResizeBlockTextarea
+                initialValue={bqText}
+                onCommit={newVal => commitBlockEdit(realLineIndex, `> ${newVal}`)}
+                onEnter={() => {
+                  commitBlockEdit(realLineIndex, `> ${editingBlockText}`);
+                  insertNewBlock('', i);
+                  setEditingBlockIndex(i + 1);
+                  setEditingBlockText('');
+                }}
+                onBackspaceEmpty={() => {
+                  deleteBlock(i);
+                  const prevIdx = Math.max(0, i - 1);
+                  setEditingBlockIndex(prevIdx);
+                  setEditingBlockText(bodyLines[prevIdx] || '');
+                }}
+                placeholder="Quote..."
+                className="text-[15px] italic text-[#585860] dark:text-[#a1a1aa]"
+              />
+            </blockquote>
+          );
+        } else {
+          blocks.push(
+            <blockquote
+              key={`bq-${i}`}
+              onClick={() => {
+                if (isEditable) {
+                  setEditingBlockIndex(i);
+                  setEditingBlockText(bqText);
+                }
+              }}
+              className="cursor-text hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded px-1 -mx-1 transition-colors"
+            >
+              {renderInline(bqText)}
+            </blockquote>
+          );
+        }
         i++;
         continue;
       }
@@ -1132,22 +1348,95 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       // 9. Unordered or Ordered list
       if (line.match(/^\s*[-*+]\s+/)) {
         const listText = line.replace(/^\s*[-*+]\s+/, '');
-        blocks.push(
-          <li key={`li-${i}`} className="ml-4 list-disc text-zinc-200">
-            {renderInline(listText)}
-          </li>
-        );
+        if (editingBlockIndex === i && isEditable) {
+          blocks.push(
+            <div key={`li-edit-${i}`} className="flex items-center gap-2 my-1 px-2 py-1 ml-4 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]">
+              <span className="text-[#8e8e93]">•</span>
+              <AutoResizeBlockTextarea
+                initialValue={listText}
+                onCommit={newVal => commitBlockEdit(realLineIndex, `- ${newVal}`)}
+                onEnter={() => {
+                  commitBlockEdit(realLineIndex, `- ${editingBlockText}`);
+                  insertNewBlock('- ', i);
+                  setEditingBlockIndex(i + 1);
+                  setEditingBlockText('');
+                }}
+                onBackspaceEmpty={() => {
+                  deleteBlock(i);
+                  const prevIdx = Math.max(0, i - 1);
+                  setEditingBlockIndex(prevIdx);
+                  setEditingBlockText(bodyLines[prevIdx] || '');
+                }}
+                placeholder="List item..."
+                className="text-[15px] text-[#111113] dark:text-[#f4f4f6]"
+              />
+            </div>
+          );
+        } else {
+          blocks.push(
+            <li
+              key={`li-${i}`}
+              onClick={() => {
+                if (isEditable) {
+                  setEditingBlockIndex(i);
+                  setEditingBlockText(listText);
+                }
+              }}
+              className="ml-4 list-disc text-[#111113] dark:text-[#f4f4f6] cursor-text hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded px-1 -mx-1 transition-colors"
+            >
+              {renderInline(listText)}
+            </li>
+          );
+        }
         i++;
         continue;
       }
 
       // 10. Empty lines / Paragraphs
-      if (line.trim() === '' || line.trim().startsWith('%%')) {
-        blocks.push(<div key={`empty-${i}`} className="h-2.5" />);
+      if (line.trim().startsWith('%%')) {
+        blocks.push(<div key={`comment-${i}`} className="hidden" />);
+      } else if (editingBlockIndex === i && isEditable) {
+        blocks.push(
+          <div key={`p-edit-${i}`} className="my-1.5 px-2 py-1 rounded-xl bg-black/[0.03] dark:bg-white/[0.05]">
+            <AutoResizeBlockTextarea
+              initialValue={editingBlockText}
+              onCommit={newVal => commitBlockEdit(realLineIndex, newVal)}
+              onEnter={() => {
+                commitBlockEdit(realLineIndex, editingBlockText);
+                insertNewBlock('', i);
+                setEditingBlockIndex(i + 1);
+                setEditingBlockText('');
+              }}
+              onBackspaceEmpty={() => {
+                deleteBlock(i);
+                const prevIdx = Math.max(0, i - 1);
+                setEditingBlockIndex(prevIdx);
+                setEditingBlockText(bodyLines[prevIdx] || '');
+              }}
+              placeholder="Type something or '/' for blocks..."
+              className="text-[15px] leading-relaxed text-[#111113] dark:text-[#f4f4f6]"
+            />
+          </div>
+        );
       } else {
         blocks.push(
-          <p key={`p-${i}`} className="leading-relaxed">
-            {renderInline(line)}
+          <p
+            key={`p-${i}`}
+            onClick={() => {
+              if (isEditable) {
+                setEditingBlockIndex(i);
+                setEditingBlockText(line);
+              }
+            }}
+            className={`leading-relaxed cursor-text hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded px-1 -mx-1 transition-colors ${
+              line.trim() === '' ? 'h-6' : ''
+            }`}
+          >
+            {line.trim() === '' ? (
+              <span className="text-[#8e8e93]/40 select-none text-xs italic">Empty line (click to type)</span>
+            ) : (
+              renderInline(line)
+            )}
           </p>
         );
       }
@@ -1156,7 +1445,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
     }
 
     return blocks;
-  }, [bodyLines, startLineOffset, copiedIndex, foldedHeadings, foldHeading, allFiles]);
+  }, [bodyLines, startLineOffset, copiedIndex, foldedHeadings, foldHeading, allFiles, editingBlockIndex, editingBlockText, isEditable]);
 
   const handleCreateProp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1169,14 +1458,10 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   };
 
   return (
-    <div 
-      onDoubleClick={() => onEnterEditMode && onEnterEditMode()}
-      className="w-full max-w-4xl mx-auto px-10 py-8 select-text relative cursor-default"
-      title="Double-click anywhere to edit in Source mode"
-    >
+    <div className="w-full max-w-4xl mx-auto px-6 md:px-10 py-8 select-text relative">
       {/* Obsidian Inline Title */}
       {isEditable ? (
-        <div className="group relative flex items-center mb-5 pb-2 border-b border-zinc-800/50">
+        <div className="group relative flex items-center mb-6 pb-2 border-b border-black/[0.08] dark:border-white/[0.08]">
           <input
             type="text"
             value={inlineTitle}
@@ -1194,30 +1479,30 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               }
             }}
             placeholder="Untitled Note"
-            className="inline-title font-bold text-3xl text-zinc-100 tracking-tight bg-transparent w-full focus:outline-none focus:border-b focus:border-purple-500"
+            className="inline-title font-bold text-3xl md:text-4xl text-[#111113] dark:text-[#f4f4f6] tracking-tight bg-transparent w-full focus:outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
           />
-          <span className="opacity-0 group-hover:opacity-100 text-[10px] text-zinc-500 font-mono ml-2 shrink-0">
+          <span className="opacity-0 group-hover:opacity-100 text-[10px] text-[#8e8e93] dark:text-[#71717a] font-mono ml-2 shrink-0 select-none">
             Click to rename
           </span>
         </div>
       ) : (
-        <h1 className="inline-title font-bold text-3xl text-zinc-100 tracking-tight mb-5 pb-2 border-b border-zinc-800/50">
+        <h1 className="inline-title font-bold text-3xl md:text-4xl text-[#111113] dark:text-[#f4f4f6] tracking-tight mb-6 pb-2 border-b border-black/[0.08] dark:border-white/[0.08]">
           {file.name.replace(/\.md$/, '')}
         </h1>
       )}
 
-      {/* Obsidian Properties Card (Frontmatter) */}
+      {/* Notion-Style Properties Card (Frontmatter) */}
       {showFrontmatter && (Object.keys(frontmatter).length > 0 || isAddingProp) && (
-        <div className="mb-6 p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-xs backdrop-blur-sm select-none">
-          <div className="flex items-center justify-between text-zinc-400 font-semibold mb-2.5">
+        <div className="mb-6 p-4 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-[#f9f9fb] dark:bg-[#18181b] shadow-xs text-xs select-none">
+          <div className="flex items-center justify-between text-[#585860] dark:text-[#a1a1aa] font-semibold mb-3">
             <div className="flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-purple-400" />
-              <span>Properties</span>
+              <Layers className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
+              <span className="text-[#111113] dark:text-[#f4f4f6] font-medium">Properties</span>
             </div>
-            {onAddProperty && (
+            {onAddProperty && isEditable && (
               <button
                 onClick={() => setIsAddingProp(prev => !prev)}
-                className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-purple-300"
+                className="flex items-center gap-1 text-[11px] text-[#585860] hover:text-[#384cff] dark:text-[#a1a1aa] dark:hover:text-[#6372ff] cursor-pointer transition-colors"
               >
                 <Plus className="w-3 h-3" />
                 <span>Add property</span>
@@ -1225,19 +1510,19 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-[110px_1fr] gap-y-2 items-center text-xs">
+          <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
             {frontmatter.tags && (
               <>
-                <div className="flex items-center gap-1 text-zinc-400">
-                  <TagIcon className="w-3 h-3 text-sky-400" />
+                <div className="flex items-center gap-1 text-[#8e8e93] dark:text-[#71717a]">
+                  <TagIcon className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
                   <span>tags</span>
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {(Array.isArray(frontmatter.tags) ? frontmatter.tags : [frontmatter.tags]).map((t: string, idx: number) => (
                     <span
                       key={idx}
                       onClick={() => onTagClick(String(t).replace(/^#/, ''))}
-                      className="px-2 py-0.5 rounded-full bg-sky-950/50 text-sky-400 border border-sky-800/40 cursor-pointer hover:bg-sky-900/50 transition-colors"
+                      className="px-2.5 py-0.5 rounded-full bg-[#ececf0] dark:bg-[#27272a] text-[#384cff] dark:text-[#6372ff] border border-black/[0.05] dark:border-white/[0.06] cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/[0.08] transition-colors font-medium text-[11px]"
                     >
                       #{String(t).replace(/^#/, '')}
                     </span>
@@ -1250,8 +1535,8 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               .filter(([k]) => k !== 'tags')
               .map(([key, val]) => (
                 <React.Fragment key={key}>
-                  <div className="text-zinc-400 font-mono text-[11px]">{key}</div>
-                  <div className="text-zinc-300">
+                  <div className="text-[#8e8e93] dark:text-[#71717a] font-mono text-[11px]">{key}</div>
+                  <div className="text-[#111113] dark:text-[#f4f4f6] font-medium">
                     {Array.isArray(val) ? val.join(', ') : String(val)}
                   </div>
                 </React.Fragment>
@@ -1259,22 +1544,25 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           </div>
 
           {isAddingProp && (
-            <form onSubmit={handleCreateProp} className="mt-3 pt-2 border-t border-zinc-800 flex items-center gap-2">
+            <form onSubmit={handleCreateProp} className="mt-3 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center gap-2">
               <input
                 type="text"
                 value={newPropKey}
                 onChange={e => setNewPropKey(e.target.value)}
                 placeholder="Property name"
-                className="bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 w-32"
+                className="bg-white dark:bg-[#111113] border border-black/[0.1] dark:border-white/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] dark:text-[#f4f4f6] focus:border-[#384cff] outline-none w-32 shadow-xs"
               />
               <input
                 type="text"
                 value={newPropVal}
                 onChange={e => setNewPropVal(e.target.value)}
                 placeholder="Value"
-                className="bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 flex-1"
+                className="bg-white dark:bg-[#111113] border border-black/[0.1] dark:border-white/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] dark:text-[#f4f4f6] focus:border-[#384cff] outline-none flex-1 shadow-xs"
               />
-              <button type="submit" className="px-2.5 py-1 rounded bg-purple-600 text-white text-xs">
+              <button
+                type="submit"
+                className="px-3 py-1 rounded-lg bg-[#384cff] hover:bg-[#2c3ee0] text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
+              >
                 Save
               </button>
             </form>
@@ -1287,37 +1575,60 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         {renderedBlocks}
       </div>
 
-      {/* Notion-Style Quick Inserter Button */}
+      {/* Notion-Style Quick Inserter and Click-to-Write Area */}
       {isEditable && (
-        <div className="mt-8 pt-4 border-t border-dashed border-zinc-800/80">
-          <button
+        <div className="mt-6">
+          <div
             onClick={() => {
-              setInsertAfterIndex(bodyLines.length - 1);
-              setShowBlockMenu(true);
+              const lastIdx = bodyLines.length - 1;
+              if (lastIdx >= 0 && bodyLines[lastIdx].trim() === '') {
+                setEditingBlockIndex(lastIdx);
+                setEditingBlockText(bodyLines[lastIdx]);
+              } else {
+                insertNewBlock('', lastIdx >= 0 ? lastIdx : null);
+                setEditingBlockIndex(bodyLines.length);
+                setEditingBlockText('');
+              }
             }}
-            className="flex items-center gap-2 text-zinc-500 hover:text-purple-400 text-xs py-2 px-3 rounded-lg hover:bg-zinc-800/40 transition-colors w-full text-left group"
+            className="min-h-[120px] cursor-text py-3"
           >
-            <Plus className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 transition-colors" />
-            <span className="font-medium">Add block (Heading, Checklist, Table, Callout, Media...)</span>
-          </button>
+            {bodyLines.length === 0 && (
+              <div className="text-[#8e8e93]/60 dark:text-[#71717a]/60 text-base py-4 select-none">
+                Type &apos;/&apos; for commands or click to start writing...
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-dashed border-black/[0.08] dark:border-white/[0.08]">
+            <button
+              onClick={() => {
+                setInsertAfterIndex(bodyLines.length - 1);
+                setShowBlockMenu(true);
+              }}
+              className="flex items-center gap-2 text-[#8e8e93] hover:text-[#384cff] dark:text-[#71717a] dark:hover:text-[#6372ff] text-xs py-2 px-3 rounded-xl hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors w-full text-left group cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-[#8e8e93] group-hover:text-[#384cff] dark:text-[#71717a] dark:group-hover:text-[#6372ff] transition-colors" />
+              <span className="font-medium">Add block (Heading, Checklist, Table, Callout, Media...)</span>
+            </button>
+          </div>
         </div>
       )}
 
       {/* Bottom Backlinks Section (Obsidian core feature: backlinks at bottom of note) */}
-      <div className="mt-12 pt-6 border-t border-zinc-800/80">
+      <div className="mt-12 pt-6 border-t border-black/[0.08] dark:border-white/[0.08]">
         <button
           onClick={() => setShowBottomBacklinks(prev => !prev)}
-          className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors w-full group py-1"
+          className="flex items-center gap-2 text-xs font-semibold text-[#585860] hover:text-[#111113] dark:text-[#a1a1aa] dark:hover:text-[#f4f4f6] transition-colors w-full group py-1 cursor-pointer"
         >
           {showBottomBacklinks ? (
-            <ChevronDown className="w-4 h-4 text-purple-400" />
+            <ChevronDown className="w-4 h-4 text-[#384cff] dark:text-[#6372ff]" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400" />
+            <ChevronRight className="w-4 h-4 text-[#8e8e93] group-hover:text-[#384cff] dark:text-[#71717a] dark:group-hover:text-[#6372ff]" />
           )}
           <span className="flex items-center gap-1.5">
-            <LinkIcon className="w-3.5 h-3.5 text-purple-400" />
+            <LinkIcon className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
             <span>Backlinks</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-zinc-800 text-zinc-400 font-mono">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#ececf0] dark:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] font-mono">
               {backlinks.length}
             </span>
           </span>
@@ -1326,7 +1637,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         {showBottomBacklinks && (
           <div className="mt-3 space-y-2">
             {backlinks.length === 0 ? (
-              <div className="text-xs text-zinc-500 italic py-2">
+              <div className="text-xs text-[#8e8e93] dark:text-[#71717a] italic py-2">
                 No incoming backlinks found for this note.
               </div>
             ) : (
@@ -1334,17 +1645,17 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
                 <div
                   key={`${b.filePath}-${idx}`}
                   onClick={() => onNavigateLink(b.filePath)}
-                  className="p-3 rounded-lg border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  className="p-3 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-[#f9f9fb] dark:bg-[#18181b] hover:bg-[#f4f4f6] dark:hover:bg-[#202023] hover:border-[#384cff]/30 transition-all cursor-pointer group shadow-xs"
                 >
-                  <div className="flex items-center justify-between text-xs font-medium text-purple-300 group-hover:text-purple-200 mb-1">
+                  <div className="flex items-center justify-between text-xs font-medium text-[#111113] dark:text-[#f4f4f6] group-hover:text-[#384cff] dark:group-hover:text-[#6372ff] mb-1">
                     <div className="flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <FileText className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff] shrink-0" />
                       <span>{b.fileName.replace(/\.md$/, '')}</span>
                     </div>
-                    <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ExternalLink className="w-3 h-3 text-[#8e8e93] group-hover:text-[#384cff] dark:text-[#71717a] dark:group-hover:text-[#6372ff] opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   {b.contextSnippet && (
-                    <div className="text-[11px] text-zinc-400 line-clamp-2 italic font-sans pl-5 border-l border-zinc-700/50">
+                    <div className="text-[11px] text-[#585860] dark:text-[#a1a1aa] line-clamp-2 italic font-sans pl-5 border-l border-black/[0.1] dark:border-white/[0.1]">
                       "{b.contextSnippet}"
                     </div>
                   )}
@@ -1358,14 +1669,14 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       {/* Hover Page Preview Popover (page-preview core plugin) */}
       {hoverPreview && (
         <div
-          className="fixed z-50 w-80 max-h-60 bg-zinc-900/95 border border-purple-500/40 rounded-xl shadow-2xl p-4 overflow-y-auto backdrop-blur-xl pointer-events-none"
+          className="fixed z-50 w-80 max-h-60 bg-white/95 dark:bg-[#18181b]/95 border border-black/[0.1] dark:border-white/[0.1] rounded-2xl shadow-2xl p-4 overflow-y-auto backdrop-blur-xl pointer-events-none"
           style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
         >
-          <div className="flex items-center gap-1.5 text-xs font-bold text-purple-300 mb-2 border-b border-zinc-800 pb-1.5">
-            <FileText className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[#111113] dark:text-[#f4f4f6] mb-2 border-b border-black/[0.06] dark:border-white/[0.08] pb-1.5">
+            <FileText className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
             <span>{hoverPreview.targetFile.name.replace(/\.md$/, '')}</span>
           </div>
-          <div className="text-[11px] text-zinc-300 whitespace-pre-wrap leading-relaxed">
+          <div className="text-[11px] text-[#585860] dark:text-[#a1a1aa] whitespace-pre-wrap leading-relaxed">
             {hoverPreview.targetFile.content.replace(/^---[\s\S]*?---/, '').trim().slice(0, 350)}
           </div>
         </div>

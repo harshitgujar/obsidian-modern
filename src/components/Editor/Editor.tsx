@@ -681,136 +681,34 @@ export const Editor: React.FC<EditorProps> = ({
             );
           }
 
-          if (viewMode === 'reading') {
-            return (
-              <div className="w-full h-full flex flex-col overflow-y-auto bg-transparent">
-                <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
-                  <LivePreview
-                    file={file}
-                    allFiles={allFiles}
-                    metadata={metadata}
-                    backlinks={backlinks}
-                    showFrontmatter={showFrontmatter}
-                    foldHeading={foldHeading}
-                    onNavigateLink={onNavigateLink}
-                    onTagClick={onTagClick}
-                    onToggleTask={handleToggleTask}
-                    onAddProperty={handleAddProperty}
-                    onEnterEditMode={() => onViewModeChange('live')}
-                    isEditable={false}
-                    onContentChange={onContentChange}
-                    onOpenFile={onOpenFile}
-                    onOpenSplit={onOpenSplit}
-                    onRenameFile={onRenameFile}
-                    onDeleteFile={onDeleteFile}
-                    onBookmarkFile={onToggleBookmark}
-                    isBookmarked={isBookmarked}
-                    onDuplicateFile={onDuplicateFile}
-                    onRevealInNavigation={onRevealInNavigation}
-                    onOpenLocalGraph={onOpenLocalGraph}
-                    onExportPdf={onExportPdf}
-                    folders={folders}
-                  />
-                </div>
-              </div>
-            );
-          }
-
-          if (viewMode === 'live') {
-            return (
-              /* Live Preview Mode (Interactive Clean Document View) */
-              <div 
-                className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
-                onClick={e => {
-                  if (e.target === e.currentTarget) {
-                    editorRef.current?.focus();
-                  }
-                }}
-              >
-                <div className={`flex-1 flex flex-col p-6 md:p-10 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
-                  {/* Notion-Style Editable Title */}
-                  <div className="group relative flex items-center mb-6 pb-2 border-b border-zinc-800/40">
-                    <input
-                      type="text"
-                      value={inlineTitle}
-                      onChange={e => setInlineTitle(e.target.value)}
-                      onBlur={() => {
-                        const trimmed = inlineTitle.trim();
-                        const currentBase = file.name.replace(/\.md$/, '');
-                        if (trimmed && trimmed !== currentBase && onRenameFile) {
-                          onRenameFile(file, `${trimmed}.md`);
-                        }
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          (e.target as HTMLInputElement).blur();
-                          editorRef.current?.focus();
-                        }
-                      }}
-                      placeholder="Untitled Note"
-                      className="inline-title font-bold text-3xl md:text-4xl text-zinc-100 tracking-tight bg-transparent w-full focus:outline-none border-b border-transparent focus:border-purple-500"
-                    />
-                    <span className="opacity-0 group-hover:opacity-100 text-[10px] text-zinc-500 font-mono ml-2 shrink-0">
-                      Click to rename
-                    </span>
-                  </div>
-
-                  {/* Notion-Style High-Fidelity CodeMirror Editor */}
-                  <div className="flex-1 min-h-[450px]">
-                    <CodeMirrorEditor
-                      ref={editorRef}
-                      value={file.content}
-                      onChange={onContentChange}
-                      livePreview={true}
-                      showLineNumbers={false}
-                      readableLineLength={false}
-                      allFiles={allFiles}
-                      onNavigateLink={onNavigateLink}
-                      onMediaContextMenu={handleMediaContextMenu}
-                      className="w-full h-full"
-                    />
-                  </div>
-
-                  {/* Notion-Style Add Block Button */}
-                  <div className="mt-8 pt-4 border-t border-dashed border-zinc-800/80">
-                    <button
-                      onClick={() => setShowBlockMenu(true)}
-                      className="flex items-center gap-2 text-zinc-500 hover:text-purple-400 text-xs py-2 px-3 rounded-lg hover:bg-zinc-800/40 transition-colors w-full text-left group"
-                    >
-                      <Plus className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 transition-colors" />
-                      <span className="font-medium">Add block (Heading, Checklist, Table, Callout, Media...)</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          /* Source Mode (Raw CodeMirror 6 with Line Numbers) */
+          // Unified High-Fidelity Reading & Interactive Editing View (Notion / Obsidian Level)
           return (
-            <div className="w-full h-full flex flex-col overflow-hidden bg-white">
-              <div className="px-4 py-1.5 bg-[#f4f4f6] border-b border-black/[0.07] flex items-center justify-between text-[11px] text-[#585860] shrink-0">
-                <div className="flex items-center gap-2">
-                  <Code className="w-3.5 h-3.5 text-[#18181b]" />
-                  <span className="font-mono text-[#111113] font-medium">Source Mode</span>
-                  <span className="text-[#8e8e93]">•</span>
-                  <span>Raw Markdown & Line Numbers</span>
-                </div>
-                <div className="flex items-center gap-2 text-[#8e8e93] font-mono text-[10px]">
-                  <span>{file.content.split('\n').length} lines</span>
-                  <span>•</span>
-                  <span>{file.content.length} chars</span>
-                </div>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <CodeMirrorEditor
-                  ref={editorRef}
-                  value={file.content}
-                  onChange={onContentChange}
-                  showLineNumbers={showLineNumbers}
-                  readableLineLength={readableLineLength}
+            <div className="w-full h-full flex flex-col overflow-y-auto bg-transparent">
+              <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
+                <LivePreview
+                  file={file}
                   allFiles={allFiles}
+                  metadata={metadata}
+                  backlinks={backlinks}
+                  showFrontmatter={showFrontmatter}
+                  foldHeading={foldHeading}
                   onNavigateLink={onNavigateLink}
+                  onTagClick={onTagClick}
+                  onToggleTask={handleToggleTask}
+                  onAddProperty={handleAddProperty}
+                  isEditable={true}
+                  onContentChange={onContentChange}
+                  onOpenFile={onOpenFile}
+                  onOpenSplit={onOpenSplit}
+                  onRenameFile={onRenameFile}
+                  onDeleteFile={onDeleteFile}
+                  onBookmarkFile={onToggleBookmark}
+                  isBookmarked={isBookmarked}
+                  onDuplicateFile={onDuplicateFile}
+                  onRevealInNavigation={onRevealInNavigation}
+                  onOpenLocalGraph={onOpenLocalGraph}
+                  onExportPdf={onExportPdf}
+                  folders={folders}
                 />
               </div>
             </div>
@@ -819,27 +717,27 @@ export const Editor: React.FC<EditorProps> = ({
 
         {/* Obsidian-Style Wikilink Autocomplete Dropdown */}
         {showSuggest && filteredSuggestions.length > 0 && (
-          <div className="absolute top-16 left-28 w-72 bg-zinc-900/95 border border-zinc-700/80 rounded-lg shadow-2xl backdrop-blur-xl z-50 overflow-hidden text-xs py-1">
-            <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold border-b border-zinc-800 flex items-center justify-between">
+          <div className="absolute top-16 left-28 w-72 bg-white dark:bg-[#18181b] border border-black/[0.1] dark:border-white/[0.1] rounded-2xl shadow-2xl backdrop-blur-xl z-50 overflow-hidden text-xs py-1">
+            <div className="px-3.5 py-2 text-[10px] uppercase tracking-wider text-[#8e8e93] dark:text-[#71717a] font-semibold border-b border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
               <span>Link Note</span>
-              <span>[[...]]</span>
+              <span className="font-mono text-[#384cff] dark:text-[#6372ff]">[[...]]</span>
             </div>
             {filteredSuggestions.map((item, idx) => (
               <div
                 key={item.id}
                 onClick={() => insertSuggestion(item.name.replace(/\.[^/.]+$/, ''))}
-                className={`px-3 py-2 flex items-center gap-2 cursor-pointer transition-colors ${
+                className={`px-3.5 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors ${
                   idx === suggestIndex
-                    ? 'bg-purple-600/30 text-purple-200'
-                    : 'text-zinc-300 hover:bg-zinc-800'
+                    ? 'bg-[#ececf0] dark:bg-[#27272a] text-[#384cff] dark:text-[#6372ff]'
+                    : 'text-[#585860] hover:text-[#111113] dark:text-[#a1a1aa] dark:hover:text-[#f4f4f6] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <FileText className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff] shrink-0" />
                 <div className="truncate">
-                  <div className="font-medium text-zinc-200">
+                  <div className="font-medium text-[#111113] dark:text-[#f4f4f6]">
                     {item.name.replace(/\.[^/.]+$/, '')}
                   </div>
-                  {item.folder && <div className="text-[10px] text-zinc-500">{item.folder}</div>}
+                  {item.folder && <div className="text-[10px] text-[#8e8e93] dark:text-[#71717a]">{item.folder}</div>}
                 </div>
               </div>
             ))}

@@ -25,8 +25,13 @@ If you’re convinced Obsidian is worth a try for you, it’s time to get starte
 | Column 1 | Column 2 |
 | -------- | -------- |
 | Item 1   | Item 2   |
-
-# Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your 
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Item 1   | Item 2   |
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Item 1   | Item 2   |
+### Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your 
 
 ## Different than most note-taking apps out there, an Obsidian vault is not a notebook on our server or a bundle in a special format on your computer.
 

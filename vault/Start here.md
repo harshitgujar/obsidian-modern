@@ -1,21 +1,15 @@
 Hi, welcome to Obsidian!
 
----
-
 ## I’m interested in Obsidian
 
 First of all, tell me a little bit about what's your experience with note-taking apps like?
 
 - [[No prior experience|I have no prior experience]]
 - [[From standard note-taking|I’ve used note-taking apps like Evernote and OneNote]]
-- [[From plain-text note-taking|I have used plain-text based apps]]
-
----
+- [[From plain-text note-taking|I have used plain-text based apps]
 
 ## Official Help Site
 Check out the complete [Obsidian documentation](https://help.obsidian.md/) online, available in multiple languages.
-
----
 
 ## What is this place?
 

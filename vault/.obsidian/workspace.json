@@ -1,20 +1,13 @@
 {
   "fileExplorer": {
     "sortOrder": "name-asc",
-    "collapsedFolders": {
-      "Daily": false,
-      "Adventurer": false,
-      "Attachments": false,
-      "Formatting": false,
-      "Guides": false,
-      "Projects": true
-    },
+    "collapsedFolders": {},
     "activeFilter": "all"
   },
   "leftSidebarOpen": true,
   "rightSidebarOpen": true,
   "activeLeftTab": "files",
-  "activeRightTab": "aiChat",
+  "activeRightTab": "outgoing",
   "history": {
     "stack": [
       "Attachments/Recording 2026-10-22T09-45-19.webm",
@@ -177,9 +170,39 @@
       "Untitled Canvas 25.canvas",
       "wikilinks.md",
       "Untitled Canvas 25.canvas",
-      "wikilinks.md"
+      "wikilinks.md",
+      "Untitled Canvas 25.canvas",
+      "Guides/Get started with Obsidian.md",
+      "Vault is just a local folder.md",
+      "202610221522 Zettelkasten Note.md",
+      "Untitled Canvas 25.canvas",
+      "Adventurer/From plain-text note-taking.md",
+      "Vault is just a local folder.md",
+      "Obsidian Architecture.canvas",
+      "wikilinks.md",
+      "202610131644 Zettelkasten Note.md",
+      "Adventurer/From standard note-taking.md",
+      "Adventurer/From plain-text note-taking.md",
+      "Adventurer/No prior experience.md",
+      "Adventurer/From plain-text note-taking.md",
+      "Untitled Canvas 25.canvas",
+      "Start here.md",
+      "Untitled Canvas 25.canvas",
+      "Untitled Canvas 15.canvas",
+      "Untitled Note 1.md",
+      "Untitled Canvas 25.canvas",
+      "wikilinks.md",
+      "Plugins make Obsidian special for you.md",
+      "202610221509 Zettelkasten Note.md",
+      "wikilinks.md",
+      "Plugins make Obsidian special for you.md",
+      "wikilinks.md",
+      "Plugins make Obsidian special for you.md",
+      "Untitled Canvas 16.canvas",
+      "wikilinks.md",
+      "Untitled Note 2.md"
     ],
-    "index": 160
+    "index": 190
   },
   "panes": [
     {
@@ -196,340 +219,50 @@
           "viewMode": "live"
         },
         {
-          "id": "tab-1792661940189-9hp",
-          "filePath": "202610221509 Zettelkasten Note.md",
-          "viewMode": "source"
-        },
-        {
-          "id": "tab-1792661945028-rk1",
-          "filePath": "Daily/2026-10-22.md",
+          "id": "tab-1793292918717",
+          "filePath": "Plugins make Obsidian special for you.md",
           "viewMode": "live"
         },
         {
-          "id": "tab-1792662614079-hjn",
-          "filePath": "Formatting/Internal link.md",
+          "id": "tab-1793292922911",
+          "filePath": "Plugins make Obsidian special for you.md",
           "viewMode": "live"
         },
         {
-          "id": "tab-1792662729198-8ex",
-          "filePath": "202610221522 Zettelkasten Note.md",
+          "id": "tab-1793292939614-2h8",
+          "filePath": "Untitled Canvas 16.canvas",
           "viewMode": "live"
         },
         {
-          "id": "tab-1792664939006-2ud",
-          "filePath": "202610221558 Zettelkasten Note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792664945070-3mv",
-          "filePath": "Formatting/Diagram.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792665350534-844",
-          "filePath": "Untitled Canvas 25.canvas",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792665409316-y3a",
-          "filePath": "202610221606 Zettelkasten Note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792665412477-r5i",
-          "filePath": "202610161643 Zettelkasten Note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792665678366-4z6",
-          "filePath": "Attachments/Recording 2026-10-22T09-45-19.webm",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792733505232-sk3",
-          "filePath": "Vault is just a local folder.md",
-          "viewMode": "source"
-        },
-        {
-          "id": "tab-1792733732392-yey",
-          "filePath": "Obsidian Architecture.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792733749588-1se",
-          "filePath": "Untitled Canvas 1.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792733790591-907",
-          "filePath": "Untitled Canvas 2.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792734132196-gz6",
-          "filePath": "Untitled Canvas 3.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792734134542-mcn",
-          "filePath": "Untitled Canvas 4.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761222407-ft4",
-          "filePath": "Untitled Canvas 5.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761223744-pdg",
-          "filePath": "Untitled Canvas 6.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761225712-s6i",
-          "filePath": "Untitled Canvas 7.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761228514-beh",
-          "filePath": "Untitled Canvas 8.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761229332-rnq",
-          "filePath": "Untitled Canvas 9.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761230291-404",
-          "filePath": "Untitled Canvas 10.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761235158-58n",
-          "filePath": "Untitled Canvas 11.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761238354-l46",
-          "filePath": "Untitled Canvas 12.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761241143-tjf",
-          "filePath": "Untitled Canvas 13.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761243720-sa4",
-          "filePath": "Adventurer/From standard note-taking.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761244844-q0w",
-          "filePath": "Adventurer/From plain-text note-taking.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792761248385-vhk",
-          "filePath": "Untitled Canvas 14.canvas",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792784692688-qcy",
-          "filePath": "202610131644 Zettelkasten Note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873681170-ro6",
-          "filePath": "Attachments/image1.png",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873681828-idi",
-          "filePath": "Attachments/image2.png",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873683787-883",
-          "filePath": "Attachments/image3.png",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873687027-def",
-          "filePath": "Attachments/image4.png",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873689412-obq",
-          "filePath": "Attachments/image5.png",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792873694483-q5g",
-          "filePath": "Attachments/Recording 2026-10-16T11-14-02.webm",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873694872-1f4",
-          "filePath": "Attachments/Recording 2026-10-22T09-38-20.webm",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873695604-bhq",
-          "filePath": "Formatting/Callout.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873696101-60h",
-          "filePath": "Formatting/Embeds.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873696693-0c6",
-          "filePath": "Formatting/Comment.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873697119-k9w",
-          "filePath": "Formatting/Code block.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873697506-xhj",
-          "filePath": "Formatting/Emphasis.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792873697849-wnf",
-          "filePath": "Formatting/Heading.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792905536478-k8g",
-          "filePath": "Note Title.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905552090-zph",
-          "filePath": "Adventurer/No prior experience.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792905667240-zxe",
-          "filePath": "==There are plenty of note-taking apps out there, so congratulations on finding Obsidian! You may have heard that Obsidian is really hard to use, but we assure you the basics are easy to learn!==.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1792905847733-enr",
-          "filePath": "Formatting/Strikethrough.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905848140-ely",
-          "filePath": "Formatting/Lists.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905848648-te5",
-          "filePath": "Formatting/Links.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905849063-8yi",
-          "filePath": "Formatting/Inline code.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905849496-pym",
-          "filePath": "Formatting/Images.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792905850425-xj7",
-          "filePath": "Formatting/Horizontal divider.md",
-          "viewMode": "reading"
-        },
-        {
-          "id": "tab-1792910888228-01n",
-          "filePath": "Formatting/Blockquote.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793136592842-l1r",
-          "filePath": "202610131347 Zettelkasten Note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793176452292-u6p",
-          "filePath": "Formatting/Format your notes.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793181326326-39h",
-          "filePath": "Attachments/Recording 2026-10-22T09-52-34.webm",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793181352352-ff1",
-          "filePath": "Guides/Create your first note.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793181352861-4z0",
-          "filePath": "Guides/Create a vault.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793181355215-vm6",
-          "filePath": "Formatting/Table.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793181356207-h1h",
-          "filePath": "Formatting/Math.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793183257906-ws2",
-          "filePath": "Daily/2026-10-28.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793185937255-h9z",
-          "filePath": "Guides/Get started with Obsidian.md",
-          "viewMode": "live"
-        },
-        {
-          "id": "tab-1793209194227-588",
-          "filePath": "AI Summary - 2026-10-28.md",
+          "id": "tab-1793293042379-35j",
+          "filePath": "Untitled Note 2.md",
           "viewMode": "live"
         }
       ],
-      "activeTabId": "tab-1792661914002-8hx"
+      "activeTabId": "tab-1793293042379-35j"
     }
   ],
   "activePaneId": "pane-main",
   "lastOpenFiles": [
-    "AI Summary - 2026-10-28.md",
-    "Guides/Get started with Obsidian.md",
-    "Adventurer/From standard note-taking.md",
-    "Attachments/image2.png",
-    "Adventurer/From plain-text note-taking.md",
+    "Untitled Note 2.md",
+    "Untitled Canvas 16.canvas",
+    "Untitled Canvas 25.canvas",
+    "Untitled Note 1.md",
+    "Untitled Canvas 15.canvas",
     "Adventurer/No prior experience.md",
+    "Start here.md",
+    "Adventurer/From plain-text note-taking.md",
+    "Adventurer/From standard note-taking.md",
+    "202610131644 Zettelkasten Note.md",
+    "Obsidian Architecture.canvas",
+    "Vault is just a local folder.md",
+    "Guides/Get started with Obsidian.md",
+    "AI Summary - 2026-10-28.md",
+    "Attachments/image2.png",
     "Attachments/image4.png",
     "Daily/2026-10-28.md",
     "Formatting/Table.md",
     "202610221509 Zettelkasten Note.md",
-    "Formatting/Format your notes.md",
-    "Formatting/Callout.md",
-    "Formatting/Comment.md",
-    "Formatting/Inline code.md",
-    "Formatting/Links.md",
-    "Formatting/Math.md",
-    "Formatting/Strikethrough.md",
-    "Guides/Create your first note.md",
-    "Guides/Create a vault.md",
-    "Formatting/Code block.md"
+    "Formatting/Format your notes.md"
   ]
 }

@@ -226,7 +226,7 @@ export class VaultManager {
         defaultContent = JSON.stringify({ nodes: [], edges: [] }, null, 2);
       } else {
         const cleanName = title.replace(/\.[^/.]+$/, '');
-        defaultContent = `---\ntitle: ${cleanName}\ncreated: ${new Date().toISOString().slice(0, 10)}\ntags: []\n---\n\n# ${cleanName}\n\n`;
+        defaultContent = `---\ntitle: ${cleanName}\ncreated: ${new Date().toISOString().slice(0, 10)}\ntags: []\n---\n\n`;
       }
     }
 

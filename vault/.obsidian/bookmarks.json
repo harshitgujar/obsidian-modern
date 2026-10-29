@@ -2,11 +2,6 @@
   "items": [
     {
       "type": "file",
-      "path": "Start here.md",
-      "title": "Start here"
-    },
-    {
-      "type": "file",
       "path": "Obsidian Architecture.canvas",
       "title": "Obsidian Architecture"
     },
