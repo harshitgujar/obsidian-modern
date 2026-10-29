@@ -1433,7 +1433,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             }`}
           >
             {line.trim() === '' ? (
-              <span className="text-[#8e8e93]/40 select-none text-xs italic">Empty line (click to type)</span>
+              <span className="inline-block h-4" />
             ) : (
               renderInline(line)
             )}

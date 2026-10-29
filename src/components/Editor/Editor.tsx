@@ -681,35 +681,97 @@ export const Editor: React.FC<EditorProps> = ({
             );
           }
 
+          if (viewMode === 'reading') {
+            return (
+              <div 
+                className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
+                onDoubleClick={() => onViewModeChange('live')}
+              >
+                <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
+                  <LivePreview
+                    file={file}
+                    allFiles={allFiles}
+                    metadata={metadata}
+                    backlinks={backlinks}
+                    showFrontmatter={showFrontmatter}
+                    foldHeading={foldHeading}
+                    onNavigateLink={onNavigateLink}
+                    onTagClick={onTagClick}
+                    onToggleTask={handleToggleTask}
+                    onAddProperty={handleAddProperty}
+                    onEnterEditMode={() => onViewModeChange('live')}
+                    isEditable={false}
+                    onContentChange={onContentChange}
+                    onOpenFile={onOpenFile}
+                    onOpenSplit={onOpenSplit}
+                    onRenameFile={onRenameFile}
+                    onDeleteFile={onDeleteFile}
+                    onBookmarkFile={onToggleBookmark}
+                    isBookmarked={isBookmarked}
+                    onDuplicateFile={onDuplicateFile}
+                    onRevealInNavigation={onRevealInNavigation}
+                    onOpenLocalGraph={onOpenLocalGraph}
+                    onExportPdf={onExportPdf}
+                    folders={folders}
+                  />
+                </div>
+              </div>
+            );
+          }
+
           // Unified High-Fidelity Reading & Interactive Editing View (Notion / Obsidian Level)
           return (
-            <div className="w-full h-full flex flex-col overflow-y-auto bg-transparent">
-              <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
-                <LivePreview
-                  file={file}
-                  allFiles={allFiles}
-                  metadata={metadata}
-                  backlinks={backlinks}
-                  showFrontmatter={showFrontmatter}
-                  foldHeading={foldHeading}
-                  onNavigateLink={onNavigateLink}
-                  onTagClick={onTagClick}
-                  onToggleTask={handleToggleTask}
-                  onAddProperty={handleAddProperty}
-                  isEditable={true}
-                  onContentChange={onContentChange}
-                  onOpenFile={onOpenFile}
-                  onOpenSplit={onOpenSplit}
-                  onRenameFile={onRenameFile}
-                  onDeleteFile={onDeleteFile}
-                  onBookmarkFile={onToggleBookmark}
-                  isBookmarked={isBookmarked}
-                  onDuplicateFile={onDuplicateFile}
-                  onRevealInNavigation={onRevealInNavigation}
-                  onOpenLocalGraph={onOpenLocalGraph}
-                  onExportPdf={onExportPdf}
-                  folders={folders}
-                />
+            <div 
+              className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
+              onClick={e => {
+                if (e.target === e.currentTarget) {
+                  editorRef.current?.focus();
+                }
+              }}
+            >
+              <div className={`flex-1 flex flex-col p-6 md:p-10 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
+                {/* Notion-Style Editable Title */}
+                <div className="group relative flex items-center mb-6 pb-2 border-b border-black/[0.08] dark:border-white/10">
+                  <input
+                    type="text"
+                    value={inlineTitle}
+                    onChange={e => setInlineTitle(e.target.value)}
+                    onBlur={() => {
+                      const trimmed = inlineTitle.trim();
+                      const currentBase = file.name.replace(/\.md$/, '');
+                      if (trimmed && trimmed !== currentBase && onRenameFile) {
+                        onRenameFile(file, `${trimmed}.md`);
+                      }
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        (e.target as HTMLInputElement).blur();
+                        editorRef.current?.focus();
+                      }
+                    }}
+                    placeholder="Untitled Note"
+                    className="inline-title font-bold text-3xl md:text-4xl text-[#111113] dark:text-[#f4f4f6] tracking-tight bg-transparent w-full focus:outline-none border-b border-transparent focus:border-[#384cff]"
+                  />
+                  <span className="opacity-0 group-hover:opacity-100 text-[10px] text-[#8e8e93] font-mono ml-2 shrink-0">
+                    Click to rename
+                  </span>
+                </div>
+
+                {/* Notion-Style High-Fidelity CodeMirror Live Preview Editor */}
+                <div className="flex-1 min-h-[450px]">
+                  <CodeMirrorEditor
+                    ref={editorRef}
+                    value={file.content}
+                    onChange={onContentChange}
+                    livePreview={viewMode !== 'source'}
+                    showLineNumbers={viewMode === 'source' && showLineNumbers}
+                    readableLineLength={false}
+                    allFiles={allFiles}
+                    onNavigateLink={onNavigateLink}
+                    onMediaContextMenu={handleMediaContextMenu}
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
             </div>
           );
