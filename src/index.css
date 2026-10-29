@@ -1713,21 +1713,54 @@
 /* 5. Hover States in Dark Mode */
 [data-theme="dark"] .hover\:bg-black\/\[0\.04\]:hover,
 [data-theme="dark"] .hover\:bg-black\/\[0\.03\]:hover,
-[data-theme="dark"] .hover\:bg-black\/\[0\.05\]:hover {
-  background-color: rgba(255, 255, 255, 0.07) !important;
+[data-theme="dark"] .hover\:bg-black\/\[0\.05\]:hover,
+[data-theme="dark"] .hover\:bg-black\/\[0\.06\]:hover,
+[data-theme="dark"] .hover\:bg-black\/\[0\.08\]:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-[data-theme="dark"] .hover\:bg-\[\#f4f4f6\]:hover {
-  background-color: #222228 !important;
-}
-
-[data-theme="dark"] .hover\:bg-\[\#e4e4e9\]:hover {
+[data-theme="dark"] .hover\:bg-\[\#f4f4f6\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#f8f8fa\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#fafafc\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#ececf0\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#ebebef\]:hover,
+[data-theme="dark"] .hover\:bg-\[\#e4e4e9\]:hover,
+[data-theme="dark"] .hover\:bg-white:hover,
+[data-theme="dark"] .hover\:bg-zinc-100:hover,
+[data-theme="dark"] .hover\:bg-zinc-200:hover,
+[data-theme="dark"] .hover\:bg-zinc-800:hover,
+[data-theme="dark"] .hover\:bg-zinc-800\/80:hover {
   background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .hover\:bg-\[\#ebebef\]:hover svg,
+[data-theme="dark"] .hover\:bg-\[\#ececf0\]:hover svg,
+[data-theme="dark"] .hover\:bg-\[\#f4f4f6\]:hover svg,
+[data-theme="dark"] .hover\:bg-white:hover svg,
+[data-theme="dark"] .hover\:bg-zinc-800:hover svg {
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .hover\:text-\[\#111113\]:hover,
-[data-theme="dark"] .hover\:text-black:hover {
+[data-theme="dark"] .hover\:text-black:hover,
+[data-theme="dark"] .hover\:text-zinc-800:hover,
+[data-theme="dark"] .hover\:text-zinc-900:hover {
   color: #ffffff !important;
+}
+
+/* Dark Mode Text Contrast Fixes */
+[data-theme="dark"] .text-zinc-900,
+[data-theme="dark"] .text-zinc-800 {
+  color: #f4f4f6 !important;
+}
+
+[data-theme="dark"] .text-zinc-700 {
+  color: #e4e4e7 !important;
+}
+
+[data-theme="dark"] .text-zinc-600 {
+  color: #d4d4d8 !important;
 }
 
 /* 6. Form Controls, Inputs & Modals */

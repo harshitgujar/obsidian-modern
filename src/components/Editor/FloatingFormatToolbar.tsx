@@ -17,6 +17,7 @@ import {
   Check,
   Search
 } from 'lucide-react';
+import { TableGridPicker, generateMarkdownTable } from './TableGridPicker';
 
 interface FloatingFormatToolbarProps {
   containerRef: React.RefObject<HTMLElement>;
@@ -36,6 +37,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
   const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
   const [selectedText, setSelectedText] = useState('');
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const [showTablePicker, setShowTablePicker] = useState(false);
   const [copied, setCopied] = useState(false);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
 
@@ -46,6 +48,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         setCoords(null);
         setSelectedText('');
         setShowHeadingMenu(false);
+        setShowTablePicker(false);
         return;
       }
 
@@ -125,7 +128,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         transform: 'translateX(-50%)',
         zIndex: 9999
       }}
-      className="flex items-center gap-0.5 skeuo-card px-2 py-1 shadow-[0_12px_36px_rgba(0,0,0,0.12)] text-[#111113] text-xs select-none animate-in fade-in zoom-in-95 duration-150"
+      className="flex items-center gap-0.5 skeuo-card px-2 py-1 shadow-[0_12px_36px_rgba(0,0,0,0.12)] text-[#111113] dark:text-[#f4f4f6] text-xs select-none animate-in fade-in zoom-in-95 duration-150"
       onMouseDown={e => {
         // Prevent losing focus / selection
         e.preventDefault();
@@ -134,16 +137,19 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       {/* Headings Selector */}
       <div className="relative">
         <button
-          onClick={e => handleAction(e, () => setShowHeadingMenu(prev => !prev))}
+          onClick={e => handleAction(e, () => {
+            setShowHeadingMenu(prev => !prev);
+            setShowTablePicker(false);
+          })}
           title="Turn into heading"
-          className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#ebebef] transition-colors text-[#111113] font-medium text-[11px]"
+          className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] transition-colors text-[#111113] dark:text-[#f4f4f6] font-medium text-[11px]"
         >
-          <Type className="w-3.5 h-3.5 text-[#18181b]" />
+          <Type className="w-3.5 h-3.5 text-current" />
           <span>H▾</span>
         </button>
 
         {showHeadingMenu && (
-          <div className="absolute left-0 bottom-full mb-1.5 w-32 skeuo-card p-1 flex flex-col gap-0.5 text-xs text-[#111113] shadow-lg">
+          <div className="absolute left-0 bottom-full mb-1.5 w-32 skeuo-card p-1 flex flex-col gap-0.5 text-xs text-[#111113] dark:text-[#f4f4f6] shadow-xl z-50">
             <button
               onClick={e =>
                 handleAction(e, () => {
@@ -152,9 +158,9 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                   setShowHeadingMenu(false);
                 })
               }
-              className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#ebebef] text-left"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#111113] dark:text-[#f4f4f6] text-left transition-colors cursor-pointer"
             >
-              <Heading1 className="w-3.5 h-3.5 text-[#18181b]" />
+              <Heading1 className="w-3.5 h-3.5 text-current" />
               <span>Heading 1</span>
             </button>
             <button
@@ -165,9 +171,9 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                   setShowHeadingMenu(false);
                 })
               }
-              className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#ebebef] text-left"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#111113] dark:text-[#f4f4f6] text-left transition-colors cursor-pointer"
             >
-              <Heading2 className="w-3.5 h-3.5 text-[#18181b]" />
+              <Heading2 className="w-3.5 h-3.5 text-current" />
               <span>Heading 2</span>
             </button>
             <button
@@ -178,22 +184,22 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                   setShowHeadingMenu(false);
                 })
               }
-              className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#ebebef] text-left"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#111113] dark:text-[#f4f4f6] text-left transition-colors cursor-pointer"
             >
-              <Heading3 className="w-3.5 h-3.5 text-[#18181b]" />
+              <Heading3 className="w-3.5 h-3.5 text-current" />
               <span>Heading 3</span>
             </button>
           </div>
         )}
       </div>
 
-      <div className="w-[1px] h-4 bg-black/[0.08] mx-1" />
+      <div className="w-[1px] h-4 bg-black/[0.08] dark:bg-white/[0.08] mx-1" />
 
       {/* Bold */}
       <button
         onClick={e => handleAction(e, () => onFormat('**', '**', selectedText || 'bold text'))}
         title="Bold (Ctrl+B)"
-        className="p-1.5 rounded-lg hover:bg-[#ebebef] text-[#585860] hover:text-[#111113] transition-colors"
+        className="p-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] hover:text-[#111113] dark:text-[#a1a1aa] dark:hover:text-white transition-colors"
       >
         <Bold className="w-3.5 h-3.5" />
       </button>
@@ -202,7 +208,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onFormat('*', '*', selectedText || 'italic text'))}
         title="Italic (Ctrl+I)"
-        className="p-1.5 rounded-lg hover:bg-[#ebebef] text-[#585860] hover:text-[#111113] transition-colors"
+        className="p-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] hover:text-[#111113] dark:text-[#a1a1aa] dark:hover:text-white transition-colors"
       >
         <Italic className="w-3.5 h-3.5" />
       </button>
@@ -211,7 +217,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onFormat('~~', '~~', selectedText || 'strikethrough text'))}
         title="Strikethrough"
-        className="p-1.5 rounded-lg hover:bg-[#ebebef] text-[#585860] hover:text-[#111113] transition-colors"
+        className="p-1.5 rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] hover:text-[#111113] dark:text-[#a1a1aa] dark:hover:text-white transition-colors"
       >
         <Strikethrough className="w-3.5 h-3.5" />
       </button>
@@ -220,7 +226,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onFormat('==', '==', selectedText || 'highlighted text'))}
         title="Highlight"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
         <Highlighter className="w-3.5 h-3.5" />
       </button>
@@ -229,7 +235,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onFormat('`', '`', selectedText || 'code'))}
         title="Inline Code"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
         <Code2 className="w-3.5 h-3.5" />
       </button>
@@ -238,18 +244,49 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onFormat('[[', ']]', selectedText || 'Note Title'))}
         title="Link Note (Ctrl+K)"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
         <Link className="w-3.5 h-3.5" />
       </button>
 
-      <div className="w-[1px] h-4 bg-black/[0.08] mx-1" />
+      <div className="w-[1px] h-4 bg-black/[0.08] dark:bg-white/[0.08] mx-1" />
+
+      {/* Google Docs Table Tool */}
+      <div className="relative">
+        <button
+          onClick={e => handleAction(e, () => {
+            setShowTablePicker(prev => !prev);
+            setShowHeadingMenu(false);
+          })}
+          title="Insert Table (Google Docs Style)"
+          className={`p-1.5 rounded-lg transition-colors ${
+            showTablePicker 
+              ? 'bg-[#384cff] dark:bg-[#6372ff] text-white' 
+              : 'hover:text-[#111113] dark:hover:text-white hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa]'
+          }`}
+        >
+          <Table className="w-3.5 h-3.5" />
+        </button>
+
+        {showTablePicker && (
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50">
+            <TableGridPicker
+              onSelect={(rows, cols) => {
+                const md = generateMarkdownTable(rows, cols);
+                onInsertBlock(md);
+                setShowTablePicker(false);
+              }}
+              onClose={() => setShowTablePicker(false)}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Quote */}
       <button
         onClick={e => handleAction(e, () => onInsertBlock(`> ${selectedText || 'Quote'}`))}
         title="Quote Block"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
         <Quote className="w-3.5 h-3.5" />
       </button>
@@ -258,7 +295,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={e => handleAction(e, () => onInsertBlock(`- [ ] ${selectedText || 'Task'}`))}
         title="Checklist Task"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
         <CheckSquare className="w-3.5 h-3.5" />
       </button>
@@ -268,7 +305,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         <button
           onClick={e => handleAction(e, () => onFindSelection(selectedText))}
           title="Find this text in note"
-          className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+          className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
         >
           <Search className="w-3.5 h-3.5" />
         </button>
@@ -278,9 +315,9 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       <button
         onClick={handleCopy}
         title="Copy selected text"
-        className="p-1.5 hover:text-[#111113] rounded-lg hover:bg-[#ebebef] text-[#585860] transition-colors"
+        className="p-1.5 hover:text-[#111113] dark:hover:text-white rounded-lg hover:bg-[#ebebef] dark:hover:bg-[#27272a] text-[#585860] dark:text-[#a1a1aa] transition-colors"
       >
-        {copied ? <Check className="w-3.5 h-3.5 text-[#18181b]" /> : <Copy className="w-3.5 h-3.5" />}
+        {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
       </button>
     </div>
   );

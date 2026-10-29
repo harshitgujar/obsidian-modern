@@ -9,6 +9,8 @@ import {
 } from '@codemirror/view';
 import { Extension, RangeSetBuilder } from '@codemirror/state';
 import { VaultFile } from '../../types';
+import { CodeMirrorTableWidget } from './CodeMirrorTableWidget';
+import { parseMarkdownTable } from './InteractiveTable';
 
 export interface LivePreviewOptions {
   onNavigateLink?: (targetTitle: string) => void;
@@ -902,6 +904,84 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     { decorations: v => v.decorations }
   );
 
+  // 11. Google Docs High-Fidelity Table ViewPlugin
+  const tablePlugin = ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+
+      constructor(view: EditorView) {
+        this.decorations = this.buildDecorations(view);
+      }
+
+      update(update: ViewUpdate) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = this.buildDecorations(update.view);
+        }
+      }
+
+      buildDecorations(view: EditorView): DecorationSet {
+        const builder = new RangeSetBuilder<Decoration>();
+        const doc = view.state.doc;
+        let inCodeBlock = false;
+        let lineNo = 1;
+
+        while (lineNo <= doc.lines) {
+          const line = doc.line(lineNo);
+          const trimmed = line.text.trim();
+
+          if (trimmed.startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            lineNo++;
+            continue;
+          }
+
+          if (!inCodeBlock && trimmed.startsWith('|') && trimmed.endsWith('|')) {
+            const tableStartLine = lineNo;
+            let tableEndLine = lineNo;
+
+            while (tableEndLine < doc.lines) {
+              const nextLine = doc.line(tableEndLine + 1);
+              const nextTrimmed = nextLine.text.trim();
+              if (nextTrimmed.startsWith('|') && nextTrimmed.endsWith('|')) {
+                tableEndLine++;
+              } else {
+                break;
+              }
+            }
+
+            if (tableEndLine > tableStartLine) {
+              const tableLines: string[] = [];
+              for (let l = tableStartLine; l <= tableEndLine; l++) {
+                tableLines.push(doc.line(l).text);
+              }
+              const tableMarkdown = tableLines.join('\n');
+              const parsed = parseMarkdownTable(tableMarkdown);
+              if (parsed) {
+                const startFrom = doc.line(tableStartLine).from;
+                const endTo = doc.line(tableEndLine).to;
+                builder.add(
+                  startFrom,
+                  endTo,
+                  Decoration.replace({
+                    widget: new CodeMirrorTableWidget(tableMarkdown, startFrom, endTo),
+                    block: true
+                  })
+                );
+                lineNo = tableEndLine + 1;
+                continue;
+              }
+            }
+          }
+
+          lineNo++;
+        }
+
+        return builder.finish();
+      }
+    },
+    { decorations: v => v.decorations }
+  );
+
   return [
     wikilinkPlugin,
     boldPlugin,
@@ -912,6 +992,7 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     checkboxPlugin,
     hrPlugin,
     embedPlugin,
-    headingLinePlugin
+    headingLinePlugin,
+    tablePlugin
   ];
 }

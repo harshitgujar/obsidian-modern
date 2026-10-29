@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { VaultFile, NoteMetadata, BacklinkMention } from '../../types';
 import { FileContextMenu } from '../Common/FileContextMenu';
+import { InteractiveTable } from './InteractiveTable';
+import { TableGridPicker, generateMarkdownTable } from './TableGridPicker';
 import { 
   FileText, 
   ExternalLink, 
@@ -238,6 +240,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   // Notion-style block insertion menu
   const [showBlockMenu, setShowBlockMenu] = useState(false);
+  const [showTablePickerInBlockMenu, setShowTablePickerInBlockMenu] = useState(false);
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
 
   // File Context Menu for media embeds & wikilinks
@@ -1076,7 +1079,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         continue;
       }
 
-      // 6. Markdown Tables
+      // 6. Markdown Tables (Google Docs High-Fidelity Table)
       if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
         const tableLines: string[] = [];
         let j = i;
@@ -1085,33 +1088,23 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           j++;
         }
 
-        const parseRow = (rowStr: string) =>
-          rowStr.split('|').slice(1, -1).map(c => c.trim());
-
-        const headers = parseRow(tableLines[0]);
-        const dataRows = tableLines.slice(2).map(parseRow);
+        const tableMarkdown = tableLines.join('\n');
+        const startIdx = i;
+        const endIdx = j;
 
         blocks.push(
-          <div key={`table-${i}`} className="my-4 overflow-x-auto rounded-lg border border-zinc-800">
-            <table>
-              <thead>
-                <tr>
-                  {headers.map((h, hIdx) => (
-                    <th key={hIdx}>{renderInline(h)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {dataRows.map((row, rIdx) => (
-                  <tr key={rIdx}>
-                    {row.map((cell, cIdx) => (
-                      <td key={cIdx}>{renderInline(cell)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <InteractiveTable
+            key={`table-${i}`}
+            initialMarkdown={tableMarkdown}
+            isEditable={isEditable}
+            onChange={newTableMd => {
+              if (onContentChange) {
+                const nextLines = [...bodyLines];
+                nextLines.splice(startIdx, endIdx - startIdx, newTableMd.trim());
+                onContentChange(nextLines.join('\n'));
+              }
+            }}
+          />
         );
         i = j;
         continue;
@@ -1382,53 +1375,92 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       {showBlockMenu && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowBlockMenu(false)}
+          onClick={() => {
+            setShowBlockMenu(false);
+            setShowTablePickerInBlockMenu(false);
+          }}
         >
           <div
-            className="w-80 max-h-[80vh] overflow-y-auto bg-[#18181e]/98 backdrop-blur-2xl border border-zinc-700/80 rounded-2xl shadow-2xl p-2 text-xs text-zinc-200 animate-in fade-in zoom-in-95 duration-100 space-y-1"
+            className="w-80 max-h-[80vh] overflow-y-auto bg-white dark:bg-[#18181b] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 text-xs text-[#111113] dark:text-[#f4f4f6] animate-in fade-in zoom-in-95 duration-100 space-y-1"
             onClick={e => e.stopPropagation()}
           >
-            <div className="px-3 py-2 border-b border-zinc-800 font-semibold text-zinc-100 flex items-center justify-between">
+            <div className="px-3 py-2 border-b border-black/[0.06] dark:border-white/[0.08] font-semibold text-[#111113] dark:text-[#f4f4f6] flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                <span>Insert Notion Block</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
+                <span>{showTablePickerInBlockMenu ? 'Insert Table' : 'Insert Block'}</span>
               </span>
-              <button onClick={() => setShowBlockMenu(false)} className="text-zinc-500 hover:text-zinc-200 p-0.5">
+              <button 
+                onClick={() => {
+                  setShowBlockMenu(false);
+                  setShowTablePickerInBlockMenu(false);
+                }} 
+                className="text-[#8e8e93] hover:text-[#111113] dark:hover:text-[#f4f4f6] p-0.5 rounded cursor-pointer"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
             
-            <div className="p-1 space-y-0.5">
-              {[
-                { label: 'Text', desc: 'Just start writing plain text', icon: <FileText className="w-4 h-4 text-zinc-400" />, template: '\nNew paragraph...\n' },
-                { label: 'Heading 1', desc: 'Large section heading', icon: <Heading1 className="w-4 h-4 text-purple-400" />, template: '\n# New Section\n' },
-                { label: 'Heading 2', desc: 'Medium section heading', icon: <Heading2 className="w-4 h-4 text-purple-400" />, template: '\n## New Sub-section\n' },
-                { label: 'Heading 3', desc: 'Small section heading', icon: <Heading3 className="w-4 h-4 text-purple-400" />, template: '\n### Subsection Title\n' },
-                { label: 'To-do List', desc: 'Track tasks with an interactive checklist', icon: <CheckSquare className="w-4 h-4 text-emerald-400" />, template: '\n- [ ] New to-do item\n' },
-                { label: 'Bulleted List', desc: 'Create a simple bulleted list', icon: <List className="w-4 h-4 text-sky-400" />, template: '\n- List item 1\n- List item 2\n' },
-                { label: 'Numbered List', desc: 'Create a list with numbering', icon: <ListOrdered className="w-4 h-4 text-amber-400" />, template: '\n1. First step\n2. Second step\n' },
-                { label: 'Callout Box', desc: 'Make writing stand out with an icon', icon: <Info className="w-4 h-4 text-blue-400" />, template: '\n> [!note]\n> Important highlight or insight goes here.\n' },
-                { label: 'Table', desc: 'Add a clean markdown table', icon: <TableIcon className="w-4 h-4 text-orange-400" />, template: '\n| Column 1 | Column 2 |\n| -------- | -------- |\n| Item 1   | Item 2   |\n' },
-                { label: 'Code Block', desc: 'Capture code snippet with syntax highlighting', icon: <CodeIcon className="w-4 h-4 text-pink-400" />, template: '\n```typescript\n// Write code here\nconsole.log("Hello Notion");\n```\n' },
-                { label: 'Quote', desc: 'Capture a quotation', icon: <Quote className="w-4 h-4 text-purple-400" />, template: '\n> "The best way to predict the future is to invent it."\n' },
-                { label: 'Divider', desc: 'Visually divide blocks with a line', icon: <div className="w-4 h-0.5 bg-zinc-500 rounded my-1.5" />, template: '\n---\n' },
-                { label: 'Link to Note', desc: 'Add a wikilink to another note', icon: <LinkIcon className="w-4 h-4 text-purple-400" />, template: ' [[Note Title]] ' }
-              ].map(item => (
+            {showTablePickerInBlockMenu ? (
+              <div className="p-1 space-y-2">
                 <button
-                  key={item.label}
-                  onClick={() => insertNewBlock(item.template, insertAfterIndex)}
-                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/80 text-left transition-colors group"
+                  type="button"
+                  onClick={() => setShowTablePickerInBlockMenu(false)}
+                  className="text-[11px] text-[#585860] dark:text-[#a1a1aa] hover:text-[#111113] dark:hover:text-[#f4f4f6] flex items-center gap-1 px-1 py-0.5 rounded cursor-pointer"
                 >
-                  <div className="p-1.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300 group-hover:text-purple-300">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-zinc-200 group-hover:text-purple-300">{item.label}</div>
-                    <div className="text-[11px] text-zinc-500">{item.desc}</div>
-                  </div>
+                  ← Back to blocks
                 </button>
-              ))}
-            </div>
+                <TableGridPicker
+                  onSelect={(rows, cols) => {
+                    const md = generateMarkdownTable(rows, cols);
+                    insertNewBlock(md, insertAfterIndex);
+                    setShowBlockMenu(false);
+                    setShowTablePickerInBlockMenu(false);
+                  }}
+                  onClose={() => {
+                    setShowBlockMenu(false);
+                    setShowTablePickerInBlockMenu(false);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="p-1 space-y-0.5">
+                {[
+                  { label: 'Text', desc: 'Just start writing plain text', icon: <FileText className="w-4 h-4 text-zinc-400" />, template: '\nNew paragraph...\n' },
+                  { label: 'Heading 1', desc: 'Large section heading', icon: <Heading1 className="w-4 h-4 text-purple-400" />, template: '\n# New Section\n' },
+                  { label: 'Heading 2', desc: 'Medium section heading', icon: <Heading2 className="w-4 h-4 text-purple-400" />, template: '\n## New Sub-section\n' },
+                  { label: 'Heading 3', desc: 'Small section heading', icon: <Heading3 className="w-4 h-4 text-purple-400" />, template: '\n### Subsection Title\n' },
+                  { label: 'To-do List', desc: 'Track tasks with an interactive checklist', icon: <CheckSquare className="w-4 h-4 text-emerald-400" />, template: '\n- [ ] New to-do item\n' },
+                  { label: 'Bulleted List', desc: 'Create a simple bulleted list', icon: <List className="w-4 h-4 text-sky-400" />, template: '\n- List item 1\n- List item 2\n' },
+                  { label: 'Numbered List', desc: 'Create a list with numbering', icon: <ListOrdered className="w-4 h-4 text-amber-400" />, template: '\n1. First step\n2. Second step\n' },
+                  { label: 'Callout Box', desc: 'Make writing stand out with an icon', icon: <Info className="w-4 h-4 text-blue-400" />, template: '\n> [!note]\n> Important highlight or insight goes here.\n' },
+                  { label: 'Table', desc: 'Interactive Google Docs style table', icon: <TableIcon className="w-4 h-4 text-orange-400" />, template: '' },
+                  { label: 'Code Block', desc: 'Capture code snippet with syntax highlighting', icon: <CodeIcon className="w-4 h-4 text-pink-400" />, template: '\n```typescript\n// Write code here\nconsole.log("Hello Runagon");\n```\n' },
+                  { label: 'Quote', desc: 'Capture a quotation', icon: <Quote className="w-4 h-4 text-purple-400" />, template: '\n> "The best way to predict the future is to invent it."\n' },
+                  { label: 'Divider', desc: 'Visually divide blocks with a line', icon: <div className="w-4 h-0.5 bg-zinc-500 rounded my-1.5" />, template: '\n---\n' },
+                  { label: 'Link to Note', desc: 'Add a wikilink to another note', icon: <LinkIcon className="w-4 h-4 text-purple-400" />, template: ' [[Note Title]] ' }
+                ].map(item => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      if (item.label === 'Table') {
+                        setShowTablePickerInBlockMenu(true);
+                      } else {
+                        insertNewBlock(item.template, insertAfterIndex);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-left transition-colors group cursor-pointer"
+                  >
+                    <div className="p-1.5 rounded-lg bg-[#f4f4f6] dark:bg-[#202024] border border-black/[0.05] dark:border-white/[0.06] text-[#585860] dark:text-[#a1a1aa] group-hover:text-[#384cff] dark:group-hover:text-[#6372ff]">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-[#111113] dark:text-[#f4f4f6] group-hover:text-[#384cff] dark:group-hover:text-[#6372ff]">{item.label}</div>
+                      <div className="text-[11px] text-[#8e8e93] dark:text-[#71717a]">{item.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
