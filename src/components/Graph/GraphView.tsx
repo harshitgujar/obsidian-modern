@@ -69,11 +69,11 @@ const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   linkStrength: 0.8,
   linkDistance: 210,
   colorGroups: [
-    { query: 'path:Formatting', color: '#27272a' },
-    { query: 'path:Guides', color: '#3f3f46' },
-    { query: 'path:Adventurer', color: '#52525b' },
-    { query: 'path:Templates', color: '#71717a' },
-    { query: 'path:Daily', color: '#8e8e93' }
+    { query: 'path:Formatting', color: '#2563eb' },
+    { query: 'path:Guides', color: '#0284c7' },
+    { query: 'path:Adventurer', color: '#6366f1' },
+    { query: 'path:Templates', color: '#4f46e5' },
+    { query: 'path:Daily', color: '#3b82f6' }
   ],
   localJumps: 1
 };
@@ -105,7 +105,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     forces: true
   });
   const [newGroupQuery, setNewGroupQuery] = useState('');
-  const [newGroupColor, setNewGroupColor] = useState('#27272a');
+  const [newGroupColor, setNewGroupColor] = useState('#384cff');
   const [isAddingGroup, setIsAddingGroup] = useState(false);
 
   // Viewport transformation
@@ -488,6 +488,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       ctx.scale(transform.k, transform.k);
 
       // 1. Draw subtle minimal skeuomorphic dot grid on light background
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       if (!isMini) {
         const gridSize = 40;
         const left = (-width / 2 - transform.x) / transform.k;
@@ -500,7 +501,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const startY = Math.floor(top / gridSize) * gridSize;
         const endY = Math.ceil(bottom / gridSize) * gridSize;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.08)';
         const dotRadius = Math.max(0.7, 1.3 / transform.k);
         for (let gx = startX; gx <= endX; gx += gridSize) {
           for (let gy = startY; gy <= endY; gy += gridSize) {
@@ -569,8 +570,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
         ctx.lineTo(currentTargetX, currentTargetY);
 
         if (isConnectingNow) {
-          // Minimal tactile connection line actively forming
-          ctx.strokeStyle = '#18181b';
+          // Minimal tactile connection line actively forming in brand blue
+          ctx.strokeStyle = '#384cff';
           ctx.lineWidth = baseEdgeWidth * 2.2;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
@@ -578,31 +579,31 @@ export const GraphView: React.FC<GraphViewProps> = ({
           // Bead traveling along the line to target node
           ctx.beginPath();
           ctx.arc(currentTargetX, currentTargetY, 3.5 / transform.k, 0, Math.PI * 2);
-          ctx.fillStyle = '#18181b';
+          ctx.fillStyle = '#384cff';
           ctx.fill();
         } else if (isSourceOfHovered) {
-          // Outgoing edge: carbon
-          ctx.strokeStyle = '#18181b';
-          ctx.lineWidth = baseEdgeWidth * 2.2;
+          // Outgoing edge: vibrant electric brand blue
+          ctx.strokeStyle = isDark ? '#6372ff' : '#384cff';
+          ctx.lineWidth = baseEdgeWidth * 2.4;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (isTargetOfHovered) {
-          // Incoming edge: slate
-          ctx.strokeStyle = '#52525b';
-          ctx.lineWidth = baseEdgeWidth * 2.2;
+          // Incoming edge: bright azure blue
+          ctx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
+          ctx.lineWidth = baseEdgeWidth * 2.4;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (activeOrHovered) {
           // Dimmed non-connected edge
-          ctx.strokeStyle = '#d4d4d8';
+          ctx.strokeStyle = isDark ? 'rgba(99, 114, 255, 0.09)' : 'rgba(56, 76, 255, 0.09)';
           ctx.lineWidth = baseEdgeWidth * 0.5;
-          ctx.globalAlpha = 0.12;
+          ctx.globalAlpha = 0.15;
           ctx.stroke();
         } else {
-          // Resting state edge: clean soft hairline slate on light background
-          ctx.strokeStyle = '#c4c4c8';
-          ctx.lineWidth = baseEdgeWidth;
-          ctx.globalAlpha = 0.6;
+          // Resting state edge: clean, handsome blue matching brand
+          ctx.strokeStyle = isDark ? 'rgba(99, 114, 255, 0.45)' : 'rgba(56, 76, 255, 0.38)';
+          ctx.lineWidth = baseEdgeWidth * 1.15;
+          ctx.globalAlpha = 0.85;
           ctx.stroke();
         }
 
@@ -631,12 +632,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
             );
             ctx.closePath();
             ctx.fillStyle = isSourceOfHovered
-              ? '#18181b'
+              ? (isDark ? '#6372ff' : '#384cff')
               : isTargetOfHovered
-              ? '#585860'
+              ? (isDark ? '#38bdf8' : '#0284c7')
               : activeOrHovered
-              ? 'rgba(180, 180, 190, 0.2)'
-              : 'rgba(120, 120, 130, 0.6)';
+              ? (isDark ? 'rgba(99, 114, 255, 0.18)' : 'rgba(56, 76, 255, 0.18)')
+              : (isDark ? 'rgba(99, 114, 255, 0.65)' : 'rgba(56, 76, 255, 0.55)');
             ctx.fill();
           }
         }
@@ -661,7 +662,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (bloomAge < 1.0) {
             ctx.beginPath();
             ctx.arc(node.x, node.y, baseRadius + (22 * bloomAge) / transform.k, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(24, 24, 27, ${Math.max(0, 1 - bloomAge)})`;
+            ctx.strokeStyle = `rgba(56, 76, 255, ${Math.max(0, 1 - bloomAge)})`;
             ctx.lineWidth = 2 / transform.k;
             ctx.stroke();
           } else {
@@ -673,12 +674,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
         if (isTarget) {
           ctx.beginPath();
           ctx.arc(node.x, node.y, baseRadius + 6, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+          ctx.fillStyle = isDark ? 'rgba(56, 76, 255, 0.18)' : 'rgba(56, 76, 255, 0.1)';
           ctx.fill();
 
           ctx.beginPath();
           ctx.arc(node.x, node.y, baseRadius + 3, 0, Math.PI * 2);
-          ctx.strokeStyle = '#18181b';
+          ctx.strokeStyle = isDark ? '#8692ff' : '#384cff';
           ctx.lineWidth = 1.8 / transform.k;
           ctx.stroke();
         }
@@ -696,17 +697,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
           ctx.arc(node.x, node.y, baseRadius, 0, Math.PI * 2);
         }
 
-        ctx.fillStyle = node.color || '#18181b';
+        // Vibrant non-black node color centered on brand Runagon palette
+        const nodeColor = (node.color && node.color !== '#18181b' && node.color !== '#000000') ? node.color : '#384cff';
+        ctx.fillStyle = nodeColor;
         ctx.fill();
 
         // Node border: Crisp white rim gives a tactile, beveled physical pebble effect on light bg
         ctx.lineWidth = isTarget ? (2.2 / transform.k) : (1.6 / transform.k);
         if (node.nodeType === 'unresolved') {
           ctx.setLineDash([3 / transform.k, 2 / transform.k]);
-          ctx.strokeStyle = '#94a3b8';
+          ctx.strokeStyle = isDark ? '#818cf8' : '#6366f1';
         } else {
           ctx.setLineDash([]);
-          ctx.strokeStyle = isTarget ? '#18181b' : '#ffffff';
+          ctx.strokeStyle = isTarget ? (isDark ? '#8692ff' : '#384cff') : (isDark ? 'rgba(255, 255, 255, 0.35)' : '#ffffff');
         }
         ctx.stroke();
         ctx.restore();
@@ -754,19 +757,23 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const pillH = textHeight;
         const pillR = 4 / transform.k;
 
-        // Elevated Crisp White Pill Background with soft tactile shadow
+        // Elevated Pill Background with soft tactile shadow
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-        ctx.fillStyle = isTarget ? '#ffffff' : 'rgba(255, 255, 255, 0.95)';
+        ctx.fillStyle = isDark
+          ? (isTarget ? '#1f1f26' : 'rgba(26, 26, 32, 0.94)')
+          : (isTarget ? '#ffffff' : 'rgba(255, 255, 255, 0.96)');
         ctx.fill();
 
         // Pill hairline border
-        ctx.strokeStyle = isTarget ? '#18181b' : 'rgba(0, 0, 0, 0.08)';
+        ctx.strokeStyle = isTarget ? (isDark ? '#8692ff' : '#384cff') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)');
         ctx.lineWidth = 1 / transform.k;
         ctx.stroke();
 
         // Label Text
-        ctx.fillStyle = isTarget ? '#111113' : (isDimmed ? '#8e8e93' : '#18181b');
+        ctx.fillStyle = isDark
+          ? (isTarget ? '#ffffff' : (isDimmed ? '#71717a' : '#f4f4f6'))
+          : (isTarget ? '#111113' : (isDimmed ? '#8e8e93' : '#18181b'));
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(labelText, node.x, pillY + pillH / 2);
@@ -1187,7 +1194,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
-                        {['#18181b', '#27272a', '#3f3f46', '#52525b', '#71717a', '#8e8e93'].map(c => (
+                        {['#384cff', '#2563eb', '#0284c7', '#6366f1', '#4f46e5', '#3b82f6', '#0ea5e9'].map(c => (
                           <button
                             key={c}
                             type="button"

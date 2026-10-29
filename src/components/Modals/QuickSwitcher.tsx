@@ -269,15 +269,15 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     }}
                     className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        ? 'bg-[rgba(56,76,255,0.08)] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-[rgba(56,76,255,0.25)]'
                         : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       {isCanvas ? (
-                        <LayoutGrid className="w-4 h-4 text-[#18181b] shrink-0" />
+                        <LayoutGrid className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#384cff]' : 'text-[#18181b]'}`} />
                       ) : (
-                        <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#18181b]' : 'text-[#8e8e93]'}`} />
+                        <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#384cff]' : 'text-[#8e8e93]'}`} />
                       )}
                       <span className="font-medium truncate">
                         {file.name.replace(/\.md$/, '')}
@@ -293,7 +293,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                     </div>
 
                     {isSelected && (
-                      <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
+                      <CornerDownLeft className="w-3.5 h-3.5 text-[#384cff] shrink-0" />
                     )}
                   </div>
                 );

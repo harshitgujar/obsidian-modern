@@ -77,14 +77,14 @@ export const Inspector: React.FC<InspectorProps> = ({
               title={backlinks.length > 0 ? `Backlinks (${backlinks.length})` : 'Backlinks'}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'backlinks'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <Link className="w-4 h-4 shrink-0" />
               {backlinks.length > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  activeTab === 'backlinks' ? 'bg-[#ececf0] text-[#111113]' : 'bg-black/[0.06] text-[#585860]'
+                  activeTab === 'backlinks' ? 'bg-[rgba(56,76,255,0.1)] text-[#384cff]' : 'bg-black/[0.06] text-[#585860]'
                 }`}>
                   {backlinks.length}
                 </span>
@@ -98,14 +98,14 @@ export const Inspector: React.FC<InspectorProps> = ({
               title={outlinks.length > 0 ? `Outgoing Links (${outlinks.length})` : 'Outgoing Links'}
               className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outgoing'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <ArrowUpRight className="w-4 h-4 shrink-0" />
               {outlinks.length > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  activeTab === 'outgoing' ? 'bg-[#ececf0] text-[#111113]' : 'bg-black/[0.06] text-[#585860]'
+                  activeTab === 'outgoing' ? 'bg-[rgba(56,76,255,0.1)] text-[#384cff]' : 'bg-black/[0.06] text-[#585860]'
                 }`}>
                   {outlinks.length}
                 </span>
@@ -119,7 +119,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title="Document Outline"
               className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outline'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -133,7 +133,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               title="Local Graph"
               className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'localGraph'
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
@@ -147,7 +147,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             title="AI Vault Assistant (RAG Memory)"
             className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
               activeTab === 'aiChat'
-                ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                 : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
             }`}
           >

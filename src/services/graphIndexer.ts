@@ -62,18 +62,18 @@ export class GraphIndexer {
     const backlinkCountMap: Map<string, number> = new Map();
 
     const defaultFolderColors: Record<string, string> = {
-      '': '#18181b',
-      'Formatting': '#27272a',
-      'Guides': '#3f3f46',
-      'Adventurer': '#52525b',
-      'Templates': '#71717a',
-      'Daily': '#8e8e93',
-      'Projects': '#18181b'
+      '': '#384cff',
+      'Formatting': '#2563eb',
+      'Guides': '#0284c7',
+      'Adventurer': '#6366f1',
+      'Templates': '#4f46e5',
+      'Daily': '#3b82f6',
+      'Projects': '#384cff'
     };
 
     // Helper to compute node color from color groups or folder
     const computeFileColor = (file: VaultFile, meta?: NoteMetadata): string => {
-      if (file.extension === 'canvas') return '#3f3f46';
+      if (file.extension === 'canvas') return '#0ea5e9';
       if (colorGroups && colorGroups.length > 0) {
         for (const cg of colorGroups) {
           if (!cg.query) continue;
@@ -98,7 +98,7 @@ export class GraphIndexer {
           }
         }
       }
-      return defaultFolderColors[file.folder] || '#18181b';
+      return defaultFolderColors[file.folder] || '#384cff';
     };
 
     // Add note files as nodes
@@ -216,7 +216,7 @@ export class GraphIndexer {
               label: `#${tag}`,
               path: tagId,
               val: 5,
-              color: '#3f3f46', // Deep slate for tag nodes in Obsidian
+              color: '#0284c7', // Azure for tag nodes in Obsidian
               folder: '',
               tags: [tag],
               nodeType: 'tag',
@@ -243,7 +243,7 @@ export class GraphIndexer {
                 label: bin.name,
                 path: bin.path,
                 val: 4.5,
-                color: '#71717a', // Slate for attachment nodes
+                color: '#6366f1', // Violet for attachment nodes
                 folder: bin.folder,
                 tags: [],
                 nodeType: 'attachment',

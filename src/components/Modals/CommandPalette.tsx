@@ -114,13 +114,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 }}
                 className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                   idx === selectedIndex
-                    ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                    ? 'bg-[rgba(56,76,255,0.08)] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-[rgba(56,76,255,0.25)]'
                     : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {cmd.category && (
-                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === selectedIndex ? 'text-[#18181b]' : 'text-[#8e8e93]'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === selectedIndex ? 'text-[#384cff]' : 'text-[#8e8e93]'}`}>
                       {cmd.category}:
                     </span>
                   )}
@@ -129,12 +129,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                 <div className="flex items-center gap-2">
                   {cmd.shortcut && (
-                    <kbd className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${idx === selectedIndex ? 'bg-white border-black/[0.08] text-[#111113]' : 'bg-[#ebebef] text-[#585860] border-black/[0.05]'}`}>
+                    <kbd className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${idx === selectedIndex ? 'bg-white border-[rgba(56,76,255,0.2)] text-[#384cff]' : 'bg-[#ebebef] text-[#585860] border-black/[0.05]'}`}>
                       {cmd.shortcut}
                     </kbd>
                   )}
                   {idx === selectedIndex && (
-                    <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
+                    <CornerDownLeft className="w-3.5 h-3.5 text-[#384cff] shrink-0" />
                   )}
                 </div>
               </div>

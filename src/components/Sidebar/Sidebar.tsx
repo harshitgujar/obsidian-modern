@@ -472,7 +472,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title="File Explorer (Ctrl+Shift+E)"
             className={`p-2 rounded-xl transition-all duration-200 border ${
               currentRibbonPill === 'files'
-                ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                 : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
             }`}
           >
@@ -489,7 +489,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title="Search Vault (Ctrl+Shift+F)"
             className={`p-2 rounded-xl transition-all duration-200 border ${
               currentRibbonPill === 'search'
-                ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                 : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
             }`}
           >
@@ -507,7 +507,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               title="Bookmarks (.obsidian/bookmarks.json)"
               className={`p-2 rounded-xl transition-all duration-200 border ${
                 currentRibbonPill === 'bookmarks'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
               }`}
             >
@@ -524,7 +524,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
               className={`p-2 rounded-xl transition-all duration-200 border ${
                 currentRibbonPill === 'graph'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
               }`}
             >
@@ -545,7 +545,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               title="Canvas Board (.canvas)"
               className={`p-2 rounded-xl transition-all duration-200 border ${
                 currentRibbonPill === 'canvas'
-                  ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
               }`}
             >
@@ -559,7 +559,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               title="AI Vault Assistant (RAG Memory)"
               className={`p-2 rounded-xl transition-all duration-200 border ${
                 isAIChatActive
-                  ? 'bg-white text-[#111113] shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#384cff] shadow-[0_1px_3px_rgba(56,76,255,0.12),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
               }`}
             >
@@ -937,7 +937,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onContextMenu={e => handleContextMenuOpen(e, file)}
                       className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl cursor-pointer transition-all duration-150 border ${
                         isActive
-                          ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.06]'
+                          ? 'bg-white text-[#384cff] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.22)]'
                           : 'border-transparent text-[#585860] hover:bg-[#ebebef] hover:text-[#111113]'
                       }`}
                     >

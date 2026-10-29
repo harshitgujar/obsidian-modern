@@ -178,14 +178,14 @@ export const TabBar: React.FC<TabBarProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer transition-all max-w-[200px] shrink-0 border ${
                 isActive
-                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(56,76,255,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-[rgba(56,76,255,0.25)]'
                   : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-[#e4e4e9]'
               }`}
             >
               {isCanvas ? (
-                <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-[#18181b]" />
+                <LayoutGrid className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff]' : 'text-[#585860]'}`} />
               ) : (
-                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#18181b]' : 'opacity-60'}`} />
+                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff]' : 'opacity-60'}`} />
               )}
 
               <span className="truncate">
@@ -193,7 +193,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               </span>
 
               {tab.isPinned && (
-                <Pin className="w-2.5 h-2.5 text-[#18181b] fill-[#18181b]/30 shrink-0" />
+                <Pin className="w-2.5 h-2.5 text-[#384cff] fill-[#384cff]/30 shrink-0" />
               )}
 
               {tabs.length > 1 && !tab.isPinned && (

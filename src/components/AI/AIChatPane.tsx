@@ -422,7 +422,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
       <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-black/[0.06] bg-white shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex items-center gap-1.5 font-semibold text-[#111113]">
-            <Sparkles className="w-3.5 h-3.5 text-zinc-700" />
+            <Sparkles className="w-3.5 h-3.5 text-[#384cff]" />
             <span>Vault Copilot</span>
           </div>
 
@@ -492,7 +492,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             onClick={() => setSearchScope('vault')}
             className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
               searchScope === 'vault'
-                ? 'bg-white text-[#111113] shadow-xs'
+                ? 'bg-white text-[#384cff] shadow-xs border border-[rgba(56,76,255,0.2)]'
                 : 'text-[#585860] hover:text-[#111113]'
             }`}
           >
@@ -503,7 +503,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
               onClick={() => setSearchScope('activeNote')}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
                 searchScope === 'activeNote'
-                  ? 'bg-white text-[#111113] shadow-xs'
+                  ? 'bg-white text-[#384cff] shadow-xs border border-[rgba(56,76,255,0.2)]'
                   : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
