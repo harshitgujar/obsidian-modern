@@ -88,7 +88,6 @@ export const App: React.FC = () => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
   const [inspectorActiveTab, setInspectorActiveTab] = useState<InspectorTab>('backlinks');
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const [isGraphViewActive, setIsGraphViewActive] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
@@ -345,6 +344,14 @@ export const App: React.FC = () => {
 
   const activeFilePath = activeTab?.filePath || '';
 
+  const isGraphPath = useCallback((path?: string) => {
+    return path === 'graph://main' || path === 'Interactive Graph' || path === '__graph__';
+  }, []);
+
+  const isGraphViewActive = useMemo(() => {
+    return Boolean(isGraphPath(activeFilePath));
+  }, [activeFilePath, isGraphPath]);
+
   // Maintain true file navigation history stack
   useEffect(() => {
     if (!activeFilePath) return;
@@ -425,7 +432,6 @@ export const App: React.FC = () => {
     const file = vault.getFileByPath(filePathOrName) || vault.getFileByName(filePathOrName);
     if (!file) return;
 
-    setIsGraphViewActive(false);
     vault.recordRecentNote(file.path);
     setRecentPaths(vault.getRecentNotePaths());
 
@@ -595,16 +601,13 @@ export const App: React.FC = () => {
   }, [handleCreateFile]);
 
   const handleToggleAIChat = useCallback(() => {
-    if (isGraphViewActive) {
-      setIsGraphViewActive(false);
-    }
     if (isInspectorOpen && inspectorActiveTab === 'aiChat') {
       setIsInspectorOpen(false);
     } else {
       setIsInspectorOpen(true);
       setInspectorActiveTab('aiChat');
     }
-  }, [isGraphViewActive, isInspectorOpen, inspectorActiveTab]);
+  }, [isInspectorOpen, inspectorActiveTab]);
 
   // Wikilink navigation: opens note or creates it on disk if not found
   const handleNavigateLink = useCallback(async (targetTitle: string) => {
@@ -889,7 +892,6 @@ export const App: React.FC = () => {
 
   const handleSelectTabInPane = (paneId: string, tabId: string) => {
     setActivePaneId(paneId);
-    setIsGraphViewActive(false);
     setPanes(prev =>
       prev.map(p => (p.id === paneId ? { ...p, activeTabId: tabId } : p))
     );
@@ -917,11 +919,61 @@ export const App: React.FC = () => {
     });
   }, [activePaneId]);
 
-  const handleNewTabInPane = (paneId: string) => {
-    const defaultFile = activeFilePath || files[0]?.path || '';
+  const handleOpenGraphView = useCallback((targetPaneId?: string) => {
+    const pId = targetPaneId || activePaneId;
+    setPanes(prevPanes =>
+      prevPanes.map(pane => {
+        if (pane.id !== pId) return pane;
+        const existingGraphTab = pane.tabs.find(t => isGraphPath(t.filePath));
+        if (existingGraphTab) {
+          return { ...pane, activeTabId: existingGraphTab.id };
+        }
+        const newTab: TabItem = {
+          id: `tab-graph-${Date.now()}`,
+          filePath: 'graph://main',
+          viewMode: 'live',
+          isPinned: false
+        };
+        return {
+          ...pane,
+          tabs: [...pane.tabs, newTab],
+          activeTabId: newTab.id
+        };
+      })
+    );
+    setActivePaneId(pId);
+  }, [activePaneId, isGraphPath]);
+
+  const handleToggleGraphView = useCallback(() => {
+    const currentPane = panes.find(p => p.id === activePaneId);
+    if (currentPane) {
+      const activeTab = currentPane.tabs.find(t => t.id === currentPane.activeTabId);
+      if (activeTab && isGraphPath(activeTab.filePath)) {
+        const otherTab = currentPane.tabs.find(t => !isGraphPath(t.filePath));
+        if (otherTab) {
+          handleSelectTabInPane(currentPane.id, otherTab.id);
+          return;
+        }
+      }
+    }
+    handleOpenGraphView(activePaneId);
+  }, [panes, activePaneId, handleOpenGraphView, isGraphPath]);
+
+  const handleNewTabInPane = async (paneId: string) => {
+    const defaultFile = (activeFilePath && !isGraphPath(activeFilePath))
+      ? activeFilePath
+      : (files.find(f => f.extension === 'md')?.path || '');
+
+    let targetPath = defaultFile;
+    if (!targetPath) {
+      const newNote = await vault.createNote('Untitled');
+      syncFromVaultManager();
+      targetPath = newNote.path;
+    }
+
     const newTab: TabItem = {
-      id: `tab-${Date.now()}`,
-      filePath: defaultFile,
+      id: `tab-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+      filePath: targetPath,
       viewMode: appConfig.defaultViewMode || 'live'
     };
     setPanes(prev =>
@@ -931,9 +983,6 @@ export const App: React.FC = () => {
   };
 
   const handleOpenCanvasView = useCallback(() => {
-    if (isGraphViewActive) {
-      setIsGraphViewActive(false);
-    }
     setActiveSidebarTab('files');
 
     // 1. If currently viewing a canvas file, do nothing
@@ -962,16 +1011,13 @@ export const App: React.FC = () => {
 
     // 4. Otherwise create a new canvas file
     handleCreateFile('', 'canvas');
-  }, [isGraphViewActive, activeFile, panes, files, handleSelectFile, handleCreateFile]);
+  }, [activeFile, panes, files, handleSelectFile, handleCreateFile]);
 
   const handleOpenFilesView = useCallback(() => {
-    if (isGraphViewActive) {
-      setIsGraphViewActive(false);
-    }
     setActiveSidebarTab('files');
 
-    // If current file is a canvas, switch to the first or active markdown note
-    if (activeFile && activeFile.extension === 'canvas') {
+    // If current file is a canvas or graph, switch to the first or active markdown note
+    if (activeFile?.extension === 'canvas' || isGraphViewActive) {
       if (activePane) {
         const mdTab = activePane.tabs.find(t => {
           const f = files.find(file => file.path === t.filePath);
@@ -987,7 +1033,7 @@ export const App: React.FC = () => {
         handleSelectFile(firstMd.path);
       }
     }
-  }, [isGraphViewActive, activeFile, activePane, files, handleSelectFile]);
+  }, [activeFile, isGraphViewActive, activePane, files, handleSelectFile]);
 
   const handleViewModeChangeInPane = (paneId: string, mode: EditorViewMode) => {
     setPanes(prev =>
@@ -1142,7 +1188,7 @@ export const App: React.FC = () => {
       title: 'Graph view: Open graph view',
       category: 'Graph view',
       shortcut: 'Ctrl+G',
-      action: () => setIsGraphViewActive(prev => !prev)
+      action: () => handleToggleGraphView()
     },
     {
       id: 'file-explorer:new-file',
@@ -1342,11 +1388,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isGraphViewActive) {
-          e.preventDefault();
-          setIsGraphViewActive(false);
-          return;
-        } else if (isPresentationOpen) {
+        if (isPresentationOpen) {
           e.preventDefault();
           setIsPresentationOpen(false);
           return;
@@ -1523,27 +1565,15 @@ export const App: React.FC = () => {
           onOpenCanvasView={handleOpenCanvasView}
           onOpenFilesView={handleOpenFilesView}
           onSelectTab={tab => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             setActiveSidebarTab(tab);
           }}
           onSelectFile={filePath => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleSelectFile(filePath);
           }}
           onSplitFile={filePath => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleSplitPaneRight(filePath);
           }}
           onCreateFile={(folder, ext) => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleCreateFile(folder, ext);
           }}
           onCreateFolder={handleCreateFolder}
@@ -1552,28 +1582,19 @@ export const App: React.FC = () => {
           onDuplicateFile={handleDuplicateFile}
           onToggleBookmark={handleToggleBookmark}
           onOpenDailyNote={() => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleOpenDailyNote();
           }}
           onOpenRandomNote={() => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleOpenRandomNote();
           }}
           onCreateZkNote={() => {
-            if (isGraphViewActive) {
-              setIsGraphViewActive(false);
-            }
             handleCreateZkNote();
           }}
           onToggleAudioRecording={handleToggleAudioRecording}
           onOpenVaultManager={() => setIsVaultModalOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenFileRecovery={() => setIsRecoveryModalOpen(true)}
-          onToggleGraphView={() => setIsGraphViewActive(prev => !prev)}
+          onToggleGraphView={handleToggleGraphView}
           onExportZip={() => vault.exportAsZip()}
           onExportPdf={filePath => {
             const f = vault.getFileByPath(filePath);
@@ -1596,73 +1617,24 @@ export const App: React.FC = () => {
 
       {/* 2. Main Center Workspace (Supports Split Panes) */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        {/* Main Workspace Body: Fullscreen Graph OR Split Panes */}
+        {/* Main Workspace Body: Split Panes & Tabs */}
         <div className="flex-1 flex overflow-hidden relative">
-          {isGraphViewActive ? (
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
-              <TabBar
-                tabs={[{ id: 'tab-graph', filePath: 'Interactive Graph', isPinned: true, viewMode: 'live' }]}
-                activeTabId="tab-graph"
-                files={files}
-                isPrimary={true}
-                isSidebarOpen={isSidebarOpen}
-                isInspectorOpen={false}
-                isZenMode={isZenMode}
-                canGoBack={canGoBack}
-                canGoForward={canGoForward}
-                onGoBack={handleGoBack}
-                onGoForward={handleGoForward}
-                onSelectTab={() => setIsGraphViewActive(false)}
-                onCloseTab={() => setIsGraphViewActive(false)}
-                onNewTab={() => {
-                  setIsGraphViewActive(false);
-                  handleNewTabInPane(activePaneId);
-                }}
-                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-                onToggleZenMode={handleToggleZenMode}
-                onOpenQuickSwitcher={() => setIsQuickSwitcherOpen(true)}
-                onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                onToggleGraph={() => setIsGraphViewActive(false)}
-              />
-              <div className="flex-1 overflow-hidden relative">
-                <GraphView
-                  data={graphData}
-                  activeFileId={activeFilePath}
-                  onSelectNode={filePath => {
-                    handleNavigateLink(filePath);
-                    setIsGraphViewActive(false);
-                  }}
-                  isMini={false}
-                  initialSettings={graphConfig}
-                  onSettingsChange={settings => {
-                    setGraphConfig(settings);
-                    vault.saveConfig('graph', settings);
-                  }}
-                  onClose={() => setIsGraphViewActive(false)}
-                  onSplitRight={filePath => {
-                    setIsGraphViewActive(false);
-                    handleSplitPaneRight(filePath);
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            panes.map((pane, idx) => {
-              const currentPaneTab = pane.tabs.find(t => t.id === pane.activeTabId) || pane.tabs[0];
-              const paneFile = files.find(f => f.path === currentPaneTab?.filePath);
-              const paneMeta = paneFile ? graphIndexer.getMetadata(paneFile.path) : undefined;
-              const paneBacklinks = paneFile ? graphIndexer.getBacklinks(paneFile.path) : [];
-              const isPaneActive = pane.id === activePaneId;
+          {panes.map((pane, idx) => {
+            const currentPaneTab = pane.tabs.find(t => t.id === pane.activeTabId) || pane.tabs[0];
+            const isGraphTab = isGraphPath(currentPaneTab?.filePath);
+            const paneFile = files.find(f => f.path === currentPaneTab?.filePath);
+            const paneMeta = paneFile ? graphIndexer.getMetadata(paneFile.path) : undefined;
+            const paneBacklinks = paneFile ? graphIndexer.getBacklinks(paneFile.path) : [];
+            const isPaneActive = pane.id === activePaneId;
 
-              return (
-                <div
-                  key={pane.id}
-                  onClick={() => setActivePaneId(pane.id)}
-                  className={`flex-1 flex flex-col h-full overflow-hidden min-w-0 ${
-                    idx > 0 ? 'border-l border-zinc-800' : ''
-                  } ${panes.length > 1 && isPaneActive ? 'ring-1 ring-inset ring-purple-500/30' : ''}`}
-                >
+            return (
+              <div
+                key={pane.id}
+                onClick={() => setActivePaneId(pane.id)}
+                className={`flex-1 flex flex-col h-full overflow-hidden min-w-0 ${
+                  idx > 0 ? 'border-l border-black/[0.08] dark:border-white/[0.08]' : ''
+                } ${panes.length > 1 && isPaneActive ? 'ring-1 ring-inset ring-[#384cff]/30' : ''}`}
+              >
                   <TabBar
                     tabs={pane.tabs}
                     activeTabId={pane.activeTabId}
@@ -1709,12 +1681,30 @@ export const App: React.FC = () => {
                     onOpenTemplates={() => setIsTemplateModalOpen(true)}
                     onOpenSettings={() => setIsSettingsOpen(true)}
                     onOpenSlides={() => setIsPresentationOpen(true)}
-                    onToggleGraph={() => setIsGraphViewActive(prev => !prev)}
+                    onToggleGraph={handleToggleGraphView}
                   />
 
                   <div className="flex-1 overflow-hidden relative">
-                    {!paneFile ? (
-                      <div className="flex items-center justify-center h-full text-zinc-500 text-sm select-none">
+                    {isGraphTab ? (
+                      <GraphView
+                        data={graphData}
+                        activeFileId={activeFilePath}
+                        onSelectNode={filePath => {
+                          handleSelectFile(filePath, pane.id);
+                        }}
+                        isMini={false}
+                        initialSettings={graphConfig}
+                        onSettingsChange={settings => {
+                          setGraphConfig(settings);
+                          vault.saveConfig('graph', settings);
+                        }}
+                        onClose={() => handleCloseTabInPane(pane.id, currentPaneTab.id)}
+                        onSplitRight={filePath => {
+                          handleSplitPaneRight(filePath || currentPaneTab.filePath);
+                        }}
+                      />
+                    ) : !paneFile ? (
+                      <div className="flex items-center justify-center h-full text-[#8e8e93] dark:text-[#71717a] text-sm select-none">
                         No file open. Press Ctrl+O to open a note or canvas.
                       </div>
                     ) : paneFile.extension === 'canvas' ? (
@@ -1758,7 +1748,7 @@ export const App: React.FC = () => {
                         onDeleteFile={handleDeleteFile}
                         onDuplicateFile={handleDuplicateFile}
                         onRevealInNavigation={handleRevealInNavigation}
-                        onOpenLocalGraph={path => setIsGraphViewActive(true)}
+                        onOpenLocalGraph={path => handleOpenGraphView(pane.id)}
                         onExportPdf={() => {
                           if (paneFile) {
                             setPdfTargetFile(paneFile);
@@ -1771,8 +1761,7 @@ export const App: React.FC = () => {
                   </div>
                 </div>
               );
-            })
-          )}
+            })}
         </div>
       </div>
 

@@ -166,6 +166,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           const file = getFile(tab.filePath);
           const isActive = tab.id === activeTabId;
           const isCanvas = file?.extension === 'canvas';
+          const isGraph = tab.filePath === 'graph://main' || tab.filePath === 'Interactive Graph' || tab.filePath === '__graph__';
 
           return (
             <div
@@ -173,22 +174,24 @@ export const TabBar: React.FC<TabBarProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer transition-all max-w-[200px] shrink-0 border ${
                 isActive
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-[#e4e4e9]'
+                  ? 'bg-white text-[#111113] dark:bg-[#18181b] dark:text-[#f4f4f6] font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-[#e4e4e9] dark:text-[#a1a1aa] dark:hover:text-[#f4f4f6] dark:hover:bg-white/[0.05]'
               }`}
             >
-              {isCanvas ? (
-                <LayoutGrid className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff]' : 'text-[#585860]'}`} />
+              {isGraph ? (
+                <Share2 className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff] dark:text-[#6372ff]' : 'text-[#585860] dark:text-[#a1a1aa]'}`} />
+              ) : isCanvas ? (
+                <LayoutGrid className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff] dark:text-[#6372ff]' : 'text-[#585860] dark:text-[#a1a1aa]'}`} />
               ) : (
-                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff]' : 'opacity-60'}`} />
+                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#384cff] dark:text-[#6372ff]' : 'opacity-60'}`} />
               )}
 
               <span className="truncate">
-                {file ? file.name.replace(/\.md$/, '') : tab.filePath || 'New Tab'}
+                {isGraph ? 'Interactive Graph' : file ? file.name.replace(/\.md$/, '') : tab.filePath || 'New Tab'}
               </span>
 
               {tab.isPinned && (
-                <Pin className="w-2.5 h-2.5 text-[#384cff] fill-[#384cff]/30 shrink-0" />
+                <Pin className="w-2.5 h-2.5 text-[#384cff] dark:text-[#6372ff] fill-[#384cff]/30 shrink-0" />
               )}
 
               {tabs.length > 1 && !tab.isPinned && (
@@ -197,7 +200,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                     e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded-full hover:bg-black/[0.08] text-[#8e8e93] hover:text-[#111113] transition-opacity ml-1"
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded-full hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-[#8e8e93] hover:text-[#111113] dark:hover:text-[#f4f4f6] transition-opacity ml-1 cursor-pointer"
                   title="Close tab"
                 >
                   <X className="w-3 h-3" />
