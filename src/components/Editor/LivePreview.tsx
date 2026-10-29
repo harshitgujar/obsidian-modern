@@ -115,23 +115,23 @@ const QuerySearchBlock: React.FC<QuerySearchBlockProps> = ({ query, allFiles, on
   }, [query, allFiles]);
 
   return (
-    <div className="my-4 rounded-xl border border-purple-500/30 bg-[#16161c] overflow-hidden shadow-xl text-xs font-sans">
-      <div className="flex items-center justify-between px-3.5 py-2 bg-purple-950/25 border-b border-purple-500/20 text-zinc-300">
+    <div className="my-4 rounded-2xl border border-black/[0.07] bg-white overflow-hidden shadow-sm text-xs font-sans">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#f4f4f6] border-b border-black/[0.06] text-[#111113]">
         <div className="flex items-center gap-2">
-          <Search className="w-3.5 h-3.5 text-purple-400" />
-          <span className="font-semibold text-purple-200">Embedded Search</span>
-          <code className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono">
+          <Search className="w-3.5 h-3.5 text-[#18181b]" />
+          <span className="font-semibold text-[#111113]">Embedded Search</span>
+          <code className="text-[10px] px-1.5 py-0.5 rounded bg-black/[0.05] text-[#585860] font-mono">
             {query.trim().slice(0, 30)}
           </code>
         </div>
-        <span className="text-[11px] text-zinc-400 font-mono">
+        <span className="text-[11px] text-[#8e8e93] font-mono">
           {matchingFiles.length} result{matchingFiles.length === 1 ? '' : 's'}
         </span>
       </div>
 
       <div className="p-2 max-h-64 overflow-y-auto space-y-1">
         {matchingFiles.length === 0 ? (
-          <div className="p-3 text-zinc-500 text-center italic text-[11px]">
+          <div className="p-3 text-[#8e8e93] text-center italic text-[11px]">
             No matching files found for query.
           </div>
         ) : (
@@ -139,20 +139,20 @@ const QuerySearchBlock: React.FC<QuerySearchBlockProps> = ({ query, allFiles, on
             <div
               key={f.path}
               onClick={() => onNavigateLink(f.path)}
-              className="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-800/80 cursor-pointer text-zinc-300 hover:text-white transition-colors group"
+              className="flex items-center justify-between p-2 rounded-xl hover:bg-[#f4f4f6] cursor-pointer text-[#111113] transition-colors group"
             >
               <div className="flex items-center gap-2 truncate">
                 {f.extension === 'canvas' ? (
-                  <LayoutDashboard className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <LayoutDashboard className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                 ) : (
-                  <FileText className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <FileText className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                 )}
                 <span className="font-medium text-xs truncate">{f.name.replace(/\.md$/, '')}</span>
                 {f.folder && (
-                  <span className="text-[10px] text-zinc-500 font-mono truncate">({f.folder})</span>
+                  <span className="text-[10px] text-[#8e8e93] font-mono truncate">({f.folder})</span>
                 )}
               </div>
-              <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-purple-300 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ExternalLink className="w-3 h-3 text-[#8e8e93] group-hover:text-[#111113] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           ))
         )}
@@ -412,10 +412,10 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             <div
               key={`audio-${match.index}`}
               onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
-              className="my-3 p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center gap-3 cursor-context-menu hover:border-purple-500/40 transition-colors"
+              className="my-3 p-3 rounded-2xl skeuo-card flex items-center gap-3 cursor-context-menu"
             >
-              <Volume2 className="w-4 h-4 text-purple-400 shrink-0" />
-              <span className="text-xs text-zinc-300 font-mono truncate">{targetPath}</span>
+              <Volume2 className="w-4 h-4 text-[#18181b] shrink-0" />
+              <span className="text-xs text-[#111113] font-mono truncate">{targetPath}</span>
               <audio controls src={`/api/vault/raw?path=${encodeURIComponent(audioPath)}`} className="h-8 flex-1" />
             </div>
           );
@@ -427,11 +427,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             <div
               key={`video-${match.index}`}
               onContextMenu={e => handleMediaContextMenu(e, embeddedFile, fullMatch)}
-              className="my-3 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-xl cursor-context-menu hover:border-purple-500/40 transition-colors"
+              className="my-3 rounded-2xl overflow-hidden border border-black/[0.07] bg-white shadow-sm cursor-context-menu"
             >
-              <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-xs text-zinc-400">
+              <div className="flex items-center justify-between px-3 py-1.5 bg-[#f4f4f6] border-b border-black/[0.06] text-xs text-[#585860]">
                 <span className="flex items-center gap-1.5 font-mono text-[11px] truncate">
-                  <Film className="w-3.5 h-3.5 text-purple-400" />
+                  <Film className="w-3.5 h-3.5 text-[#18181b]" />
                   {targetPath}
                 </span>
               </div>
@@ -664,7 +664,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               }
             }}
             onMouseLeave={() => setHoverPreview(null)}
-            className="wikilink cm-wikilink-pill inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle border-none"
+            className="wikilink cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[12px] font-medium cursor-pointer transition-all border border-black/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] select-none align-middle"
             title={targetFile ? `Open note: ${targetFile.path} (Right-click for options)` : `Create note: ${target}`}
           >
             <FileText className="w-3 h-3 inline-block opacity-70" />

@@ -61,18 +61,18 @@ export class GraphIndexer {
     const backlinkCountMap: Map<string, number> = new Map();
 
     const defaultFolderColors: Record<string, string> = {
-      '': '#8b5cf6',
-      'Formatting': '#a855f7',
-      'Guides': '#10b981',
-      'Adventurer': '#f59e0b',
-      'Templates': '#06b6d4',
-      'Daily': '#ec4899',
-      'Projects': '#3b82f6'
+      '': '#18181b',
+      'Formatting': '#3f3f46',
+      'Guides': '#52525b',
+      'Adventurer': '#71717a',
+      'Templates': '#27272a',
+      'Daily': '#09090b',
+      'Projects': '#18181b'
     };
 
     // Helper to compute node color from color groups or folder
     const computeFileColor = (file: VaultFile, meta?: NoteMetadata): string => {
-      if (file.extension === 'canvas') return '#f97316';
+      if (file.extension === 'canvas') return '#52525b';
       if (colorGroups && colorGroups.length > 0) {
         for (const cg of colorGroups) {
           if (!cg.query) continue;
@@ -97,7 +97,7 @@ export class GraphIndexer {
           }
         }
       }
-      return defaultFolderColors[file.folder] || '#8b5cf6';
+      return defaultFolderColors[file.folder] || '#18181b';
     };
 
     // Add note files as nodes

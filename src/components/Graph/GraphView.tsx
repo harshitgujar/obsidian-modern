@@ -570,32 +570,26 @@ export const GraphView: React.FC<GraphViewProps> = ({
         ctx.lineTo(currentTargetX, currentTargetY);
 
         if (isConnectingNow) {
-          // Glowing electric purple connection line actively forming
-          ctx.strokeStyle = '#c084fc';
-          ctx.lineWidth = baseEdgeWidth * 2.8;
+          // Minimal tactile connection line actively forming
+          ctx.strokeStyle = '#18181b';
+          ctx.lineWidth = baseEdgeWidth * 2.2;
           ctx.globalAlpha = 1.0;
-          ctx.shadowColor = '#a855f7';
-          ctx.shadowBlur = 12 / transform.k;
           ctx.stroke();
-          ctx.shadowBlur = 0;
 
-          // Electric spark bead traveling along the line to target node
+          // Bead traveling along the line to target node
           ctx.beginPath();
           ctx.arc(currentTargetX, currentTargetY, 3.5 / transform.k, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = '#e9d5ff';
-          ctx.shadowBlur = 8 / transform.k;
+          ctx.fillStyle = '#18181b';
           ctx.fill();
-          ctx.shadowBlur = 0;
         } else if (isSourceOfHovered) {
-          // Outgoing edge: vibrant purple
-          ctx.strokeStyle = '#a855f7';
+          // Outgoing edge: carbon
+          ctx.strokeStyle = '#18181b';
           ctx.lineWidth = baseEdgeWidth * 2.2;
           ctx.globalAlpha = 0.95;
           ctx.stroke();
         } else if (isTargetOfHovered) {
-          // Incoming edge: cyan
-          ctx.strokeStyle = '#38bdf8';
+          // Incoming edge: slate
+          ctx.strokeStyle = '#52525b';
           ctx.lineWidth = baseEdgeWidth * 2.2;
           ctx.globalAlpha = 0.95;
           ctx.stroke();
@@ -638,9 +632,9 @@ export const GraphView: React.FC<GraphViewProps> = ({
             );
             ctx.closePath();
             ctx.fillStyle = isSourceOfHovered
-              ? '#a855f7'
+              ? '#18181b'
               : isTargetOfHovered
-              ? '#38bdf8'
+              ? '#585860'
               : activeOrHovered
               ? (isLight ? 'rgba(200, 200, 210, 0.2)' : 'rgba(113, 113, 122, 0.1)')
               : (isLight ? 'rgba(100, 100, 115, 0.4)' : 'rgba(161, 161, 170, 0.45)');
@@ -668,7 +662,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           if (bloomAge < 1.0) {
             ctx.beginPath();
             ctx.arc(node.x, node.y, baseRadius + (22 * bloomAge) / transform.k, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(192, 132, 252, ${Math.max(0, 1 - bloomAge)})`;
+            ctx.strokeStyle = `rgba(24, 24, 27, ${Math.max(0, 1 - bloomAge)})`;
             ctx.lineWidth = 2 / transform.k;
             ctx.stroke();
           } else {
@@ -676,16 +670,16 @@ export const GraphView: React.FC<GraphViewProps> = ({
           }
         }
 
-        // Double-ring glowing aura for focused or hovered node
+        // Double-ring highlight aura for focused or hovered node
         if (isTarget) {
           ctx.beginPath();
-          ctx.arc(node.x, node.y, baseRadius + 9, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
+          ctx.arc(node.x, node.y, baseRadius + 6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
           ctx.fill();
 
           ctx.beginPath();
           ctx.arc(node.x, node.y, baseRadius + 3, 0, Math.PI * 2);
-          ctx.strokeStyle = '#c084fc';
+          ctx.strokeStyle = '#18181b';
           ctx.lineWidth = 1.8 / transform.k;
           ctx.stroke();
         }
@@ -703,7 +697,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           ctx.arc(node.x, node.y, baseRadius, 0, Math.PI * 2);
         }
 
-        ctx.fillStyle = node.color || '#8b5cf6';
+        ctx.fillStyle = node.color || '#18181b';
         ctx.fill();
 
         // Node border
@@ -995,12 +989,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
               value={settings.search}
               onChange={e => updateSetting('search', e.target.value)}
               placeholder="Search graph..."
-              className="graph-control-input bg-zinc-900/90 text-xs text-zinc-200 pl-8 pr-6 py-1.5 rounded-lg border border-zinc-700/60 focus:border-purple-500 focus:outline-none w-48 backdrop-blur-md shadow-lg"
+              className="graph-control-input bg-white text-xs text-[#111113] pl-8 pr-6 py-1.5 rounded-xl border border-black/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] focus:outline-none focus:border-zinc-400 w-48"
             />
             {settings.search && (
               <button
                 onClick={() => updateSetting('search', '')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -1011,25 +1005,25 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={handleToggleTimelapse}
             title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
-            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border-none backdrop-blur-md shadow-lg transition-all ${
+            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
               isTimelapseRunning
-                ? 'bg-[#705dcf] text-white'
-                : 'bg-[#202028] hover:bg-[#282834] text-zinc-300 hover:text-white'
+                ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                : 'bg-white hover:bg-[#f4f4f6] text-[#111113] border-black/[0.08] shadow-xs'
             }`}
           >
             {isTimelapseRunning ? (
               <>
-                <Pause className="w-3.5 h-3.5 text-purple-300 fill-purple-300" />
+                <Pause className="w-3.5 h-3.5 text-white fill-white" />
                 <span>Pause ({animProgress}/{filteredData.nodes.length})</span>
               </>
             ) : animProgress < filteredData.nodes.length && animProgress > 1 ? (
               <>
-                <Play className="w-3.5 h-3.5 text-purple-400 fill-purple-400" />
+                <Play className="w-3.5 h-3.5 text-zinc-700 fill-zinc-700" />
                 <span>Resume ({animProgress}/{filteredData.nodes.length})</span>
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 text-purple-400 fill-purple-400" />
+                <Play className="w-3.5 h-3.5 text-zinc-700 fill-zinc-700" />
                 <span>{animProgress >= filteredData.nodes.length && animProgress > 1 ? 'Replay' : 'Animate'}</span>
               </>
             )}
@@ -1040,7 +1034,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={handleResetTimelapse}
               title="Show Full Graph"
-              className="graph-control-btn p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
+              className="graph-control-btn p-1.5 rounded-xl bg-white hover:bg-[#f4f4f6] text-[#585860] hover:text-[#111113] border border-black/[0.08] shadow-xs text-xs transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
@@ -1050,7 +1044,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={handleReheatSimulation}
             title="Reheat Simulation Forces"
-            className="graph-control-btn p-1.5 rounded-lg bg-zinc-900/85 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-700/60 backdrop-blur-md text-xs transition-colors"
+            className="graph-control-btn p-1.5 rounded-xl bg-white hover:bg-[#f4f4f6] text-[#585860] hover:text-[#111113] border border-black/[0.08] shadow-xs text-xs transition-colors"
           >
             <RotateCw className="w-3.5 h-3.5" />
           </button>
@@ -1064,7 +1058,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={() => onSplitRight()}
               title="Open Note to the Right (Split)"
-              className="graph-control-btn p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
+              className="graph-control-btn p-2 rounded-xl bg-white text-[#585860] border border-black/[0.08] hover:text-[#111113] hover:bg-[#f4f4f6] shadow-xs transition-all"
             >
               <Columns className="w-4 h-4" />
             </button>
@@ -1073,10 +1067,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={() => setShowControls(prev => !prev)}
             title="Graph Settings"
-            className={`graph-control-btn p-2 rounded-lg border-none backdrop-blur-md shadow-xl transition-all ${
+            className={`graph-control-btn p-2 rounded-xl border transition-all ${
               showControls
-                ? 'bg-[#705dcf] text-white shadow-sm'
-                : 'bg-[#202028] text-zinc-400 hover:text-white hover:bg-[#282834]'
+                ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                : 'bg-white text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] border-black/[0.08] shadow-xs'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -1086,7 +1080,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={onClose}
               title="Close Graph (Esc)"
-              className="graph-control-btn p-2 rounded-lg bg-zinc-900/85 text-zinc-400 border border-zinc-700/60 hover:text-zinc-100 hover:bg-zinc-800 backdrop-blur-md shadow-lg transition-all"
+              className="graph-control-btn p-2 rounded-xl bg-white text-[#585860] border border-black/[0.08] hover:text-[#111113] hover:bg-[#f4f4f6] shadow-xs transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1095,11 +1089,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Real Obsidian .graph-controls Floating Drawer */}
+      {/* Real Obsidian .graph-controls Floating Drawer */}
       {showControls && !isMini && (
-        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/80 rounded-2xl shadow-2xl p-3.5 text-xs text-zinc-200 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-800 font-semibold text-zinc-100">
+        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-3.5 text-xs text-[#111113] space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] font-semibold text-[#111113]">
             <span>Graph Settings</span>
-            <span className="text-[10px] text-zinc-500 font-normal">
+            <span className="text-[10px] text-[#8e8e93] font-normal">
               {filteredData.nodes.length} nodes · {filteredData.edges.length} links
             </span>
           </div>
@@ -1108,51 +1103,51 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <div className="space-y-2">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, filters: !s.filters }))}
-              className="flex items-center justify-between font-semibold text-zinc-300 cursor-pointer hover:text-white"
+              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
             >
-              <span className="uppercase tracking-wider text-[10px] text-zinc-400">Filters</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Filters</span>
               {collapsedSections.filters ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.filters && (
               <div className="space-y-2 pt-1 pl-1">
-                <label className="flex items-center justify-between cursor-pointer text-zinc-300">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
                   <span>Tags</span>
                   <input
                     type="checkbox"
                     checked={settings.showTags}
                     onChange={e => updateSetting('showTags', e.target.checked)}
-                    className="accent-purple-500 w-3.5 h-3.5"
+                    className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-zinc-300">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
                   <span>Attachments</span>
                   <input
                     type="checkbox"
                     checked={settings.showAttachments}
                     onChange={e => updateSetting('showAttachments', e.target.checked)}
-                    className="accent-purple-500 w-3.5 h-3.5"
+                    className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-zinc-300">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
                   <span>Existing files only</span>
                   <input
                     type="checkbox"
                     checked={settings.hideUnresolved}
                     onChange={e => updateSetting('hideUnresolved', e.target.checked)}
-                    className="accent-purple-500 w-3.5 h-3.5"
+                    className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-zinc-300">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
                   <span>Orphans</span>
                   <input
                     type="checkbox"
                     checked={settings.showOrphans}
                     onChange={e => updateSetting('showOrphans', e.target.checked)}
-                    className="accent-purple-500 w-3.5 h-3.5"
+                    className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
               </div>
@@ -1160,26 +1155,26 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 2: Groups */}
-          <div className="space-y-2 border-t border-zinc-800/80 pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, groups: !s.groups }))}
-              className="flex items-center justify-between font-semibold text-zinc-300 cursor-pointer hover:text-white"
+              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
             >
-              <span className="uppercase tracking-wider text-[10px] text-zinc-400">Groups</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Groups</span>
               {collapsedSections.groups ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.groups && (
               <div className="space-y-2 pt-1 pl-1">
                 {settings.colorGroups.map((group, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-1.5 rounded bg-zinc-950/60 border border-zinc-800">
+                  <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-[#f8f8fa] border border-black/[0.06]">
                     <div className="flex items-center gap-2 truncate">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
-                      <span className="truncate text-[11px] font-mono text-zinc-300">{group.query}</span>
+                      <span className="truncate text-[11px] font-mono text-[#111113]">{group.query}</span>
                     </div>
                     <button
                       onClick={() => handleRemoveGroup(idx)}
-                      className="text-zinc-500 hover:text-rose-400 p-0.5"
+                      className="text-[#8e8e93] hover:text-rose-600 p-0.5"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -1194,30 +1189,30 @@ export const GraphView: React.FC<GraphViewProps> = ({
                       onChange={e => setNewGroupQuery(e.target.value)}
                       placeholder="path:Guides or tag:daily"
                       autoFocus
-                      className="w-full bg-zinc-950 border border-purple-500 rounded px-2 py-1 text-xs text-zinc-100 font-mono"
+                      className="w-full bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2 py-1 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
-                        {['#a855f7', '#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#3b82f6'].map(c => (
+                        {['#18181b', '#52525b', '#71717a', '#a1a1aa', '#10b981', '#f59e0b'].map(c => (
                           <button
                             key={c}
                             type="button"
                             onClick={() => setNewGroupColor(c)}
-                            className={`w-4 h-4 rounded-full border ${newGroupColor === c ? 'border-white scale-110' : 'border-transparent'}`}
+                            className={`w-4 h-4 rounded-full border ${newGroupColor === c ? 'border-[#18181b] scale-110' : 'border-transparent'}`}
                             style={{ backgroundColor: c }}
                           />
                         ))}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button type="submit" className="px-2 py-0.5 rounded bg-purple-600 text-white text-[11px]">Add</button>
-                        <button type="button" onClick={() => setIsAddingGroup(false)} className="text-zinc-500 text-[11px]">✕</button>
+                        <button type="submit" className="px-2.5 py-0.5 rounded-lg skeuo-btn-dark text-white text-[11px]">Add</button>
+                        <button type="button" onClick={() => setIsAddingGroup(false)} className="text-[#8e8e93] text-[11px]">✕</button>
                       </div>
                     </div>
                   </form>
                 ) : (
                   <button
                     onClick={() => setIsAddingGroup(true)}
-                    className="w-full py-1 rounded bg-zinc-800/60 hover:bg-zinc-800 text-purple-300 flex items-center justify-center gap-1 text-[11px]"
+                    className="w-full py-1.5 rounded-lg skeuo-btn text-[#111113] flex items-center justify-center gap-1 text-[11px] border border-black/[0.08]"
                   >
                     <Plus className="w-3 h-3" />
                     <span>New group</span>
@@ -1228,29 +1223,29 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 3: Display */}
-          <div className="space-y-2 border-t border-zinc-800/80 pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, display: !s.display }))}
-              className="flex items-center justify-between font-semibold text-zinc-300 cursor-pointer hover:text-white"
+              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
             >
-              <span className="uppercase tracking-wider text-[10px] text-zinc-400">Display</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Display</span>
               {collapsedSections.display ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.display && (
               <div className="space-y-3 pt-1 pl-1">
-                <label className="flex items-center justify-between cursor-pointer text-zinc-300">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
                   <span>Arrows</span>
                   <input
                     type="checkbox"
                     checked={settings.showArrow}
                     onChange={e => updateSetting('showArrow', e.target.checked)}
-                    className="accent-purple-500 w-3.5 h-3.5"
+                    className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Text fade threshold</span>
                     <span>{settings.textFadeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1261,12 +1256,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.textFadeMultiplier}
                     onChange={e => updateSetting('textFadeMultiplier', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Node size</span>
                     <span>{settings.nodeSizeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1277,12 +1272,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.nodeSizeMultiplier}
                     onChange={e => updateSetting('nodeSizeMultiplier', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Link thickness</span>
                     <span>{settings.lineSizeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1293,7 +1288,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.lineSizeMultiplier}
                     onChange={e => updateSetting('lineSizeMultiplier', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
               </div>
@@ -1301,19 +1296,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 4: Forces */}
-          <div className="space-y-2 border-t border-zinc-800/80 pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, forces: !s.forces }))}
-              className="flex items-center justify-between font-semibold text-zinc-300 cursor-pointer hover:text-white"
+              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
             >
-              <span className="uppercase tracking-wider text-[10px] text-zinc-400">Forces</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Forces</span>
               {collapsedSections.forces ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.forces && (
               <div className="space-y-3 pt-1 pl-1">
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Center force</span>
                     <span>{(settings.centerStrength * 100).toFixed(1)}%</span>
                   </div>
@@ -1324,12 +1319,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.005"
                     value={settings.centerStrength}
                     onChange={e => updateSetting('centerStrength', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Repel force</span>
                     <span>{settings.repelStrength}</span>
                   </div>
@@ -1340,12 +1335,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="50"
                     value={settings.repelStrength}
                     onChange={e => updateSetting('repelStrength', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Link force</span>
                     <span>{settings.linkStrength.toFixed(1)}</span>
                   </div>
@@ -1356,12 +1351,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.linkStrength}
                     onChange={e => updateSetting('linkStrength', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-zinc-400 text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
                     <span>Link distance</span>
                     <span>{settings.linkDistance}px</span>
                   </div>
@@ -1372,13 +1367,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="10"
                     value={settings.linkDistance}
                     onChange={e => updateSetting('linkDistance', Number(e.target.value))}
-                    className="w-full accent-purple-500"
+                    className="w-full accent-zinc-900"
                   />
                 </div>
 
                 <button
                   onClick={() => setSettings(DEFAULT_GRAPH_SETTINGS)}
-                  className="w-full py-1 text-center rounded bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-[10px] mt-1"
+                  className="w-full py-1 text-center rounded-lg skeuo-btn text-[#585860] hover:text-[#111113] text-[10px] mt-1 border border-black/[0.08]"
                 >
                   Restore default forces
                 </button>
@@ -1391,36 +1386,36 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Sleek Obsidian Hover Tooltip Card */}
       {hoverInfo && !isMini && (
         <div
-          className="fixed z-40 pointer-events-none bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl p-3 text-xs text-zinc-200 animate-in fade-in duration-75 space-y-1"
+          className="fixed z-40 pointer-events-none bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] p-3 text-xs text-[#111113] animate-in fade-in duration-75 space-y-1"
           style={{
             left: `${Math.min(window.innerWidth - 240, hoverInfo.clientX + 14)}px`,
             top: `${Math.min(window.innerHeight - 150, hoverInfo.clientY + 14)}px`
           }}
         >
-          <div className="flex items-center gap-1.5 font-semibold text-zinc-100">
+          <div className="flex items-center gap-1.5 font-semibold text-[#111113]">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: hoverInfo.node.color }} />
             <span className="truncate max-w-[180px]">{hoverInfo.node.label.replace(/\.md$/, '')}</span>
           </div>
           {hoverInfo.node.path && (
-            <div className="text-[10px] text-zinc-500 font-mono truncate">
+            <div className="text-[10px] text-[#8e8e93] font-mono truncate">
               {hoverInfo.node.path}
             </div>
           )}
-          <div className="flex items-center gap-2 pt-1 border-t border-zinc-800 text-[11px]">
-            <span className="text-purple-400 font-medium">{hoverInfo.outCount} outgoing</span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-sky-400 font-medium">{hoverInfo.inCount} incoming</span>
+          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06] text-[11px]">
+            <span className="text-[#111113] font-medium">{hoverInfo.outCount} outgoing</span>
+            <span className="text-[#8e8e93]">·</span>
+            <span className="text-[#585860] font-medium">{hoverInfo.inCount} incoming</span>
           </div>
           {hoverInfo.node.tags && hoverInfo.node.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-0.5">
               {hoverInfo.node.tags.map(t => (
-                <span key={t} className="text-[9px] bg-purple-950/60 text-purple-300 border border-purple-800/40 px-1 rounded">
+                <span key={t} className="text-[9px] bg-[#ebebef] text-[#1c1c1e] border border-black/[0.06] px-1.5 py-0.5 rounded-full font-medium">
                   #{t}
                 </span>
               ))}
             </div>
           )}
-          <div className="text-[9px] text-zinc-500 italic pt-0.5">
+          <div className="text-[9px] text-[#8e8e93] italic pt-0.5">
             Click to open · Ctrl+Click to split
           </div>
         </div>
@@ -1428,16 +1423,16 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
       {/* Local Graph Depth / Jumps Slider in Mini Mode */}
       {isMini && (
-        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-zinc-900/90 border border-zinc-700/60 rounded px-2 py-0.5 text-[10px] text-zinc-400">
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-xl px-2 py-0.5 text-[10px] text-[#585860] shadow-xs">
           <span>Depth:</span>
           {[1, 2, 3].map(j => (
             <button
               key={j}
               onClick={() => updateSetting('localJumps', j)}
-              className={`px-1 rounded font-bold transition-colors ${
+              className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
                 (settings.localJumps || 1) === j
-                  ? 'bg-purple-600 text-white'
-                  : 'hover:text-white'
+                  ? 'bg-[#18181b] text-white shadow-xs'
+                  : 'hover:text-[#111113]'
               }`}
             >
               {j}

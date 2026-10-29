@@ -59,36 +59,49 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/65 backdrop-blur-2xl z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-150"
+      className="fixed inset-0 bg-black/25 backdrop-blur-md z-50 flex items-start justify-center pt-20 select-none animate-in fade-in duration-150"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="glass-panel-elevated w-full max-w-xl rounded-2xl overflow-hidden flex flex-col text-sm shadow-[0_24px_64px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)]"
+        className="skeuo-modal w-full max-w-xl overflow-hidden flex flex-col text-sm text-[#111113] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.14),0_1px_3px_rgba(0,0,0,0.05)] border border-black/[0.08]"
       >
-        {/* Input */}
-        <div className="flex items-center px-4 py-3.5 border-b border-white/[0.08] bg-white/[0.03]">
-          <Terminal className="w-4 h-4 text-purple-400 mr-3 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value);
-              setSelectedIndex(0);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a command..."
-            className="flex-1 bg-transparent text-white placeholder-zinc-500 focus:outline-none text-base"
-          />
-          <button onClick={onClose} className="text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.08] transition-all">
-            <X className="w-4 h-4" />
-          </button>
+        {/* Input Bar */}
+        <div className="p-3 pb-2 border-b border-black/[0.06] bg-white">
+          <div className="flex items-center px-3.5 py-2 bg-[#f4f4f6] rounded-full border border-black/[0.07] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+            <Terminal className="w-4 h-4 text-[#18181b] mr-2.5 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => {
+                setQuery(e.target.value);
+                setSelectedIndex(0);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a command..."
+              className="flex-1 bg-transparent text-[#111113] placeholder-[#8e8e93] focus:outline-none text-sm"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="text-[#8e8e93] hover:text-[#111113] p-0.5 rounded-full mr-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-[#8e8e93] hover:text-[#111113] p-1 rounded-full hover:bg-black/[0.05] transition-all"
+            >
+              <kbd className="text-[10px] bg-[#ebebef] border border-black/[0.06] px-1.5 py-0.5 rounded-full font-mono">esc</kbd>
+            </button>
+          </div>
         </div>
 
         {/* Results */}
-        <div className="max-h-80 overflow-y-auto p-1.5 space-y-0.5">
+        <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filteredCommands.length === 0 ? (
-            <div className="text-zinc-500 text-center py-6 text-xs">
+            <div className="text-[#8e8e93] text-center py-6 text-xs">
               No matching commands found.
             </div>
           ) : (
@@ -99,15 +112,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   cmd.action();
                   onClose();
                 }}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors border-none ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                   idx === selectedIndex
-                    ? 'bg-[#705dcf] text-white shadow-sm'
-                    : 'text-zinc-300 hover:bg-zinc-800/60'
+                    ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                    : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {cmd.category && (
-                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === selectedIndex ? 'text-white/70' : 'text-zinc-500'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${idx === selectedIndex ? 'text-[#18181b]' : 'text-[#8e8e93]'}`}>
                       {cmd.category}:
                     </span>
                   )}
@@ -116,12 +129,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                 <div className="flex items-center gap-2">
                   {cmd.shortcut && (
-                    <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono border-none ${idx === selectedIndex ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-400'}`}>
+                    <kbd className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${idx === selectedIndex ? 'bg-white border-black/[0.08] text-[#111113]' : 'bg-[#ebebef] text-[#585860] border-black/[0.05]'}`}>
                       {cmd.shortcut}
                     </kbd>
                   )}
                   {idx === selectedIndex && (
-                    <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
+                    <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                   )}
                 </div>
               </div>
@@ -130,13 +143,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-zinc-800/80 bg-zinc-950/40 text-[11px] text-zinc-500 flex items-center justify-between">
+        <div className="px-4 py-2.5 border-t border-black/[0.06] bg-[#f8f8fa] text-[11px] text-[#585860] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span><strong>↑↓</strong> navigate</span>
-            <span><strong>↵</strong> execute</span>
-            <span><strong>esc</strong> close</span>
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">↑↓</kbd> navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">↵</kbd> execute
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">esc</kbd> close
+            </span>
           </div>
-          <span>Command Palette</span>
+          <span className="font-medium text-[#111113]">Command Palette</span>
         </div>
       </div>
     </div>

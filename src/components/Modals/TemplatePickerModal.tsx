@@ -39,26 +39,26 @@ export const TemplatePickerModal: React.FC<TemplatePickerModalProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-100"
+      className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-start justify-center pt-24 select-none animate-in fade-in duration-100"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-lg bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden flex flex-col text-sm"
+        className="w-full max-w-lg bg-white border border-black/[0.08] rounded-3xl skeuo-modal overflow-hidden flex flex-col text-sm text-[#111113]"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#161619]">
-          <div className="flex items-center gap-2 text-zinc-200 font-semibold text-xs">
-            <FileCode className="w-4 h-4 text-purple-400" />
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06] bg-[#f8f8fa]">
+          <div className="flex items-center gap-2 text-[#111113] font-semibold text-xs">
+            <FileCode className="w-4 h-4 text-zinc-700" />
             <span>Insert Template ({templateFiles.length} available)</span>
           </div>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
+          <button onClick={onClose} className="p-1 rounded-lg text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="max-h-72 overflow-y-auto p-2 space-y-1">
+        <div className="max-h-80 overflow-y-auto p-2.5 space-y-1.5">
           {templateFiles.length === 0 ? (
-            <div className="text-zinc-500 text-center py-6 text-xs italic">
-              No template files found in folder <code className="text-purple-300">{templateFolder}</code>.<br />
+            <div className="text-[#8e8e93] text-center py-8 text-xs italic">
+              No template files found in folder <code className="text-[#111113] font-semibold">{templateFolder}</code>.<br />
               Create a note in the Templates folder to use as a template.
             </div>
           ) : (
@@ -66,17 +66,17 @@ export const TemplatePickerModal: React.FC<TemplatePickerModalProps> = ({
               <div
                 key={file.path}
                 onClick={() => handleSelect(file)}
-                className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors border-none ${
+                className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-colors border ${
                   idx === selectedIndex
-                    ? 'bg-[#705dcf] text-white shadow-sm'
-                    : 'text-zinc-300 hover:bg-zinc-800/60'
+                    ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                    : 'bg-[#f8f8fa] text-[#111113] border-black/[0.05] hover:bg-[#ececf0]'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  <FileText className={`w-4 h-4 shrink-0 ${idx === selectedIndex ? 'text-white' : 'text-purple-400'}`} />
+                  <FileText className={`w-4 h-4 shrink-0 ${idx === selectedIndex ? 'text-white' : 'text-zinc-600'}`} />
                   <span className="font-medium truncate">{file.name.replace(/\.md$/, '')}</span>
                 </div>
-                <CornerDownLeft className={`w-3.5 h-3.5 shrink-0 ${idx === selectedIndex ? 'text-white/90' : 'text-purple-400'}`} />
+                <CornerDownLeft className={`w-3.5 h-3.5 shrink-0 ${idx === selectedIndex ? 'text-white/80' : 'text-[#8e8e93]'}`} />
               </div>
             ))
           )}

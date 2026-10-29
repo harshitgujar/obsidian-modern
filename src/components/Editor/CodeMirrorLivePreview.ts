@@ -34,11 +34,11 @@ class WikilinkPillWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
     span.className =
-      'cm-wikilink-pill inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[13px] font-medium cursor-pointer transition-all shadow-sm select-none align-middle border-none';
+      'cm-wikilink-pill inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[12px] font-medium cursor-pointer transition-all border border-black/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] select-none align-middle';
     span.title = `Click to open [[${this.target}]]`;
 
     const icon = document.createElement('span');
-    icon.innerHTML = `<svg class="w-3 h-3 text-purple-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+    icon.innerHTML = `<svg class="w-3 h-3 text-[#18181b] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
     span.appendChild(icon);
 
     const label = document.createElement('span');
@@ -288,7 +288,7 @@ class NoteEmbedWidget extends WidgetType {
     );
 
     const body = document.createElement('div');
-    body.className = 'p-3.5 text-xs text-zinc-300 leading-relaxed font-sans space-y-2 border-l-2 border-[#705dcf] bg-white/[0.01]';
+    body.className = 'p-3.5 text-xs text-[#111113] leading-relaxed font-sans space-y-2 border-l-2 border-[#18181b] bg-[#f4f4f6]/50';
 
     if (targetFile) {
       let contentToShow = targetFile.content.replace(/^---[\s\S]*?---\n*/, '').trim();
@@ -336,7 +336,7 @@ class NoteEmbedWidget extends WidgetType {
         if (!trimmed) return '<div class="h-1"></div>';
         if (trimmed.startsWith('#')) return `<div class="font-bold text-zinc-100 mt-1">${escapeHtml(trimmed.replace(/^#+\s*/, ''))}</div>`;
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          return `<div class="flex items-start gap-1.5 pl-1"><span class="text-[#705dcf]">•</span><span>${escapeHtml(trimmed.slice(2))}</span></div>`;
+          return `<div class="flex items-start gap-1.5 pl-1"><span class="text-[#18181b]">•</span><span>${escapeHtml(trimmed.slice(2))}</span></div>`;
         }
         return `<div>${escapeHtml(trimmed)}</div>`;
       }).join('');

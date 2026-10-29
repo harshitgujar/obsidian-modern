@@ -87,7 +87,7 @@ export const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
   const [inspectorActiveTab, setInspectorActiveTab] = useState<InspectorTab>('backlinks');
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isGraphViewActive, setIsGraphViewActive] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
@@ -1482,25 +1482,26 @@ export const App: React.FC = () => {
 
   if (!isVaultLoaded) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#141417] text-zinc-400 gap-4 select-none">
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#f4f4f6] text-[#585860] gap-4 select-none">
         <div className="relative flex items-center justify-center">
-          <div className="absolute w-24 h-24 bg-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
-          <img 
-            src="/logo-symbol.png" 
-            alt="Runagon Logo" 
-            className="w-16 h-16 object-contain drop-shadow-[0_0_20px_rgba(68,87,255,0.6)] animate-pulse" 
-          />
+          <div className="w-20 h-20 rounded-2xl skeuo-card flex items-center justify-center">
+            <img 
+              src="/logo-symbol.png" 
+              alt="Runagon Logo" 
+              className="w-12 h-12 object-contain" 
+            />
+          </div>
         </div>
         <div className="flex flex-col items-center gap-1.5">
-          <span className="text-zinc-100 text-base font-bold tracking-wider">RUNAGON</span>
-          <span className="text-xs text-zinc-500 font-medium">Opening vault from disk...</span>
+          <span className="text-[#111113] text-base font-bold tracking-wider">RUNAGON</span>
+          <span className="text-xs text-[#8e8e93] font-medium">Opening vault from disk...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden glass-canvas text-zinc-100 font-sans">
+    <div className="flex flex-col h-screen w-screen overflow-hidden glass-canvas text-[#111113] font-sans">
       {/* Main Row: Sidebar + Workspace + Inspector */}
       <div className="flex-1 flex w-full overflow-hidden min-h-0">
         {/* 1. Left Sidebar (Ribbon + File Explorer / Search / Bookmarks / Tags) */}

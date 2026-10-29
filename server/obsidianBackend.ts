@@ -64,7 +64,7 @@ const DEFAULT_CONFIGS: Record<string, any> = {
   },
   'appearance': {
     baseFontSize: 16,
-    theme: 'obsidian',
+    theme: 'moonstone',
     translucency: false,
     cssTheme: '',
     showViewHeader: true,

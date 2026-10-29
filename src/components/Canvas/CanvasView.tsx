@@ -266,7 +266,7 @@ function parseCanvasInline(text: string, onNavigateFile: (path: string) => void)
             e.stopPropagation();
             onNavigateFile(target.trim());
           }}
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#705dcf] text-white text-[10.5px] font-medium cursor-pointer hover:bg-[#5e4db5] transition-colors mx-0.5 select-none"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[10.5px] font-medium cursor-pointer border border-black/[0.06] transition-colors mx-0.5 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
         >
           {alias ? alias.trim() : target.trim()}
         </span>
@@ -345,7 +345,7 @@ function renderCanvasMarkdown(text: string, onNavigateFile: (path: string) => vo
         }
         if (trimmed.startsWith('>')) {
           return (
-            <blockquote key={idx} className="border-l-2 border-purple-400/70 pl-2 text-zinc-400 italic text-[11px] my-1">
+            <blockquote key={idx} className="border-l-2 border-black/20 pl-2 text-[#585860] italic text-[11px] my-1">
               {parseCanvasInline(trimmed.replace(/^>\s*/, ''), onNavigateFile)}
             </blockquote>
           );
@@ -1322,9 +1322,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         setSelectedNodeId(newNode.id);
         setSelectedEdgeId(null);
       }}
-      className="relative w-full h-full bg-[#141416] overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans"
+      className="relative w-full h-full bg-[#f4f4f6] overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans"
       style={{
-        backgroundImage: 'radial-gradient(circle, var(--canvas-dot-color, #2d2d34) 1.2px, transparent 1.2px)',
+        backgroundImage: 'radial-gradient(circle, var(--canvas-dot-color, #d1d1d6) 1.2px, transparent 1.2px)',
         backgroundSize: `${28 * transform.scale}px ${28 * transform.scale}px`,
         backgroundPosition: `${transform.x}px ${transform.y}px`
       }}
@@ -1332,30 +1332,30 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       {/* 1. File Suggestion Popover (matching Table ▾ popover in user screenshot!) */}
       {showFileSuggestPopover && (
         <div
-          className="canvas-suggest-popover absolute top-4 left-4 z-50 w-80 max-h-[460px] bg-[#1a1a1e]/98 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl flex flex-col text-xs text-zinc-200"
+          className="canvas-suggest-popover absolute top-4 left-4 z-50 w-80 max-h-[460px] bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex flex-col text-xs text-[#111113]"
           onClick={e => e.stopPropagation()}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between p-2.5 pb-2 border-b border-zinc-800/80">
+          <div className="flex items-center justify-between p-2.5 pb-2 border-b border-black/[0.06]">
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1 font-semibold text-zinc-200 hover:text-white bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-700/60">
+              <button className="flex items-center gap-1 font-semibold text-[#111113] hover:bg-black/[0.04] bg-[#f4f4f6] px-2 py-0.5 rounded-lg border border-black/[0.08]">
                 <span>Table</span>
-                <span className="text-[10px] text-zinc-400">▾</span>
+                <span className="text-[10px] text-[#8e8e93]">▾</span>
               </button>
-              <span className="text-[11px] text-zinc-400 font-mono">{popoverFilesList.length} results</span>
+              <span className="text-[11px] text-[#8e8e93] font-mono">{popoverFilesList.length} results</span>
             </div>
 
-            <div className="flex items-center gap-1 text-zinc-400">
+            <div className="flex items-center gap-1 text-[#8e8e93]">
               <button
                 onClick={() => setFileSortAsc(prev => !prev)}
-                className="p-1 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+                className="p-1 hover:text-[#111113] hover:bg-black/[0.04] rounded-lg transition-colors"
                 title="Sort Files"
               >
                 <ArrowUpDown className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setShowFileSuggestPopover(false)}
-                className="p-1 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors ml-1"
+                className="p-1 hover:text-[#111113] hover:bg-black/[0.04] rounded-lg transition-colors ml-1"
                 title="Close"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1373,13 +1373,13 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 onChange={e => setFileSearchQuery(e.target.value)}
                 placeholder="Search vault..."
                 autoFocus
-                className="w-full bg-[#121214] border border-zinc-700/60 rounded px-2.5 pl-6 py-1 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#f4f4f6] border border-black/[0.08] rounded-lg px-2.5 pl-6 py-1 text-xs text-[#111113] placeholder-[#8e8e93] focus:outline-none focus:border-zinc-400"
               />
             </div>
           </div>
 
           {/* Info column header */}
-          <div className="px-3 py-1.5 text-[10px] text-zinc-500 border-b border-zinc-800/60 flex items-center gap-1">
+          <div className="px-3 py-1.5 text-[10px] text-[#8e8e93] border-b border-black/[0.06] flex items-center gap-1">
             <span>ⓘ</span>
             <span>file name</span>
           </div>
@@ -1392,13 +1392,13 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 <div
                   key={f.id}
                   onClick={() => handleAddFileCard(f)}
-                  className="px-2.5 py-1.5 rounded hover:bg-zinc-800/70 cursor-pointer flex items-center justify-between transition-colors group"
+                  className="px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] cursor-pointer flex items-center justify-between transition-colors group"
                 >
-                  <span className="text-[#8e84f5] hover:underline font-normal truncate group-hover:text-[#a79eff]">
+                  <span className="text-[#111113] hover:underline font-normal truncate">
                     {f.name.replace(/\.md$/, '')}
                   </span>
                   {isCanvas && (
-                    <span className="text-[9px] font-mono px-1 rounded bg-orange-950/60 text-orange-400 border border-orange-500/30 uppercase tracking-wider">
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 uppercase tracking-wider">
                       canvas
                     </span>
                   )}
@@ -1412,21 +1412,21 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       {/* 1.5 Media & Documents Suggestion Popover (Images, PDFs, Media from Vault or Computer) */}
       {showMediaSuggestPopover && (
         <div
-          className="canvas-suggest-popover absolute top-4 left-4 z-50 w-88 max-h-[500px] bg-[#1a1a1e]/98 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl flex flex-col text-xs text-zinc-200"
+          className="canvas-suggest-popover absolute top-4 left-4 z-50 w-88 max-h-[500px] bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex flex-col text-xs text-[#111113]"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-2.5 pb-2 border-b border-zinc-800/80">
+          <div className="flex items-center justify-between p-2.5 pb-2 border-b border-black/[0.06]">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-zinc-100 flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-emerald-400" />
+              <span className="font-semibold text-[#111113] flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4 text-zinc-700" />
                 <span>Media & Documents</span>
               </span>
-              <span className="text-[11px] text-zinc-500 font-mono">({filteredMediaList.length})</span>
+              <span className="text-[11px] text-[#8e8e93] font-mono">({filteredMediaList.length})</span>
             </div>
             <button
               onClick={() => setShowMediaSuggestPopover(false)}
-              className="p-1 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors"
+              className="p-1 hover:text-[#111113] hover:bg-black/[0.04] rounded-lg transition-colors"
               title="Close"
             >
               <X className="w-3.5 h-3.5" />
@@ -1445,7 +1445,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             />
             <button
               onClick={() => mediaUploadInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-500/40 rounded-lg font-medium text-xs transition-all shadow-sm cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 skeuo-btn-dark rounded-xl font-medium text-xs shadow-xs cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Choose Image or Doc from Computer...</span>
@@ -1462,21 +1462,21 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 onChange={e => setMediaSearchQuery(e.target.value)}
                 placeholder="Search images, PDFs, media..."
                 autoFocus
-                className="w-full bg-[#121214] border border-zinc-700/60 rounded-md px-2.5 pl-7 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#f4f4f6] border border-black/[0.08] rounded-lg px-2.5 pl-7 py-1.5 text-xs text-[#111113] placeholder-[#8e8e93] focus:outline-none focus:border-zinc-400"
               />
             </div>
           </div>
 
           {/* Filter pills: All, Images, PDFs, Audio/Video */}
-          <div className="flex items-center gap-1 px-2.5 py-1 text-[11px] border-b border-zinc-800/80">
+          <div className="flex items-center gap-1 px-2.5 py-1 text-[11px] border-b border-black/[0.06]">
             {(['all', 'images', 'pdfs', 'media'] as const).map(cat => (
               <button
                 key={cat}
                 onClick={() => setMediaCategory(cat)}
-                className={`px-2 py-0.5 rounded capitalize transition-colors ${
+                className={`px-2 py-0.5 rounded-lg capitalize transition-colors ${
                   mediaCategory === cat
-                    ? 'bg-zinc-700 text-white font-medium'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                    ? 'bg-[#18181b] text-white font-medium shadow-xs'
+                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
                 {cat}
@@ -1487,7 +1487,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           {/* Media List */}
           <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
             {filteredMediaList.length === 0 ? (
-              <div className="p-6 text-center text-zinc-500 italic">
+              <div className="p-6 text-center text-[#8e8e93] italic">
                 <span>No media found in vault. Click "Choose Image or Doc" above to upload!</span>
               </div>
             ) : (
@@ -1499,11 +1499,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                   <div
                     key={f.id}
                     onClick={() => handleAddMediaCard(f)}
-                    className="p-1.5 rounded-lg hover:bg-zinc-800/80 cursor-pointer flex items-center justify-between transition-colors group border border-transparent hover:border-zinc-700/60"
+                    className="p-1.5 rounded-lg hover:bg-black/[0.04] cursor-pointer flex items-center justify-between transition-colors group border border-transparent"
                   >
                     <div className="flex items-center gap-2 truncate">
                       {isImg ? (
-                        <div className="w-7 h-7 rounded bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded bg-[#f4f4f6] border border-black/[0.08] overflow-hidden shrink-0 flex items-center justify-center">
                           <img
                             src={`/api/vault/raw?path=${encodeURIComponent(f.path)}`}
                             alt={f.name}
@@ -1511,28 +1511,28 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                           />
                         </div>
                       ) : isPdf ? (
-                        <div className="w-7 h-7 rounded bg-rose-950/40 border border-rose-800/40 shrink-0 flex items-center justify-center text-rose-400">
+                        <div className="w-7 h-7 rounded bg-[#f4f4f6] border border-black/[0.08] shrink-0 flex items-center justify-center text-zinc-700">
                           <FileText className="w-4 h-4" />
                         </div>
                       ) : isAudio ? (
-                        <div className="w-7 h-7 rounded bg-purple-950/40 border border-purple-800/40 shrink-0 flex items-center justify-center text-purple-400">
+                        <div className="w-7 h-7 rounded bg-[#f4f4f6] border border-black/[0.08] shrink-0 flex items-center justify-center text-zinc-700">
                           <Volume2 className="w-4 h-4" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 rounded bg-blue-950/40 border border-blue-800/40 shrink-0 flex items-center justify-center text-blue-400">
+                        <div className="w-7 h-7 rounded bg-[#f4f4f6] border border-black/[0.08] shrink-0 flex items-center justify-center text-zinc-700">
                           <Video className="w-4 h-4" />
                         </div>
                       )}
                       <div className="flex flex-col truncate">
-                        <span className="text-zinc-200 group-hover:text-white truncate font-medium">
+                        <span className="text-[#111113] group-hover:text-black truncate font-medium">
                           {f.name}
                         </span>
-                        <span className="text-[10px] text-zinc-500 truncate">
+                        <span className="text-[10px] text-[#8e8e93] truncate">
                           {f.folder || 'Vault Root'} • {(f.size ? (f.size / 1024).toFixed(1) + ' KB' : '')}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono uppercase text-zinc-500 group-hover:text-purple-400 shrink-0">
+                    <span className="text-[10px] font-mono uppercase text-[#8e8e93] group-hover:text-[#111113] shrink-0">
                       Add +
                     </span>
                   </div>
@@ -1695,20 +1695,20 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       })()}
 
       {/* 4. Right Vertical Toolbar on Canvas (`canvas-controls` in user screenshot!) */}
-      <div className="canvas-controls absolute top-4 right-4 z-40 flex flex-col gap-1 p-1 bg-[#1a1a1e]/90 backdrop-blur-md border border-zinc-700/70 rounded-xl shadow-2xl text-zinc-400">
+      <div className="canvas-controls absolute top-4 right-4 z-40 flex flex-col gap-1 p-1 bg-white border border-black/[0.08] rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] text-[#585860]">
         <button
           onClick={() => setShowFileSuggestPopover(prev => !prev)}
-          className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/80 rounded-lg transition-colors"
+          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
           title="Canvas Settings / Files"
         >
           <SlidersHorizontal className="w-4 h-4" />
         </button>
 
-        <div className="w-4 h-[1px] bg-zinc-800 mx-auto my-0.5" />
+        <div className="w-4 h-[1px] bg-black/[0.06] mx-auto my-0.5" />
 
         <button
           onClick={() => setTransform(t => ({ ...t, scale: Math.min(2.5, t.scale * 1.15) }))}
-          className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/80 rounded-lg transition-colors"
+          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
           title="Zoom In (+)"
         >
           <Plus className="w-4 h-4" />
@@ -1716,7 +1716,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
         <button
           onClick={handleZoomToFit}
-          className="p-1.5 hover:text-purple-300 hover:bg-zinc-800/80 rounded-lg transition-colors"
+          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
           title="Zoom to Fit (1:1)"
         >
           <Maximize2 className="w-4 h-4" />
@@ -1724,7 +1724,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
         <button
           onClick={() => setTransform(t => ({ ...t, scale: Math.max(0.2, t.scale * 0.85) }))}
-          className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/80 rounded-lg transition-colors"
+          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
           title="Zoom Out (-)"
         >
           <Minus className="w-4 h-4" />
@@ -1732,18 +1732,18 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
         <button
           onClick={() => setTransform({ x: 500, y: 350, scale: 0.85 })}
-          className="p-1.5 hover:text-zinc-100 hover:bg-zinc-800/80 rounded-lg transition-colors"
+          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
           title="Reset Zoom"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-4 h-[1px] bg-zinc-800 mx-auto my-0.5" />
+        <div className="w-4 h-[1px] bg-black/[0.06] mx-auto my-0.5" />
 
         <button
           onClick={handleUndo}
           disabled={historyIdx <= 0}
-          className={`p-1.5 rounded-lg transition-colors ${historyIdx > 0 ? 'hover:text-zinc-100 hover:bg-zinc-800/80' : 'opacity-30 cursor-not-allowed'}`}
+          className={`p-1.5 rounded-xl transition-colors ${historyIdx > 0 ? 'hover:text-[#111113] hover:bg-black/[0.04]' : 'opacity-30 cursor-not-allowed'}`}
           title="Undo (Ctrl+Z)"
         >
           <Undo2 className="w-4 h-4" />
@@ -1752,7 +1752,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         <button
           onClick={handleRedo}
           disabled={historyIdx >= history.length - 1}
-          className={`p-1.5 rounded-lg transition-colors ${historyIdx < history.length - 1 ? 'hover:text-zinc-100 hover:bg-zinc-800/80' : 'opacity-30 cursor-not-allowed'}`}
+          className={`p-1.5 rounded-xl transition-colors ${historyIdx < history.length - 1 ? 'hover:text-[#111113] hover:bg-black/[0.04]' : 'opacity-30 cursor-not-allowed'}`}
           title="Redo (Ctrl+Shift+Z)"
         >
           <Redo2 className="w-4 h-4" />
@@ -1760,7 +1760,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       </div>
 
       {/* 5. Bottom Center Floating Dock Toolbar matching Obsidian Canvas dock in media_1792147243199.png */}
-      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-[#1e1e22]/95 backdrop-blur-xl border border-zinc-700/60 rounded-xl px-2 py-1.5 shadow-2xl">
+      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-2xl px-2.5 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] text-[#585860]">
         {/* 1. Card / Text Card (Folded card outline) */}
         <button
           onClick={handleAddTextCard}
@@ -1769,7 +1769,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             e.dataTransfer.setData('canvas-dock-action', 'text');
             e.dataTransfer.effectAllowed = 'copy';
           }}
-          className="canvas-card-menu-button p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           title="Card: Click or drag to canvas to add a text card"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -1789,7 +1789,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             e.dataTransfer.setData('canvas-dock-action', 'note');
             e.dataTransfer.effectAllowed = 'copy';
           }}
-          className="canvas-card-menu-button p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           title="Note: Click or drag to canvas to add a vault note"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -1812,7 +1812,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             e.dataTransfer.setData('canvas-dock-action', 'media');
             e.dataTransfer.effectAllowed = 'copy';
           }}
-          className="canvas-card-menu-button p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           title="Media: Click or drag to canvas to add an image or document from vault or computer"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -1823,12 +1823,12 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           </svg>
         </button>
 
-        <div className="w-[1px] h-5 bg-zinc-700/60 mx-0.5" />
+        <div className="w-[1px] h-5 bg-black/[0.08] mx-0.5" />
 
         {/* 4. Group Card */}
         <button
           onClick={handleAddGroupCard}
-          className="canvas-card-menu-button p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           title="Add Group"
         >
           <FolderPlus className="w-5 h-5" />
@@ -1837,7 +1837,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         {/* 5. Sub-Canvas Card */}
         <button
           onClick={handleAddCanvasCard}
-          className="canvas-card-menu-button p-2 text-zinc-400 hover:text-orange-400 rounded-lg hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           title="Add Canvas in Canvas (.canvas)"
         >
           <LayoutDashboard className="w-5 h-5" />
@@ -2057,7 +2057,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                     e.preventDefault();
                     handleSaveEdgeLabel(edge.id, edgeLabelText);
                   }}
-                  className="flex items-center gap-1 bg-[#1a1a1e] border-2 border-purple-500 rounded-lg p-1 shadow-2xl"
+                  className="flex items-center gap-1 bg-white border-2 border-[#18181b] rounded-xl p-1 shadow-md"
                 >
                   <input
                     ref={labelInputRef}
@@ -2071,7 +2071,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                     }}
                     onBlur={() => handleSaveEdgeLabel(edge.id, edgeLabelText)}
                     placeholder="Edge notation..."
-                    className="bg-transparent text-xs text-white placeholder-zinc-500 outline-none w-32 px-1 font-sans"
+                    className="bg-transparent text-xs text-[#111113] placeholder-[#8e8e93] outline-none w-32 px-1 font-sans"
                   />
                 </form>
               </div>
@@ -2103,10 +2103,10 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 title="Double-click to edit notation"
               >
                 <div
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-lg backdrop-blur-md transition-colors duration-150 ${
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-xs transition-colors duration-150 ${
                     isSelected
-                      ? 'bg-purple-950/95 text-purple-200 border-purple-400 ring-2 ring-purple-500/50'
-                      : 'bg-[#18181c]/95 text-zinc-200 border-zinc-700/80 hover:border-zinc-500 hover:text-white'
+                      ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                      : 'bg-white text-[#111113] border-black/[0.08] hover:border-black/[0.2]'
                   }`}
                 >
                   {edge.label}
@@ -2131,8 +2131,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                   setEdgeLabelText('');
                 }}
               >
-                <div className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#18181c]/95 text-zinc-300 hover:text-purple-300 border border-purple-500/50 shadow-md backdrop-blur-md flex items-center gap-1 transition-colors">
-                  <Plus className="w-3 h-3 text-purple-400" />
+                <div className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white text-[#111113] border border-black/[0.1] shadow-xs hover:bg-[#f4f4f6] flex items-center gap-1 transition-colors">
+                  <Plus className="w-3 h-3 text-zinc-700" />
                   <span>Notation</span>
                 </div>
               </div>
@@ -2154,12 +2154,12 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
               userSelect: 'none',
               zIndex: 10
             }}
-            className="bg-[#1c1926]/90 border border-purple-500/30 rounded-2xl px-8 py-6 text-center shadow-2xl backdrop-blur-md"
+            className="bg-white border border-black/[0.08] rounded-2xl px-8 py-6 text-center shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)]"
           >
-            <div className="text-sm font-medium text-purple-300 space-y-1.5">
-              <div className="text-purple-200 font-semibold">Drag from below or double click</div>
-              <div className="text-xs text-purple-400/80">Space + Drag to pan</div>
-              <div className="text-xs text-purple-400/80">⌘ + Scroll to zoom</div>
+            <div className="space-y-1.5 text-center">
+              <div className="text-[#111113] font-semibold text-sm">Drag from below or double click</div>
+              <div className="text-xs text-[#8e8e93]">Space + Drag to pan</div>
+              <div className="text-xs text-[#8e8e93]">⌘ + Scroll to zoom</div>
             </div>
           </div>
         )}
@@ -2199,28 +2199,28 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 setSelectedEdgeId(null);
               }}
               onMouseDown={e => startDragNode(node, e)}
-              className={`canvas-node absolute pointer-events-auto flex flex-col shadow-2xl transition-all duration-150 select-none ${
+              className={`canvas-node absolute pointer-events-auto flex flex-col transition-all duration-150 select-none ${
                 isGroup
                   ? 'border-dashed border-2 rounded-2xl z-0 p-3'
                   : isSelected
                   ? 'border-2 rounded-2xl z-20 p-4'
                   : customColor
                   ? 'border-2 rounded-2xl z-10 p-4'
-                  : 'bg-[#18181c] border border-zinc-700/80 hover:border-zinc-500 rounded-2xl z-10 p-4'
+                  : 'bg-white border border-black/[0.08] hover:border-black/[0.18] rounded-2xl z-10 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] text-[#111113]'
               }`}
               style={{
                 left: `${node.x}px`,
                 top: `${node.y}px`,
                 width: `${node.width}px`,
                 height: `${node.height}px`,
-                borderColor: cardHex || (isSelected ? '#a855f7' : undefined),
+                borderColor: cardHex || (isSelected ? '#18181b' : undefined),
                 backgroundColor: isGroup
-                  ? (customColor ? `${customColor.hex}18` : 'rgba(112, 93, 207, 0.08)')
-                  : (customColor ? `${customColor.hex}15` : '#18181c'),
+                  ? (customColor ? `${customColor.hex}18` : 'rgba(0, 0, 0, 0.03)')
+                  : (customColor ? `${customColor.hex}15` : '#ffffff'),
                 boxShadow: isSelected
-                  ? `0 0 0 3px ${(cardHex || '#a855f7')}40, 0 20px 30px -10px rgba(0,0,0,0.6)`
+                  ? '0 0 0 2px #18181b, 0 12px 24px -6px rgba(0,0,0,0.1)'
                   : customColor
-                  ? `0 4px 20px -2px ${(cardHex || '#a855f7')}30`
+                  ? '0 4px 12px rgba(0,0,0,0.05)'
                   : undefined
               }}
             >
@@ -2451,7 +2451,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                             persistCanvas(canvasData);
                           }
                         }}
-                        className="w-full h-full bg-transparent resize-none focus:outline-none text-zinc-100 font-sans text-xs leading-relaxed selection:bg-purple-600/40 p-1"
+                        className="w-full h-full bg-transparent resize-none focus:outline-none text-[#111113] font-sans text-xs leading-relaxed selection:bg-zinc-200 selection:text-zinc-900 p-1"
                         placeholder="Enter card markdown..."
                       />
                     ) : (
@@ -2461,7 +2461,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                           setEditingNodeId(node.id);
                         }}
                         title="Double-click to edit card"
-                        className="w-full h-full overflow-y-auto cursor-text text-zinc-200 select-text font-sans p-1 hover:bg-white/[0.02] rounded-lg transition-colors"
+                        className="w-full h-full overflow-y-auto cursor-text text-[#111113] select-text font-sans p-1 hover:bg-black/[0.02] rounded-lg transition-colors"
                       >
                         {renderCanvasMarkdown(node.text || 'Double-click to edit this card in markdown.', onNavigateFile)}
                       </div>

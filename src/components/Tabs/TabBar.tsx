@@ -138,7 +138,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 onClick={onGoBack}
                 disabled={!canGoBack}
                 title="Navigate Back (Alt+← / ⌘[)"
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+                className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -146,7 +146,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 onClick={onGoForward}
                 disabled={!canGoForward}
                 title="Navigate Forward (Alt+→ / ⌘])"
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+                className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] disabled:opacity-25 disabled:cursor-not-allowed transition-all"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -156,7 +156,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               <button
                 onClick={onToggleSidebar}
                 title={isSidebarOpen ? 'Collapse Left Sidebar (Cmd+B)' : 'Expand Left Sidebar (Cmd+B)'}
-                className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-lg transition-all"
+                className="p-1.5 text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] rounded-lg transition-all"
               >
                 {isSidebarOpen ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
               </button>
@@ -176,16 +176,16 @@ export const TabBar: React.FC<TabBarProps> = ({
             <div
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all max-w-[200px] shrink-0 border-none ${
+              className={`group flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs cursor-pointer transition-all max-w-[200px] shrink-0 border ${
                 isActive
-                  ? 'bg-[#2a2b36] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-[#e4e4e9]'
               }`}
             >
               {isCanvas ? (
-                <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-orange-400" />
+                <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-[#18181b]" />
               ) : (
-                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-purple-400' : 'opacity-60'}`} />
+                <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#18181b]' : 'opacity-60'}`} />
               )}
 
               <span className="truncate">
@@ -193,7 +193,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               </span>
 
               {tab.isPinned && (
-                <Pin className="w-2.5 h-2.5 text-purple-400 fill-purple-400/30 shrink-0" />
+                <Pin className="w-2.5 h-2.5 text-[#18181b] fill-[#18181b]/30 shrink-0" />
               )}
 
               {tabs.length > 1 && !tab.isPinned && (
@@ -202,7 +202,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                     e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-white/[0.12] text-zinc-400 hover:text-white transition-opacity ml-1"
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded-full hover:bg-black/[0.08] text-[#8e8e93] hover:text-[#111113] transition-opacity ml-1"
                   title="Close tab"
                 >
                   <X className="w-3 h-3" />
@@ -216,24 +216,24 @@ export const TabBar: React.FC<TabBarProps> = ({
         <button
           onClick={onNewTab}
           title="New Tab (Ctrl+T)"
-          className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all shrink-0"
+          className="p-1.5 text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] rounded-xl transition-all shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Right controls: Quick Switcher + Save + Bookmark + View Mode + Split + Zen + Inspector + More */}
-      <div className="flex items-center gap-2 text-zinc-400 shrink-0">
+      <div className="flex items-center gap-2 text-[#585860] shrink-0">
         {/* Quick Switcher Search Pill (on primary) */}
         {isPrimary && onOpenQuickSwitcher && (
           <button
             onClick={onOpenQuickSwitcher}
             title="Quick Switcher (Ctrl+O / Cmd+O)"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#202028] hover:bg-[#282834] text-zinc-300 hover:text-white transition-all text-[11px] border-none shadow-sm"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white hover:bg-[#fafafc] text-[#111113] border border-black/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_1px_2px_rgba(0,0,0,0.04)] transition-all text-[11px]"
           >
-            <Search className="w-3 h-3 text-purple-400" />
-            <span className="text-[11px]">Jump to...</span>
-            <kbd className="text-[9px] bg-white/[0.08] px-1.5 py-0.5 rounded text-zinc-300 font-mono">⌘O</kbd>
+            <Search className="w-3 h-3 text-[#585860]" />
+            <span className="text-[11px] font-medium">Jump to...</span>
+            <kbd className="text-[9px] bg-[#ececf0] px-1.5 py-0.5 rounded text-[#585860] font-mono border border-black/[0.05]">⌘O</kbd>
           </button>
         )}
 
@@ -248,26 +248,26 @@ export const TabBar: React.FC<TabBarProps> = ({
                 ? 'Save note to disk (⌘S)'
                 : 'All changes saved to disk (⌘S)'
             }
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border-none ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
               isSaving
-                ? 'bg-[#705dcf]/30 text-purple-200 animate-pulse'
+                ? 'bg-[#ececf0] text-[#111113] animate-pulse border border-black/[0.08]'
                 : hasUnsavedChanges
-                ? 'bg-[#e5a00d]/20 text-amber-300'
-                : 'bg-[#202028] text-zinc-300 hover:text-white hover:bg-[#282834]'
+                ? 'skeuo-btn-dark'
+                : 'skeuo-btn text-[#585860]'
             }`}
           >
             {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#111113]" />
             ) : hasUnsavedChanges ? (
-              <Save className="w-3.5 h-3.5 text-amber-400" />
+              <Save className="w-3.5 h-3.5 text-white" />
             ) : (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#18181b]" />
             )}
             <span className="text-[11px]">
               {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
             </span>
             {hasUnsavedChanges && (
-              <kbd className="hidden lg:inline text-[9px] bg-white/[0.08] px-1 py-0.2 rounded text-zinc-300 font-mono">
+              <kbd className="hidden lg:inline text-[9px] bg-white/20 px-1 py-0.2 rounded text-white font-mono">
                 ⌘S
               </kbd>
             )}
@@ -279,26 +279,26 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onToggleBookmark}
             title={isBookmarked ? 'Remove bookmark from note (⌘D)' : 'Bookmark note (⌘D)'}
-            className={`p-1.5 rounded-lg transition-all border-none ${
+            className={`p-1.5 rounded-xl transition-all skeuo-btn ${
               isBookmarked
-                ? 'bg-[#e5a00d]/20 text-amber-300'
-                : 'bg-[#202028] text-zinc-400 hover:text-amber-300 hover:bg-[#282834]'
+                ? 'text-[#18181b] bg-[#ececf0]'
+                : 'text-[#585860] hover:text-[#111113]'
             }`}
           >
-            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
+            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-[#18181b] text-[#18181b]' : ''}`} />
           </button>
         )}
 
         {/* View Mode Segmented Switcher (Live / Source / Reading) */}
         {onToggleViewMode && (
-          <div className="flex items-center p-0.5 rounded-lg bg-[#181820] border-none">
+          <div className="flex items-center p-0.5 rounded-full bg-[#e4e4e9] border border-black/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
             <button
               onClick={() => onToggleViewMode('live')}
               title="Live Preview Mode: Interactive editing with live styled formatting"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all text-[11px] font-medium border-none ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
                 activeViewMode === 'live'
-                  ? 'bg-[#705dcf] text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
+                  : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -307,10 +307,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('source')}
               title="Source Mode: Raw Markdown code editor with line numbers"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all text-[11px] font-medium border-none ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
                 activeViewMode === 'source'
-                  ? 'bg-[#705dcf] text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
+                  : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
               <Code className="w-3.5 h-3.5" />
@@ -319,10 +319,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             <button
               onClick={() => onToggleViewMode('reading')}
               title="Reading View: Pristine read-only publication reader"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all text-[11px] font-medium border-none ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all text-[11px] font-medium ${
                 activeViewMode === 'reading'
-                  ? 'bg-[#705dcf] text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  ? 'bg-white text-[#111113] shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)]'
+                  : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -336,7 +336,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={() => onSplitRight()}
             title="Split Right (Ctrl+\)"
-            className="p-1.5 hover:text-white hover:bg-white/[0.08] rounded-lg transition-all border-none"
+            className="p-1.5 text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] rounded-xl transition-all"
           >
             <Columns className="w-3.5 h-3.5" />
           </button>
@@ -346,7 +346,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onClosePane}
             title="Close Split Pane"
-            className="p-1.5 hover:text-rose-300 hover:bg-white/[0.08] rounded-lg transition-all border-none"
+            className="p-1.5 text-[#585860] hover:text-rose-600 hover:bg-black/[0.05] rounded-xl transition-all"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -357,8 +357,8 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onToggleZenMode}
             title={isZenMode ? 'Exit Focus Mode (Cmd+Shift+F)' : 'Focus Mode (Cmd+Shift+F)'}
-            className={`p-1.5 rounded-lg transition-all border-none ${
-              isZenMode ? 'text-white bg-[#705dcf] shadow-sm' : 'hover:text-white hover:bg-white/[0.08]'
+            className={`p-1.5 rounded-xl transition-all ${
+              isZenMode ? 'skeuo-btn-dark' : 'skeuo-btn text-[#585860] hover:text-[#111113]'
             }`}
           >
             {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -370,7 +370,7 @@ export const TabBar: React.FC<TabBarProps> = ({
           <button
             onClick={onToggleInspector}
             title={isInspectorOpen ? 'Collapse Inspector (Cmd+I)' : 'Expand Inspector (Cmd+I)'}
-            className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.08] rounded-xl transition-all"
+            className="p-1.5 text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] rounded-xl transition-all"
           >
             {isInspectorOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
           </button>

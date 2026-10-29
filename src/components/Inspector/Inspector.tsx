@@ -67,24 +67,24 @@ export const Inspector: React.FC<InspectorProps> = ({
   const outlinks = metadata?.outlinks || [];
 
   return (
-    <div className="w-80 glass-inspector flex flex-col h-full select-none shrink-0 text-xs">
+    <div className="w-80 bg-[#f8f8fa] border-l border-black/[0.07] flex flex-col h-full select-none shrink-0 text-xs text-[#111113]">
       {/* Top Floating Segmented Tabs */}
-      <div className="p-2 border-b border-white/[0.07] bg-white/[0.02] shrink-0">
-        <div className="flex items-center justify-between p-1 rounded-xl bg-black/25 gap-1 border-none">
+      <div className="p-2 border-b border-black/[0.06] bg-[#f8f8fa] shrink-0">
+        <div className="flex items-center justify-between p-1 rounded-full bg-[#ececf0] gap-1 border border-black/[0.05]">
           {showBacklinks && (
             <button
               onClick={() => handleTabClick('backlinks')}
               title={backlinks.length > 0 ? `Backlinks (${backlinks.length})` : 'Backlinks'}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'backlinks'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <Link className="w-4 h-4 shrink-0" />
               {backlinks.length > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  activeTab === 'backlinks' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-300'
+                  activeTab === 'backlinks' ? 'bg-[#ececf0] text-[#111113]' : 'bg-black/[0.06] text-[#585860]'
                 }`}>
                   {backlinks.length}
                 </span>
@@ -96,16 +96,16 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={() => handleTabClick('outgoing')}
               title={outlinks.length > 0 ? `Outgoing Links (${outlinks.length})` : 'Outgoing Links'}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outgoing'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <ArrowUpRight className="w-4 h-4 shrink-0" />
               {outlinks.length > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  activeTab === 'outgoing' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-300'
+                  activeTab === 'outgoing' ? 'bg-[#ececf0] text-[#111113]' : 'bg-black/[0.06] text-[#585860]'
                 }`}>
                   {outlinks.length}
                 </span>
@@ -117,10 +117,10 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={() => handleTabClick('outline')}
               title="Document Outline"
-              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
+              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'outline'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <ListTree className="w-4 h-4 shrink-0" />
@@ -131,10 +131,10 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={() => handleTabClick('localGraph')}
               title="Local Graph"
-              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
+              className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
                 activeTab === 'localGraph'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <Share2 className="w-4 h-4 shrink-0" />
@@ -145,10 +145,10 @@ export const Inspector: React.FC<InspectorProps> = ({
           <button
             onClick={() => handleTabClick('aiChat')}
             title="AI Vault Assistant (RAG Memory)"
-            className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-lg transition-all min-w-0 border-none ${
+            className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
               activeTab === 'aiChat'
-                ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-white text-[#111113] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.95)] border-black/[0.08]'
+                : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
             }`}
           >
             <Sparkles className="w-4 h-4 shrink-0" />
@@ -257,7 +257,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         </span>
                         <button
                           onClick={() => onLinkMention(um.filePath, activeFile.name.replace(/\.md$/, ''))}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white border-none text-[10px] font-medium transition-all"
+                          className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg skeuo-btn-dark text-[10px] font-medium transition-all"
                           title="Convert to [[Wikilink]]"
                         >
                           <Plus className="w-3 h-3" />

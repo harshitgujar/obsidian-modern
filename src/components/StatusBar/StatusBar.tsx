@@ -55,24 +55,24 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   }, [activeFile]);
 
   return (
-    <footer className="glass-statusbar h-[26px] text-[11px] text-zinc-400 font-sans flex items-center justify-between px-3.5 select-none z-30 shrink-0">
+    <footer className="glass-statusbar h-[26px] text-[11px] text-[#585860] font-sans flex items-center justify-between px-3.5 select-none z-30 shrink-0 border-t border-black/[0.07] bg-white">
       {/* Left side: Vault and Sync Status */}
       <div className="flex items-center gap-2.5">
         <button
           onClick={onOpenVaultSwitcher}
-          className="px-2 py-0.5 rounded-md flex items-center gap-1.5 text-zinc-300 hover:text-white bg-[#202028] hover:bg-[#282834] transition-all cursor-pointer border-none shadow-sm"
+          className="px-2 py-0.5 rounded-full flex items-center gap-1.5 text-[#111113] hover:bg-[#ebebef] bg-[#f4f4f6] border border-black/[0.06] transition-all cursor-pointer shadow-none"
           title="Click to Switch Vault"
         >
-          <HardDrive className="w-3 h-3 text-[#705dcf]" />
+          <HardDrive className="w-3 h-3 text-[#18181b]" />
           <span className="font-medium truncate max-w-[140px]">{vaultName}</span>
         </button>
 
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[10px] border-none">
-          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/[0.04] text-[#111113] text-[10px] border border-black/[0.04]">
+          <CheckCircle2 className="w-3 h-3 text-[#18181b]" />
           <span>Synced to disk</span>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-zinc-400/80 text-[10px] pl-2 border-l border-white/[0.08]">
+        <div className="hidden sm:flex items-center gap-1.5 text-[#8e8e93] text-[10px] pl-2 border-l border-black/[0.08]">
           <span>{totalNotesCount} notes</span>
           <span>•</span>
           <span>{totalCanvasesCount} canvases</span>
@@ -81,10 +81,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {onToggleAIChat && (
           <button
             onClick={onToggleAIChat}
-            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#202028] hover:bg-[#282834] text-zinc-300 hover:text-white transition-all cursor-pointer text-[10px] border-none"
+            className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#f4f4f6] hover:bg-[#ebebef] text-[#111113] border border-black/[0.06] transition-all cursor-pointer text-[10px]"
             title="Open AI Vault Assistant (RAG Memory)"
           >
-            <Sparkles className="w-3 h-3 text-purple-300" />
+            <Sparkles className="w-3 h-3 text-[#18181b]" />
             <span>Vault Copilot</span>
           </button>
         )}
@@ -93,15 +93,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       {/* Right side: Active File or View Metrics */}
       <div className="flex items-center gap-3">
         {isGraphActive ? (
-          <div className="flex items-center gap-1.5 text-purple-200 text-[10px] bg-[#202028] px-2 py-0.5 rounded-md border-none">
-            <Share2 className="w-3 h-3 text-[#705dcf]" />
+          <div className="flex items-center gap-1.5 text-[#111113] text-[10px] bg-[#f4f4f6] px-2 py-0.5 rounded-full border border-black/[0.06]">
+            <Share2 className="w-3 h-3 text-[#18181b]" />
             <span>
               {graphStats ? `${graphStats.nodesCount} nodes • ${graphStats.edgesCount} links` : 'Interactive Graph'}
             </span>
           </div>
         ) : activeFile?.extension === 'canvas' ? (
-          <div className="flex items-center gap-1.5 text-orange-300 text-[10px] bg-[#202028] px-2 py-0.5 rounded-md border-none">
-            <LayoutDashboard className="w-3 h-3 text-orange-400" />
+          <div className="flex items-center gap-1.5 text-[#111113] text-[10px] bg-[#f4f4f6] px-2 py-0.5 rounded-full border border-black/[0.06]">
+            <LayoutDashboard className="w-3 h-3 text-[#18181b]" />
             <span>
               {canvasStats ? `${canvasStats.nodesCount} cards • ${canvasStats.edgesCount} edges` : 'Canvas'}
             </span>
@@ -112,7 +112,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             {showBacklinks && (
               <button
                 onClick={onOpenBacklinks}
-                className="flex items-center gap-1 text-zinc-400 hover:text-purple-300 transition-colors cursor-pointer text-[10px]"
+                className="flex items-center gap-1 text-[#585860] hover:text-[#111113] transition-colors cursor-pointer text-[10px]"
                 title="View Backlinks in Inspector"
               >
                 <span>{backlinksCount} {backlinksCount === 1 ? 'backlink' : 'backlinks'}</span>

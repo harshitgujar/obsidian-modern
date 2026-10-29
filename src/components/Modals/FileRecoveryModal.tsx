@@ -39,17 +39,17 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
   const selectedSnapshot = snapshots.find(s => s.id === selectedId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm select-none">
-      <div className="w-[780px] h-[540px] bg-[#18181b] border border-zinc-700/80 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md select-none">
+      <div className="w-[820px] h-[560px] bg-white border border-black/[0.08] rounded-3xl skeuo-modal flex flex-col overflow-hidden text-[#111113]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 bg-[#141416]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06] bg-[#f8f8fa]">
           <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-semibold">File Recovery — Local Snapshots (.obsidian/file-recovery)</span>
+            <History className="w-4 h-4 text-zinc-700" />
+            <span className="text-sm font-semibold text-[#111113]">File Recovery — Local Snapshots (.obsidian/file-recovery)</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+            className="p-1 rounded-lg text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -58,20 +58,20 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
         {/* Body */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Snapshot List */}
-          <div className="w-72 border-r border-zinc-800 bg-[#121214] flex flex-col">
-            <div className="p-2.5 border-b border-zinc-800">
+          <div className="w-72 border-r border-black/[0.06] bg-[#f8f8fa] flex flex-col">
+            <div className="p-2.5 border-b border-black/[0.06]">
               <input
                 type="text"
                 value={filterQuery}
                 onChange={e => setFilterQuery(e.target.value)}
                 placeholder="Filter by file path..."
-                className="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:border-purple-500 focus:outline-none"
+                className="w-full bg-white border border-black/[0.1] rounded-xl px-2.5 py-1.5 text-xs text-[#111113] focus:border-zinc-400 focus:outline-none"
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 text-xs">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs">
               {filtered.length === 0 ? (
-                <div className="text-zinc-500 text-center py-8 text-[11px] italic">
+                <div className="text-[#8e8e93] text-center py-8 text-[11px] italic">
                   No snapshots recorded yet.<br />Edit any note to automatically record snapshots on disk!
                 </div>
               ) : (
@@ -79,17 +79,17 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
                   <div
                     key={snap.id}
                     onClick={() => setSelectedId(snap.id)}
-                    className={`p-2.5 rounded-lg cursor-pointer border-none transition-colors ${
+                    className={`p-2.5 rounded-xl cursor-pointer border transition-colors ${
                       snap.id === selectedId
-                        ? 'bg-[#705dcf] text-white shadow-sm'
-                        : 'bg-zinc-900/50 text-zinc-300 hover:bg-zinc-800/60'
+                        ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                        : 'bg-white text-[#111113] border-black/[0.05] hover:bg-[#ececf0]'
                     }`}
                   >
                     <div className="flex items-center gap-1.5 font-medium truncate">
-                      <FileText className={`w-3.5 h-3.5 shrink-0 ${snap.id === selectedId ? 'text-white' : 'text-purple-400'}`} />
+                      <FileText className={`w-3.5 h-3.5 shrink-0 ${snap.id === selectedId ? 'text-white' : 'text-zinc-600'}`} />
                       <span className="truncate">{snap.path}</span>
                     </div>
-                    <div className={`flex items-center justify-between text-[10px] mt-1 ${snap.id === selectedId ? 'text-white/80' : 'text-zinc-500'}`}>
+                    <div className={`flex items-center justify-between text-[10px] mt-1 ${snap.id === selectedId ? 'text-white/80' : 'text-[#8e8e93]'}`}>
                       <span className="flex items-center gap-1">
                         <Clock className="w-2.5 h-2.5" />
                         {new Date(snap.timestamp).toLocaleTimeString()}
@@ -103,13 +103,13 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
           </div>
 
           {/* Right Snapshot Preview */}
-          <div className="flex-1 flex flex-col bg-[#18181b] overflow-hidden">
+          <div className="flex-1 flex flex-col bg-white overflow-hidden">
             {selectedSnapshot ? (
               <>
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-[#161619] text-xs">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/[0.06] bg-[#f8f8fa] text-xs">
                   <div>
-                    <span className="font-semibold text-zinc-200">{selectedSnapshot.path}</span>
-                    <span className="text-zinc-500 ml-2 text-[11px]">
+                    <span className="font-semibold text-[#111113]">{selectedSnapshot.path}</span>
+                    <span className="text-[#8e8e93] ml-2 text-[11px]">
                       {new Date(selectedSnapshot.timestamp).toLocaleString()}
                     </span>
                   </div>
@@ -121,9 +121,9 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
                         setCopied(true);
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 text-zinc-300 hover:text-white text-xs"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] text-xs border border-black/[0.08]"
                     >
-                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copied ? 'Copied' : 'Copy'}</span>
                     </button>
 
@@ -132,7 +132,7 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
                         onRestoreSnapshot(selectedSnapshot.path, selectedSnapshot.content || '');
                         onClose();
                       }}
-                      className="flex items-center gap-1 px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs"
+                      className="flex items-center gap-1 px-3 py-1 rounded-lg skeuo-btn-dark text-white font-medium text-xs shadow-xs"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Restore Snapshot</span>
@@ -140,12 +140,12 @@ export const FileRecoveryModal: React.FC<FileRecoveryModalProps> = ({
                   </div>
                 </div>
 
-                <pre className="flex-1 p-4 overflow-auto font-mono text-xs text-zinc-300 leading-relaxed select-text bg-zinc-950/50">
+                <pre className="flex-1 p-4 overflow-auto font-mono text-xs text-[#111113] leading-relaxed select-text bg-[#f4f4f6]">
                   {selectedSnapshot.content || ''}
                 </pre>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-zinc-500 text-xs">
+              <div className="flex-1 flex items-center justify-center text-[#8e8e93] text-xs">
                 Select a snapshot on the left to inspect its contents.
               </div>
             )}

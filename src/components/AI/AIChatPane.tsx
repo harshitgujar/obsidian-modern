@@ -288,7 +288,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
               e.stopPropagation();
               onNavigateFile(targetNav);
             }}
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded bg-[#705dcf] hover:bg-[#5e4db5] border-none text-white font-medium text-[11px] align-baseline transition-all select-none shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 mx-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] border border-black/[0.06] text-[#1c1c1e] font-medium text-[11px] align-baseline transition-all select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] cursor-pointer"
             title={`Open ${targetWithHeading}`}
           >
             <span>{label}</span>
@@ -298,20 +298,20 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
         tokens.push(
           <code
             key={keyId}
-            className="px-1.5 py-0.5 mx-0.5 rounded bg-black/50 text-purple-200 font-mono text-[11px] select-text"
+            className="px-1.5 py-0.5 mx-0.5 rounded bg-black/[0.05] text-[#111113] font-mono text-[11px] select-text"
           >
             {raw.slice(1, -1)}
           </code>
         );
       } else if (raw.startsWith('**') && raw.endsWith('**')) {
         tokens.push(
-          <strong key={keyId} className="font-semibold text-white">
+          <strong key={keyId} className="font-semibold text-[#111113]">
             {formatInlineText(raw.slice(2, -2))}
           </strong>
         );
       } else if (raw.startsWith('*') && raw.endsWith('*')) {
         tokens.push(
-          <em key={keyId} className="italic text-zinc-200">
+          <em key={keyId} className="italic text-[#585860]">
             {formatInlineText(raw.slice(1, -1))}
           </em>
         );
@@ -341,14 +341,14 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           // Headers
           if (trimmed.startsWith('### ')) {
             return (
-              <h4 key={`h3-${idx}`} className="font-bold text-zinc-100 text-xs mt-3 mb-1 border-b border-white/[0.06] pb-1">
+              <h4 key={`h3-${idx}`} className="font-bold text-[#111113] text-xs mt-3 mb-1 border-b border-black/[0.06] pb-1">
                 {formatInlineText(trimmed.slice(4))}
               </h4>
             );
           }
           if (trimmed.startsWith('## ')) {
             return (
-              <h3 key={`h2-${idx}`} className="font-bold text-white text-sm mt-3.5 mb-1.5 border-b border-white/[0.08] pb-1">
+              <h3 key={`h2-${idx}`} className="font-bold text-[#111113] text-sm mt-3.5 mb-1.5 border-b border-black/[0.06] pb-1">
                 {formatInlineText(trimmed.slice(3))}
               </h3>
             );
@@ -362,10 +362,10 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             return (
               <div
                 key={`callout-${idx}`}
-                className="my-2 p-2.5 rounded-lg bg-purple-950/30 border-l-2 border-[#705dcf] text-xs text-zinc-200"
+                className="my-2 p-2.5 rounded-xl bg-[#f8f8fa] border-l-2 border-[#18181b] text-xs text-[#111113]"
               >
-                <div className="font-semibold text-[#a594fd] mb-1 flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" />
+                <div className="font-semibold text-[#111113] mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-zinc-700" />
                   <span>{calloutTitle}</span>
                 </div>
               </div>
@@ -377,7 +377,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             return (
               <div
                 key={`quote-${idx}`}
-                className="border-l-2 border-white/20 pl-2.5 py-0.5 my-1 text-zinc-300 italic text-[11px]"
+                className="border-l-2 border-black/20 pl-2.5 py-0.5 my-1 text-[#585860] italic text-[11px]"
               >
                 {formatInlineText(trimmed.slice(2))}
               </div>
@@ -388,7 +388,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
             return (
               <div key={`li-${idx}`} className="flex items-start gap-2 my-0.5 pl-1.5 leading-relaxed">
-                <span className="text-[#705dcf] font-bold text-sm leading-none mt-0.5">•</span>
+                <span className="text-[#18181b] font-bold text-sm leading-none mt-0.5">•</span>
                 <span className="flex-1">{formatInlineText(trimmed.slice(2))}</span>
               </div>
             );
@@ -417,12 +417,12 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent select-none text-xs text-zinc-300 overflow-hidden">
+    <div className="flex flex-col h-full bg-[#f8f8fa] select-none text-xs text-[#111113] overflow-hidden">
       {/* 1. Header Toolbar */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-white/[0.07] bg-white/[0.02] shrink-0">
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-black/[0.06] bg-white shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 font-semibold text-white">
-            <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+          <div className="flex items-center gap-1.5 font-semibold text-[#111113]">
+            <Sparkles className="w-3.5 h-3.5 text-zinc-700" />
             <span>Vault Copilot</span>
           </div>
 
@@ -431,15 +431,15 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             <div
               onClick={onOpenSettings}
               title={`Provider: ${aiStatus.provider} • Engine: GraphRAG (BM25 + Semantic + 1-Hop) • Model: ${aiStatus.embeddingModel || 'default'} (Click to configure)`}
-              className="flex items-center gap-1.5 bg-[#202028] hover:bg-[#2c2d3a] cursor-pointer px-2 py-0.5 rounded-full text-[10px] text-zinc-300 border-none shadow-sm transition-colors"
+              className="flex items-center gap-1.5 bg-[#f4f4f6] hover:bg-[#ebebef] cursor-pointer px-2 py-0.5 rounded-full text-[10px] text-[#111113] border border-black/[0.08] shadow-xs transition-colors"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
                   aiStatus.isIndexing
-                    ? 'bg-purple-400 animate-pulse'
+                    ? 'bg-zinc-700 animate-pulse'
                     : aiStatus.isProviderAvailable
-                    ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
-                    : 'bg-indigo-400'
+                    ? 'bg-emerald-500'
+                    : 'bg-zinc-400'
                 }`}
               />
               <span className="truncate max-w-[105px] font-medium">
@@ -458,14 +458,14 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             onClick={handleReindex}
             disabled={isReindexing}
             title={isReindexing ? 'Rebuilding vault vector index...' : 'Re-index vault now'}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all disabled:opacity-50"
+            className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-purple-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-zinc-700' : ''}`} />
           </button>
           <button
             onClick={handleClearChat}
             title="Clear chat history"
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
+            className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -473,7 +473,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             <button
               onClick={onOpenSettings}
               title="Open AI & Memory Settings"
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
+              className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
             >
               <Settings className="w-3.5 h-3.5" />
             </button>
@@ -482,18 +482,18 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
       </div>
 
       {/* 2. Scope Filter Strip */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-black/25 border-b border-white/[0.06] text-[11px] text-zinc-400 shrink-0">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#f4f4f6] border-b border-black/[0.06] text-[11px] text-[#585860] shrink-0">
         <div className="flex items-center gap-1.5">
-          <Globe className="w-3 h-3 text-purple-400/80" />
+          <Globe className="w-3 h-3 text-zinc-500" />
           <span>Scope:</span>
         </div>
-        <div className="flex items-center p-0.5 rounded-lg bg-[#181820] border-none">
+        <div className="flex items-center p-0.5 rounded-xl bg-[#ebebef] border border-black/[0.06]">
           <button
             onClick={() => setSearchScope('vault')}
-            className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border-none ${
+            className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
               searchScope === 'vault'
-                ? 'bg-[#705dcf] text-white shadow-sm'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                ? 'bg-white text-[#111113] shadow-xs'
+                : 'text-[#585860] hover:text-[#111113]'
             }`}
           >
             Entire Vault
@@ -501,10 +501,10 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
           {activeFile && (
             <button
               onClick={() => setSearchScope('activeNote')}
-              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border-none ${
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
                 searchScope === 'activeNote'
-                  ? 'bg-[#705dcf] text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  ? 'bg-white text-[#111113] shadow-xs'
+                  : 'text-[#585860] hover:text-[#111113]'
               }`}
             >
               Active Note
@@ -526,8 +526,8 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
               <div
                 className={`max-w-[94%] rounded-2xl px-4 py-3 leading-relaxed text-xs ${
                   isUser
-                    ? 'glass-bubble-user rounded-tr-sm'
-                    : 'glass-bubble-assistant rounded-tl-sm w-full'
+                    ? 'bg-[#18181b] text-white shadow-xs rounded-tr-sm'
+                    : 'bg-white text-[#111113] border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] rounded-tl-sm w-full'
                 }`}
               >
                 {/* Text Content */}
@@ -535,8 +535,8 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                   {msg.content ? (
                     renderFormattedMarkdown(msg.content)
                   ) : (
-                    <span className="flex items-center gap-2 text-zinc-400 italic">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                    <span className="flex items-center gap-2 text-[#8e8e93] italic">
+                      <Sparkles className="w-3.5 h-3.5 text-zinc-600 animate-spin" />
                       <span>Thinking with vault context...</span>
                     </span>
                   )}
@@ -544,13 +544,13 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
 
                 {/* Grounded Citations (Source Pills) */}
                 {!isUser && msg.sources && msg.sources.length > 0 && (
-                  <div className="mt-3.5 pt-3 border-t border-white/[0.08]">
-                    <div className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <div className="mt-3.5 pt-3 border-t border-black/[0.06]">
+                    <div className="text-[10px] font-semibold text-[#8e8e93] uppercase tracking-wider mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <FileText className="w-3 h-3 text-[#705dcf]" />
+                        <FileText className="w-3 h-3 text-zinc-700" />
                         <span>Grounded Sources ({msg.sources.length}):</span>
                       </div>
-                      <span className="text-[9px] font-mono text-zinc-500">BM25 + Dense + Graph</span>
+                      <span className="text-[9px] font-mono text-[#8e8e93]">BM25 + Dense + Graph</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {msg.sources.map((src, sIdx) => {
@@ -566,17 +566,15 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                             key={sIdx}
                             onClick={() => onNavigateFile(src.filePath)}
                             title={tooltip}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border-none text-white text-[11px] font-medium shadow-sm transition-all select-none ${
-                              isGraph ? 'bg-[#5e4db5] hover:bg-[#4d3da3]' : 'bg-[#705dcf] hover:bg-[#5e4db5]'
-                            }`}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[11px] font-medium border border-black/[0.06] shadow-xs transition-all select-none"
                           >
                             {isGraph ? (
-                              <Share2 className="w-2.5 h-2.5 shrink-0 text-amber-300" />
+                              <Share2 className="w-2.5 h-2.5 shrink-0 text-zinc-600" />
                             ) : (
-                              <ExternalLink className="w-2.5 h-2.5 shrink-0 text-white/80" />
+                              <ExternalLink className="w-2.5 h-2.5 shrink-0 text-zinc-600" />
                             )}
                             <span className="truncate max-w-[130px]">{src.noteTitle}</span>
-                            <span className="text-[9px] text-white/90 font-mono font-semibold">
+                            <span className="text-[9px] text-[#585860] font-mono font-semibold">
                               {src.score}%
                             </span>
                           </button>
@@ -592,11 +590,11 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                 <div className="flex items-center gap-1 mt-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleCopy(msg.id, msg.content)}
-                    className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-all"
+                    className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
                     title="Copy response"
                   >
                     {copiedMessageId === msg.id ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
+                      <Check className="w-3 h-3 text-emerald-600" />
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}
@@ -605,7 +603,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                   {onInsertTextAtCursor && (
                     <button
                       onClick={() => onInsertTextAtCursor(msg.content)}
-                      className="p-1 rounded-md text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] transition-all"
+                      className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
                       title="Insert response into active note"
                     >
                       <ArrowDownToLine className="w-3 h-3" />
@@ -620,7 +618,7 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                           msg.content
                         )
                       }
-                      className="p-1 rounded-md text-zinc-400 hover:text-purple-300 hover:bg-white/[0.08] transition-all"
+                      className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
                       title="Create new note from response"
                     >
                       <Plus className="w-3 h-3" />
@@ -635,8 +633,8 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
       </div>
 
       {/* 4. Chat Input Bar */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-white/[0.07] bg-white/[0.02] shrink-0">
-        <div className="relative flex items-center glass-input-dock rounded-2xl shadow-xl">
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-black/[0.06] bg-white shrink-0">
+        <div className="relative flex items-center bg-[#f4f4f6] border border-black/[0.08] rounded-2xl shadow-xs focus-within:border-zinc-400 focus-within:bg-white transition-colors">
           <textarea
             ref={inputRef}
             value={inputQuery}
@@ -654,12 +652,12 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
             }
             rows={1}
             disabled={isStreaming}
-            className="w-full bg-transparent px-3.5 py-3 pr-10 text-xs text-white placeholder-zinc-500 focus:outline-none resize-none max-h-32"
+            className="w-full bg-transparent px-3.5 py-3 pr-12 text-xs text-[#111113] placeholder-[#8e8e93] focus:outline-none resize-none max-h-32"
           />
           <button
             type="submit"
             disabled={!inputQuery.trim() || isStreaming}
-            className="absolute right-2 p-2 rounded-xl bg-[#705dcf] hover:bg-[#5e4db5] text-white disabled:opacity-30 disabled:hover:bg-[#705dcf] border-none shadow-sm transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-2 p-2 rounded-xl skeuo-btn-dark disabled:opacity-30 border-none shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             <Send className="w-3.5 h-3.5" />
           </button>

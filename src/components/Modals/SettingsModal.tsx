@@ -379,12 +379,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-2xl select-none animate-in fade-in duration-150">
-      <div className="w-[860px] h-[620px] glass-panel-elevated rounded-2xl shadow-[0_32px_96px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.18)] flex overflow-hidden text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md select-none animate-in fade-in duration-150">
+      <div className="w-[880px] h-[640px] bg-white rounded-3xl skeuo-modal flex overflow-hidden text-[#111113] border border-black/[0.08]">
         {/* Left Settings Sidebar */}
-        <div className="w-60 bg-black/30 border-r border-white/[0.08] p-3.5 flex flex-col justify-between shrink-0 overflow-y-auto">
+        <div className="w-60 bg-[#f8f8fa] border-r border-black/[0.07] p-3.5 flex flex-col justify-between shrink-0 overflow-y-auto">
           <div className="space-y-1">
-            <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider">
               Options
             </div>
 
@@ -392,11 +392,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('editor')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'editor'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3.5 h-3.5 text-zinc-600" />
               <span>Editor</span>
             </button>
 
@@ -404,11 +404,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('files')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'files'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <Folder className="w-3.5 h-3.5" />
+              <Folder className="w-3.5 h-3.5 text-zinc-600" />
               <span>Files & Links</span>
             </button>
 
@@ -416,11 +416,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('appearance')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'appearance'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <Palette className="w-3.5 h-3.5" />
+              <Palette className="w-3.5 h-3.5 text-zinc-600" />
               <span>Appearance</span>
             </button>
 
@@ -428,15 +428,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('hotkeys')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'hotkeys'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <Keyboard className="w-3.5 h-3.5" />
+              <Keyboard className="w-3.5 h-3.5 text-zinc-600" />
               <span>Hotkeys</span>
             </button>
 
-            <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider pt-3">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider pt-3">
               Core Extensions
             </div>
 
@@ -444,16 +444,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('plugins')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'plugins'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <Puzzle className="w-3.5 h-3.5" />
+              <Puzzle className="w-3.5 h-3.5 text-zinc-600" />
               <span>Core Plugins</span>
             </button>
 
             {/* Plugin Options (Sub-settings) */}
-            <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider pt-3">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider pt-3">
               Plugin Options
             </div>
 
@@ -462,11 +462,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('daily-notes')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'daily-notes'
-                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
-                <Calendar className="w-3.5 h-3.5" />
+                <Calendar className="w-3.5 h-3.5 text-zinc-600" />
                 <span>Daily Notes</span>
               </button>
             )}
@@ -476,11 +476,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('templates')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'templates'
-                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5" />
+                <Sliders className="w-3.5 h-3.5 text-zinc-600" />
                 <span>Templates</span>
               </button>
             )}
@@ -490,11 +490,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => setActiveSection('file-recovery')}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                   activeSection === 'file-recovery'
-                    ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
                 }`}
               >
-                <History className="w-3.5 h-3.5" />
+                <History className="w-3.5 h-3.5 text-zinc-600" />
                 <span>File Recovery</span>
               </button>
             )}
@@ -504,64 +504,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() => setActiveSection('ai')}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'ai'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-purple-300 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-zinc-700" />
                 <span>AI & Memory (RAG)</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-200 border border-purple-500/30 font-medium">
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 font-medium">
                 PRO
               </span>
             </button>
           </div>
 
-          <div className="pt-4 border-t border-zinc-850">
+          <div className="pt-4 border-t border-black/[0.06]">
             <button
               onClick={() => setActiveSection('about')}
               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
                 activeSection === 'about'
-                  ? 'bg-[#705dcf] text-white font-medium shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-white text-[#111113] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] border border-black/[0.08]'
+                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
               }`}
             >
-              <Info className="w-3.5 h-3.5" />
+              <Info className="w-3.5 h-3.5 text-zinc-600" />
               <span>About</span>
             </button>
           </div>
         </div>
 
         {/* Right Settings Body */}
-        <div className="flex-1 flex flex-col h-full bg-[#18181b] overflow-hidden">
+        <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-3.5 border-b border-zinc-800/80 bg-[#161619]">
-            <h2 className="text-sm font-semibold text-zinc-200 capitalize">
+          <div className="flex items-center justify-between px-6 py-3.5 border-b border-black/[0.06] bg-white">
+            <h2 className="text-sm font-semibold text-[#111113] capitalize">
               {activeSection === 'files' ? 'Files & Links' : activeSection.replace(/-/g, ' ')} Settings
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              className="p-1 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-zinc-300">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-[#585860]">
             {/* Section 1: Editor */}
             {activeSection === 'editor' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Default view for new tabs</div>
-                    <div className="text-zinc-500 text-[11px]">Choose whether notes open in Live Preview, Source, or Reading view</div>
+                    <div className="font-medium text-[#111113]">Default view for new tabs</div>
+                    <div className="text-[#8e8e93] text-[11px]">Choose whether notes open in Live Preview, Source, or Reading view</div>
                   </div>
                   <select
                     value={appConfig.defaultViewMode || 'live'}
                     onChange={e => onSaveAppConfig({ ...appConfig, defaultViewMode: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] focus:outline-none focus:border-zinc-400"
                   >
                     <option value="reading">Reading view (High Fidelity)</option>
                     <option value="live">Live Preview (Notion-style Interactive)</option>
@@ -569,42 +569,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </select>
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Fold heading</div>
-                    <div className="text-zinc-500 text-[11px]">Allow folding content under markdown headings</div>
+                    <div className="font-medium text-[#111113]">Fold heading</div>
+                    <div className="text-[#8e8e93] text-[11px]">Allow folding content under markdown headings</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={appConfig.foldHeading !== false}
                     onChange={e => onSaveAppConfig({ ...appConfig, foldHeading: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
+                    className="accent-zinc-900 w-4 h-4 cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Show frontmatter properties</div>
-                    <div className="text-zinc-500 text-[11px]">Render YAML properties widget at top of note</div>
+                    <div className="font-medium text-[#111113]">Show frontmatter properties</div>
+                    <div className="text-[#8e8e93] text-[11px]">Render YAML properties widget at top of note</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={appConfig.showFrontmatter !== false}
                     onChange={e => onSaveAppConfig({ ...appConfig, showFrontmatter: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
+                    className="accent-zinc-900 w-4 h-4 cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Readable line length</div>
-                    <div className="text-zinc-500 text-[11px]">Constrain line length for optimal reading comfort</div>
+                    <div className="font-medium text-[#111113]">Readable line length</div>
+                    <div className="text-[#8e8e93] text-[11px]">Constrain line length for optimal reading comfort</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={appConfig.readableLineLength !== false}
                     onChange={e => onSaveAppConfig({ ...appConfig, readableLineLength: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
+                    className="accent-zinc-900 w-4 h-4 cursor-pointer"
                   />
                 </div>
               </div>
@@ -613,44 +613,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 2: Files & Links */}
             {activeSection === 'files' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Automatically update internal links</div>
-                    <div className="text-zinc-500 text-[11px]">Update [[wikilinks]] across all notes when a note is renamed or moved</div>
+                    <div className="font-medium text-[#111113]">Automatically update internal links</div>
+                    <div className="text-[#8e8e93] text-[11px]">Update [[wikilinks]] across all notes when a note is renamed or moved</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={appConfig.alwaysUpdateLinks !== false}
                     onChange={e => onSaveAppConfig({ ...appConfig, alwaysUpdateLinks: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4"
+                    className="accent-zinc-900 w-4 h-4 cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Default location for new notes</div>
-                    <div className="text-zinc-500 text-[11px]">Where newly created notes are saved</div>
+                    <div className="font-medium text-[#111113]">Default location for new notes</div>
+                    <div className="text-[#8e8e93] text-[11px]">Where newly created notes are saved</div>
                   </div>
                   <select
                     value={appConfig.newFileLocation || 'root'}
                     onChange={e => onSaveAppConfig({ ...appConfig, newFileLocation: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] focus:outline-none focus:border-zinc-400"
                   >
                     <option value="root">Vault root folder</option>
                     <option value="current">Same folder as current file</option>
                   </select>
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Attachment folder path</div>
-                    <div className="text-zinc-500 text-[11px]">Folder to store pasted images and audio recordings</div>
+                    <div className="font-medium text-[#111113]">Attachment folder path</div>
+                    <div className="text-[#8e8e93] text-[11px]">Folder to store pasted images and audio recordings</div>
                   </div>
                   <input
                     type="text"
                     value={appConfig.attachmentFolderPath || 'Attachments'}
                     onChange={e => onSaveAppConfig({ ...appConfig, attachmentFolderPath: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-200 w-40"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2 py-1 text-xs text-[#111113] w-40 focus:outline-none focus:border-zinc-400"
                   />
                 </div>
               </div>
@@ -660,18 +660,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeSection === 'appearance' && (
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                  <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                     <div>
-                      <div className="font-medium text-zinc-200">Base color scheme</div>
-                      <div className="text-zinc-500 text-[11px]">Choose between Dark (Runagon) and Light (Moonstone)</div>
+                      <div className="font-medium text-[#111113]">Base color scheme</div>
+                      <div className="text-[#8e8e93] text-[11px]">Choose between Dark (Runagon) and Light (Moonstone)</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onSaveAppearanceConfig({ ...appearanceConfig, theme: 'obsidian' })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border-none font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border font-medium transition-all ${
                           appearanceConfig.theme !== 'moonstone'
-                            ? 'bg-[#705dcf] text-white shadow-sm'
-                            : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                            ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                            : 'bg-[#f4f4f6] text-[#585860] hover:text-[#111113] hover:bg-[#ececf0] border-black/[0.08]'
                         }`}
                       >
                         <Moon className="w-3.5 h-3.5" />
@@ -679,10 +679,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                       <button
                         onClick={() => onSaveAppearanceConfig({ ...appearanceConfig, theme: 'moonstone' })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border-none font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border font-medium transition-all ${
                           appearanceConfig.theme === 'moonstone'
-                            ? 'bg-[#705dcf] text-white shadow-sm'
-                            : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                            ? 'bg-[#18181b] text-white border-transparent shadow-sm'
+                            : 'bg-[#f4f4f6] text-[#585860] hover:text-[#111113] hover:bg-[#ececf0] border-black/[0.08]'
                         }`}
                       >
                         <Sun className="w-3.5 h-3.5" />
@@ -691,10 +691,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                  <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                     <div>
-                      <div className="font-medium text-zinc-200">Base font size</div>
-                      <div className="text-zinc-500 text-[11px]">{appearanceConfig.baseFontSize || 16}px</div>
+                      <div className="font-medium text-[#111113]">Base font size</div>
+                      <div className="text-[#8e8e93] text-[11px]">{appearanceConfig.baseFontSize || 16}px</div>
                     </div>
                     <input
                       type="range"
@@ -702,7 +702,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       max="22"
                       value={appearanceConfig.baseFontSize || 16}
                       onChange={e => onSaveAppearanceConfig({ ...appearanceConfig, baseFontSize: Number(e.target.value) })}
-                      className="accent-purple-500 w-36"
+                      className="accent-zinc-900 w-36"
                     />
                   </div>
                 </div>
@@ -712,7 +712,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 4: Core Plugins */}
             {activeSection === 'plugins' && (
               <div className="space-y-2">
-                <div className="text-zinc-400 mb-3 text-[11px]">
+                <div className="text-[#8e8e93] mb-3 text-[11px]">
                   Runagon built-in core extensions:
                 </div>
                 {Object.entries({
@@ -739,17 +739,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   return (
                     <div
                       key={id}
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/70"
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#f8f8fa] border border-black/[0.06]"
                     >
                       <div>
-                        <div className="font-medium text-zinc-200 capitalize">{id.replace(/-/g, ' ')}</div>
-                        <div className="text-[11px] text-zinc-500">{label}</div>
+                        <div className="font-medium text-[#111113] capitalize">{id.replace(/-/g, ' ')}</div>
+                        <div className="text-[11px] text-[#8e8e93]">{label}</div>
                       </div>
                       <input
                         type="checkbox"
                         checked={isEnabled}
                         onChange={e => onSaveCorePluginsConfig({ ...corePluginsConfig, [id]: e.target.checked })}
-                        className="accent-purple-500 w-4 h-4 cursor-pointer"
+                        className="accent-zinc-900 w-4 h-4 cursor-pointer"
                       />
                     </div>
                   );
@@ -760,7 +760,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 5: Hotkeys */}
             {activeSection === 'hotkeys' && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">
+                <div className="flex items-center gap-2 pb-2 border-b border-black/[0.06]">
                   <div className="relative flex-1">
                     <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" />
                     <input
@@ -768,7 +768,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       placeholder="Search hotkeys..."
                       value={hotkeySearch}
                       onChange={e => setHotkeySearch(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-700/70 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-purple-500/50"
+                      className="w-full bg-[#f4f4f6] border border-black/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#111113] focus:outline-none focus:border-zinc-400"
                     />
                   </div>
                 </div>
@@ -782,25 +782,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     return (
                       <div
                         key={cmd.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/60 text-xs hover:border-zinc-700/60 transition-colors"
+                        className="flex items-center justify-between p-2 rounded-xl bg-[#f8f8fa] border border-black/[0.06] text-xs hover:border-black/[0.12] transition-colors"
                       >
                         <div className="truncate pr-3">
-                          <div className="text-zinc-200 font-medium truncate">{cmd.title}</div>
-                          <div className="text-[10px] text-zinc-500">{cmd.category}</div>
+                          <div className="text-[#111113] font-medium truncate">{cmd.title}</div>
+                          <div className="text-[10px] text-[#8e8e93]">{cmd.category}</div>
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
                           {isRecording ? (
-                            <span className="px-2.5 py-1 rounded bg-purple-600 text-white font-mono text-[11px] animate-pulse">
+                            <span className="px-2.5 py-1 rounded bg-[#18181b] text-white font-mono text-[11px] animate-pulse">
                               Press hotkey... (Esc to cancel)
                             </span>
                           ) : (
                             <button
                               onClick={() => setRecordingCommandId(cmd.id)}
-                              className={`px-2.5 py-1 rounded font-mono text-[11px] border transition-colors ${
+                              className={`px-2.5 py-1 rounded-lg font-mono text-[11px] border transition-colors ${
                                 activeShortcut
-                                  ? 'bg-zinc-800 text-purple-300 border-zinc-700 hover:border-purple-500'
-                                  : 'bg-zinc-900/80 text-zinc-500 border-dashed border-zinc-700 hover:text-zinc-300'
+                                  ? 'bg-white text-[#111113] border-black/[0.1] shadow-xs hover:border-black/[0.2]'
+                                  : 'bg-black/[0.03] text-[#8e8e93] border-dashed border-black/[0.12] hover:text-[#111113]'
                               }`}
                             >
                               {activeShortcut || 'Set hotkey'}
@@ -815,7 +815,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 onSaveHotkeysConfig(next);
                               }}
                               title="Reset to default"
-                              className="p-1 text-zinc-500 hover:text-purple-300 rounded hover:bg-zinc-800"
+                              className="p-1 text-[#8e8e93] hover:text-[#111113] rounded hover:bg-black/[0.05]"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
                             </button>
@@ -828,7 +828,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 onSaveHotkeysConfig(next);
                               }}
                               title="Clear hotkey"
-                              className="p-1 text-zinc-500 hover:text-rose-400 rounded hover:bg-zinc-800"
+                              className="p-1 text-[#8e8e93] hover:text-rose-600 rounded hover:bg-black/[0.05]"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -844,41 +844,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Sub-setting: Daily Notes */}
             {activeSection === 'daily-notes' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Date format</div>
-                    <div className="text-zinc-500 text-[11px]">Filename format for daily notes (e.g. YYYY-MM-DD or YYYY/MM/DD)</div>
+                    <div className="font-medium text-[#111113]">Date format</div>
+                    <div className="text-[#8e8e93] text-[11px]">Filename format for daily notes (e.g. YYYY-MM-DD or YYYY/MM/DD)</div>
                   </div>
                   <input
                     type="text"
                     value={dailyConfig.format || 'YYYY-MM-DD'}
                     onChange={e => handleSaveDailyConfig({ ...dailyConfig, format: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44 font-mono"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-44 font-mono focus:outline-none focus:border-zinc-400"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">New file location</div>
-                    <div className="text-zinc-500 text-[11px]">Folder where daily notes are created</div>
+                    <div className="font-medium text-[#111113]">New file location</div>
+                    <div className="text-[#8e8e93] text-[11px]">Folder where daily notes are created</div>
                   </div>
                   <input
                     type="text"
                     value={dailyConfig.folder || 'Daily'}
                     onChange={e => handleSaveDailyConfig({ ...dailyConfig, folder: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-44 focus:outline-none focus:border-zinc-400"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Template file location</div>
-                    <div className="text-zinc-500 text-[11px]">Note to use as a template for new daily notes</div>
+                    <div className="font-medium text-[#111113]">Template file location</div>
+                    <div className="text-[#8e8e93] text-[11px]">Note to use as a template for new daily notes</div>
                   </div>
                   <select
                     value={dailyConfig.template || ''}
                     onChange={e => handleSaveDailyConfig({ ...dailyConfig, template: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-52"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-52 focus:outline-none focus:border-zinc-400"
                   >
                     <option value="">None</option>
                     {files.filter(f => f.extension === 'md').map(f => (
@@ -887,16 +887,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </select>
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Open on startup</div>
-                    <div className="text-zinc-500 text-[11px]">Automatically open today's daily note when vault opens</div>
+                    <div className="font-medium text-[#111113]">Open on startup</div>
+                    <div className="text-[#8e8e93] text-[11px]">Automatically open today's daily note when vault opens</div>
                   </div>
                   <input
                     type="checkbox"
                     checked={Boolean(dailyConfig.autorun)}
                     onChange={e => handleSaveDailyConfig({ ...dailyConfig, autorun: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4 cursor-pointer"
+                    className="accent-zinc-900 w-4 h-4 cursor-pointer"
                   />
                 </div>
               </div>
@@ -905,42 +905,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Sub-setting: Templates */}
             {activeSection === 'templates' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Template folder location</div>
-                    <div className="text-zinc-500 text-[11px]">Folder containing reusable markdown templates</div>
+                    <div className="font-medium text-[#111113]">Template folder location</div>
+                    <div className="text-[#8e8e93] text-[11px]">Folder containing reusable markdown templates</div>
                   </div>
                   <input
                     type="text"
                     value={templatesConfig.folder || 'Templates'}
                     onChange={e => handleSaveTemplatesConfig({ ...templatesConfig, folder: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-44 focus:outline-none focus:border-zinc-400"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Date format token</div>
-                    <div className="text-zinc-500 text-[11px]">Format for replaces {'{{date}}'}</div>
+                    <div className="font-medium text-[#111113]">Date format token</div>
+                    <div className="text-[#8e8e93] text-[11px]">Format for replaces {'{{date}}'}</div>
                   </div>
                   <input
                     type="text"
                     value={templatesConfig.dateFormat || 'YYYY-MM-DD'}
                     onChange={e => handleSaveTemplatesConfig({ ...templatesConfig, dateFormat: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44 font-mono"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-44 font-mono focus:outline-none focus:border-zinc-400"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Time format token</div>
-                    <div className="text-zinc-500 text-[11px]">Format for replaces {'{{time}}'}</div>
+                    <div className="font-medium text-[#111113]">Time format token</div>
+                    <div className="text-[#8e8e93] text-[11px]">Format for replaces {'{{time}}'}</div>
                   </div>
                   <input
                     type="text"
                     value={templatesConfig.timeFormat || 'HH:mm'}
                     onChange={e => handleSaveTemplatesConfig({ ...templatesConfig, timeFormat: e.target.value })}
-                    className="bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1 text-xs text-zinc-200 w-44 font-mono"
+                    className="bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2.5 py-1 text-xs text-[#111113] w-44 font-mono focus:outline-none focus:border-zinc-400"
                   />
                 </div>
               </div>
@@ -949,15 +949,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Sub-setting: File Recovery */}
             {activeSection === 'file-recovery' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="font-medium text-zinc-200">Local snapshot recovery</div>
-                    <div className="text-zinc-500 text-[11px]">Browse previous note versions or clear backup snapshots</div>
+                    <div className="font-medium text-[#111113]">Local snapshot recovery</div>
+                    <div className="text-[#8e8e93] text-[11px]">Browse previous note versions or clear backup snapshots</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={onOpenFileRecoveryModal}
-                      className="px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs transition-colors shadow-sm"
+                      className="px-3.5 py-1.5 rounded-lg skeuo-btn-dark font-medium text-xs shadow-sm"
                     >
                       View Snapshots
                     </button>
@@ -968,7 +968,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           alert('Recovery snapshot cache cleared.');
                         }
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-rose-950/60 text-zinc-300 hover:text-rose-300 border border-zinc-750 text-xs transition-colors"
+                      className="px-3.5 py-1.5 rounded-lg skeuo-btn text-rose-600 hover:text-rose-700 text-xs"
                     >
                       Clear History
                     </button>
@@ -981,23 +981,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeSection === 'ai' && (
               <div className="space-y-6">
                 {/* Header Banner */}
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.06]">
                   <div>
-                    <div className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-purple-400" />
+                    <div className="text-base font-bold text-[#111113] flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-zinc-700" />
                       <span>AI & Vault Memory (GraphRAG)</span>
                     </div>
-                    <div className="text-zinc-400 text-xs mt-0.5">
+                    <div className="text-[#585860] text-xs mt-0.5">
                       Ground every response in your private notes using hybrid semantic retrieval.
                     </div>
                   </div>
                   {aiStatus && (
                     <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
                       aiStatus.isProviderAvailable
-                        ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-amber-950/60 text-amber-300 border border-amber-500/30'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
                     }`}>
-                      <span className={`w-2 h-2 rounded-full ${aiStatus.isProviderAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                      <span className={`w-2 h-2 rounded-full ${aiStatus.isProviderAvailable ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                       <span>{aiStatus.isProviderAvailable ? 'Engine Connected' : 'Engine Offline'}</span>
                     </div>
                   )}
@@ -1005,48 +1005,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* 1. Provider Choice Cards */}
                 <div className="space-y-2">
-                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">AI Intelligence Provider</label>
+                  <label className="text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider">AI Intelligence Provider</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div
                       onClick={() => setAiProvider('ollama')}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                         aiProvider === 'ollama'
-                          ? 'bg-purple-950/30 border-purple-500/80 ring-2 ring-purple-500/20'
-                          : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                          ? 'bg-white border-black/[0.18] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] ring-1 ring-black/[0.08]'
+                          : 'bg-[#f8f8fa] border-black/[0.06] hover:border-black/[0.12]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2 font-medium text-zinc-100 text-xs">
-                          <Cpu className="w-4 h-4 text-purple-400" />
+                        <div className="flex items-center gap-2 font-medium text-[#111113] text-xs">
+                          <Cpu className="w-4 h-4 text-zinc-700" />
                           <span>Local Ollama</span>
                         </div>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 font-medium">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-800 font-medium border border-black/[0.05]">
                           100% Private
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                      <p className="text-[11px] text-[#585860] leading-relaxed">
                         Runs directly on your machine. Zero data sent to the cloud. Free forever.
                       </p>
                     </div>
 
                     <div
                       onClick={() => setAiProvider('openai')}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                         aiProvider === 'openai'
-                          ? 'bg-purple-950/30 border-purple-500/80 ring-2 ring-purple-500/20'
-                          : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+                          ? 'bg-white border-black/[0.18] shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] ring-1 ring-black/[0.08]'
+                          : 'bg-[#f8f8fa] border-black/[0.06] hover:border-black/[0.12]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2 font-medium text-zinc-100 text-xs">
-                          <Globe className="w-4 h-4 text-cyan-400" />
+                        <div className="flex items-center gap-2 font-medium text-[#111113] text-xs">
+                          <Globe className="w-4 h-4 text-zinc-700" />
                           <span>Cloud AI (API Key)</span>
                         </div>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 font-medium">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-800 font-medium border border-black/[0.05]">
                           Fastest
                         </span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                      <p className="text-[11px] text-[#585860] leading-relaxed">
                         Connect OpenAI, Google Gemini, Claude, DeepSeek, or OpenRouter with an API key.
                       </p>
                     </div>
@@ -1055,39 +1055,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* 2. Provider Specific Settings Form */}
                 {aiProvider === 'ollama' ? (
-                  <div className="space-y-3.5 bg-black/20 p-4 rounded-xl border border-white/[0.06]">
+                  <div className="space-y-3.5 bg-[#f8f8fa] p-4 rounded-2xl border border-black/[0.07]">
                     {/* Ollama Status Alert */}
                     {aiStatus?.isProviderAvailable ? (
-                      <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-300">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                         <span>Ollama is detected and responding locally ({aiStatus.availableModels?.length || 0} models detected).</span>
                       </div>
                     ) : (
-                      <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300">
-                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-800">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                         <span>Ollama not detected at {ollamaUrl}. Make sure the Ollama application is running.</span>
                       </div>
                     )}
 
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-zinc-200">Ollama Server Address</label>
+                      <label className="text-xs font-medium text-[#111113]">Ollama Server Address</label>
                       <input
                         type="text"
                         value={ollamaUrl}
                         onChange={e => setOllamaUrl(e.target.value)}
                         placeholder="http://127.0.0.1:11434"
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                        className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-medium text-zinc-200">Chat & Reasoning Model</label>
+                          <label className="text-xs font-medium text-[#111113]">Chat & Reasoning Model</label>
                           <button
                             onClick={fetchAiStatus}
                             title="Refresh detected models"
-                            className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                            className="text-[10px] text-[#585860] hover:text-[#111113] flex items-center gap-1"
                           >
                             <RefreshCw className="w-2.5 h-2.5" />
                             <span>Refresh</span>
@@ -1097,7 +1097,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           <select
                             value={chatModel}
                             onChange={e => setChatModel(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
+                            className="w-full bg-white border border-black/[0.1] rounded-xl px-2.5 py-1.5 text-xs text-[#111113] focus:outline-none focus:border-zinc-400"
                           >
                             {aiStatus.availableModels.map((m: string) => (
                               <option key={m} value={m}>{m}</option>
@@ -1109,29 +1109,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             value={chatModel}
                             onChange={e => setChatModel(e.target.value)}
                             placeholder="qwen2.5:7b or llama3.2"
-                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                            className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                           />
                         )}
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-zinc-200">Embedding Model</label>
+                        <label className="text-xs font-medium text-[#111113]">Embedding Model</label>
                         <input
                           type="text"
                           value={embeddingModel}
                           onChange={e => setEmbeddingModel(e.target.value)}
                           placeholder="nomic-embed-text:latest"
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                          className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                         />
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3.5 bg-black/20 p-4 rounded-xl border border-white/[0.06]">
+                  <div className="space-y-3.5 bg-[#f8f8fa] p-4 rounded-2xl border border-black/[0.07]">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-medium text-zinc-200">API Key</label>
-                        <span className="text-[10px] text-zinc-500">Stored locally in .obsidian/ai-config.json</span>
+                        <label className="text-xs font-medium text-[#111113]">API Key</label>
+                        <span className="text-[10px] text-[#8e8e93]">Stored locally in .obsidian/ai-config.json</span>
                       </div>
                       <div className="relative">
                         <input
@@ -1139,12 +1139,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           value={apiKey}
                           onChange={e => setApiKey(e.target.value)}
                           placeholder={aiStatus?.hasApiKey ? '•••••••••••••••• (API key configured)' : 'sk-...'}
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 pr-8 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                          className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 pr-8 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                         />
                         <button
                           type="button"
                           onClick={() => setShowApiKey(prev => !prev)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
                         >
                           {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                         </button>
@@ -1153,29 +1153,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-zinc-200">API Base URL</label>
+                        <label className="text-xs font-medium text-[#111113]">API Base URL</label>
                         <input
                           type="text"
                           value={apiUrl}
                           onChange={e => setApiUrl(e.target.value)}
                           placeholder="https://api.openai.com/v1/chat/completions"
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                          className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-zinc-200">Chat Model Name</label>
+                        <label className="text-xs font-medium text-[#111113]">Chat Model Name</label>
                         <input
                           type="text"
                           value={chatModel}
                           onChange={e => setChatModel(e.target.value)}
                           placeholder="gpt-4o-mini"
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-200 font-mono focus:outline-none focus:border-purple-500"
+                          className="w-full bg-white border border-black/[0.1] rounded-xl px-3 py-1.5 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
                         />
                       </div>
                     </div>
 
                     {/* Quick Preset Buttons */}
-                    <div className="flex items-center gap-1.5 pt-1 text-[11px] text-zinc-400">
+                    <div className="flex items-center gap-1.5 pt-1 text-[11px] text-[#585860]">
                       <span>Presets:</span>
                       <button
                         type="button"
@@ -1183,7 +1183,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           setApiUrl('https://api.openai.com/v1/chat/completions');
                           setChatModel('gpt-4o-mini');
                         }}
-                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                        className="px-2 py-0.5 rounded-lg bg-white hover:bg-[#f4f4f6] text-[#111113] text-[10px] border border-black/[0.08] shadow-xs"
                       >
                         OpenAI (GPT-4o Mini)
                       </button>
@@ -1193,7 +1193,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           setApiUrl('https://openrouter.ai/api/v1/chat/completions');
                           setChatModel('anthropic/claude-3.5-sonnet');
                         }}
-                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                        className="px-2 py-0.5 rounded-lg bg-white hover:bg-[#f4f4f6] text-[#111113] text-[10px] border border-black/[0.08] shadow-xs"
                       >
                         OpenRouter (Claude 3.5)
                       </button>
@@ -1203,7 +1203,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           setApiUrl('https://api.groq.com/openai/v1/chat/completions');
                           setChatModel('llama-3.3-70b-versatile');
                         }}
-                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px]"
+                        className="px-2 py-0.5 rounded-lg bg-white hover:bg-[#f4f4f6] text-[#111113] text-[10px] border border-black/[0.08] shadow-xs"
                       >
                         Groq (Llama 3.3)
                       </button>
@@ -1217,7 +1217,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       onClick={handleSaveAndTestAiConfig}
                       disabled={isSavingAi}
-                      className="px-4 py-2 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] text-white font-medium text-xs flex items-center gap-2 transition-all shadow-md disabled:opacity-50"
+                      className="px-4 py-2 rounded-xl skeuo-btn-dark font-medium text-xs flex items-center gap-2 shadow-sm disabled:opacity-50"
                     >
                       <Zap className={`w-3.5 h-3.5 ${isSavingAi ? 'animate-bounce' : ''}`} />
                       <span>{isSavingAi ? 'Testing Connection...' : 'Save & Test Connection'}</span>
@@ -1225,15 +1225,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   {aiTestResult && (
-                    <div className={`p-2.5 rounded-lg text-xs flex items-center gap-2 transition-all ${
+                    <div className={`p-2.5 rounded-xl text-xs flex items-center gap-2 transition-all ${
                       aiTestResult.status === 'success'
-                        ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200'
-                        : 'bg-rose-950/40 border border-rose-500/40 text-rose-200'
+                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                        : 'bg-rose-50 border border-rose-200 text-rose-800'
                     }`}>
                       {aiTestResult.status === 'success' ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       ) : (
-                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                       )}
                       <span>{aiTestResult.message}</span>
                     </div>
@@ -1241,16 +1241,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* 4. Vault Memory Index Status */}
-                <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-3">
+                <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4 text-purple-400" />
-                      <span className="font-semibold text-zinc-100 text-xs">Vault Vector Index Health</span>
+                      <Database className="w-4 h-4 text-zinc-700" />
+                      <span className="font-semibold text-[#111113] text-xs">Vault Vector Index Health</span>
                     </div>
                     <button
                       onClick={handleTriggerReindex}
                       disabled={isReindexingAi}
-                      className="px-2.5 py-1 rounded-md bg-purple-900/50 hover:bg-purple-900/80 text-purple-200 border border-purple-500/40 text-[11px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                      className="px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] border border-black/[0.1] text-[11px] font-medium flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                     >
                       <RefreshCw className={`w-3 h-3 ${isReindexingAi ? 'animate-spin' : ''}`} />
                       <span>{isReindexingAi ? 'Re-indexing...' : 'Re-index Vault'}</span>
@@ -1258,43 +1258,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-3 gap-2.5">
-                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
-                      <div className="text-[10px] text-zinc-400">Indexed Notes</div>
-                      <div className="text-sm font-bold text-white mt-0.5">
+                    <div className="bg-white p-2.5 rounded-xl border border-black/[0.06] shadow-xs">
+                      <div className="text-[10px] text-[#8e8e93]">Indexed Notes</div>
+                      <div className="text-sm font-bold text-[#111113] mt-0.5">
                         {aiStatus?.indexedFiles ?? 0} / {aiStatus?.totalFiles ?? 0}
                       </div>
                     </div>
-                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
-                      <div className="text-[10px] text-zinc-400">Memory Chunks</div>
-                      <div className="text-sm font-bold text-white mt-0.5">
+                    <div className="bg-white p-2.5 rounded-xl border border-black/[0.06] shadow-xs">
+                      <div className="text-[10px] text-[#8e8e93]">Memory Chunks</div>
+                      <div className="text-sm font-bold text-[#111113] mt-0.5">
                         {aiStatus?.totalChunks ?? 0} chunks
                       </div>
                     </div>
-                    <div className="bg-black/30 p-2.5 rounded-lg border border-white/[0.04]">
-                      <div className="text-[10px] text-zinc-400">Active Embedding</div>
-                      <div className="text-xs font-semibold text-purple-300 mt-1 truncate" title={aiStatus?.embeddingModel}>
+                    <div className="bg-white p-2.5 rounded-xl border border-black/[0.06] shadow-xs">
+                      <div className="text-[10px] text-[#8e8e93]">Active Embedding</div>
+                      <div className="text-xs font-semibold text-[#111113] mt-1 truncate" title={aiStatus?.embeddingModel}>
                         {aiStatus?.embeddingModel ? aiStatus.embeddingModel.split(':')[0] : 'Local Hash'}
                       </div>
                     </div>
                   </div>
 
                   {reindexSuccess && (
-                    <div className="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-1">
-                      <Check className="w-3.5 h-3.5" />
+                    <div className="text-[11px] text-emerald-700 flex items-center gap-1.5 pt-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Vault index refreshed successfully! All notes are synchronized into RAG memory.</span>
                     </div>
                   )}
                 </div>
 
                 {/* 5. 1-Click External AI Hub (Claude Desktop & Cursor MCP) */}
-                <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3.5">
+                <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] space-y-3.5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-zinc-100 text-xs flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-purple-400" />
+                      <div className="font-semibold text-[#111113] text-xs flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-zinc-700" />
                         <span>1-Click External AI Hub (Model Context Protocol)</span>
                       </div>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                      <p className="text-[11px] text-[#585860] mt-0.5">
                         Connect Claude Desktop, Cursor, or terminal assistants to your vault memory seamlessly.
                       </p>
                     </div>
@@ -1303,24 +1303,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     {mcpStatus && (
                       <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1.5 ${
                         mcpStatus.isClaudeConnected 
-                          ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40' 
-                          : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                          : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                         <span>{mcpStatus.isClaudeConnected ? 'Claude Connected' : 'Claude Ready'}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Hub Tabs */}
-                  <div className="flex items-center gap-1.5 border-b border-zinc-800 pb-2">
+                  <div className="flex items-center gap-1.5 border-b border-black/[0.06] pb-2">
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('claude')}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                         activeMcpTab === 'claude' 
-                          ? 'bg-[#705dcf] text-white shadow-sm' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
+                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
                       }`}
                     >
                       <Bot className="w-3.5 h-3.5" />
@@ -1329,10 +1329,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('cursor')}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                         activeMcpTab === 'cursor' 
-                          ? 'bg-[#705dcf] text-white shadow-sm' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
+                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
                       }`}
                     >
                       <Code2 className="w-3.5 h-3.5" />
@@ -1341,10 +1341,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('cli')}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                         activeMcpTab === 'cli' 
-                          ? 'bg-[#705dcf] text-white shadow-sm' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
+                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
                       }`}
                     >
                       <Terminal className="w-3.5 h-3.5" />
@@ -1353,10 +1353,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('raw')}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
                         activeMcpTab === 'raw' 
-                          ? 'bg-[#705dcf] text-white shadow-sm' 
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
+                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
                       }`}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1367,15 +1367,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 1: Claude Desktop (1-Click Auto Installer) */}
                   {activeMcpTab === 'claude' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <div className="font-semibold text-zinc-200 text-xs">
+                            <div className="font-semibold text-[#111113] text-xs">
                               {mcpStatus?.isClaudeConnected 
                                 ? '✓ Connected to Claude Desktop' 
                                 : '1-Click Claude Desktop Integration'}
                             </div>
-                            <p className="text-[11px] text-zinc-400 leading-relaxed">
+                            <p className="text-[11px] text-[#585860] leading-relaxed">
                               {mcpStatus?.isClaudeConnected
                                 ? 'Claude Desktop is configured to query your notes using standard MCP tools. If Claude was open, restart it to load the memory tools.'
                                 : 'Click below to automatically configure Claude Desktop. No manual JSON editing or terminal commands required.'}
@@ -1386,7 +1386,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <button
                               onClick={handleUninstallClaude}
                               disabled={isInstallingClaude}
-                              className="px-3 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 border border-rose-500/40 text-xs font-medium transition-all shrink-0 disabled:opacity-50"
+                              className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-medium transition-all shrink-0 disabled:opacity-50"
                             >
                               {isInstallingClaude ? 'Disconnecting...' : 'Disconnect'}
                             </button>
@@ -1394,7 +1394,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <button
                               onClick={handleInstallClaude}
                               disabled={isInstallingClaude}
-                              className="px-3.5 py-1.5 rounded-lg bg-[#705dcf] hover:bg-[#5e4db5] text-white text-xs font-medium flex items-center gap-1.5 transition-all shadow-md shrink-0 disabled:opacity-50"
+                              className="px-3.5 py-1.5 rounded-xl skeuo-btn-dark text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm shrink-0 disabled:opacity-50"
                             >
                               <Zap className={`w-3.5 h-3.5 ${isInstallingClaude ? 'animate-bounce' : ''}`} />
                               <span>{isInstallingClaude ? 'Connecting...' : 'Connect to Claude Desktop'}</span>
@@ -1403,8 +1403,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
 
                         {mcpStatus?.isDifferentVault && (
-                          <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-2">
-                            <span className="truncate">Claude is currently connected to: <code className="text-amber-100">{mcpStatus.connectedVaultPath}</code></span>
+                          <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between gap-2">
+                            <span className="truncate">Claude is currently connected to: <code className="text-amber-900 font-semibold">{mcpStatus.connectedVaultPath}</code></span>
                             <button
                               onClick={handleInstallClaude}
                               disabled={isInstallingClaude}
@@ -1416,21 +1416,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         )}
 
                         {claudeFeedback && (
-                          <div className={`p-2 rounded text-xs flex items-center gap-2 ${
+                          <div className={`p-2 rounded-xl text-xs flex items-center gap-2 ${
                             claudeFeedback.status === 'success' 
-                              ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-200' 
-                              : 'bg-rose-950/40 border border-rose-500/40 text-rose-200'
+                              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
+                              : 'bg-rose-50 border border-rose-200 text-rose-800'
                           }`}>
                             {claudeFeedback.status === 'success' ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                             ) : (
-                              <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                             )}
                             <span>{claudeFeedback.message}</span>
                           </div>
                         )}
 
-                        <div className="text-[10px] text-zinc-500 font-mono break-all pt-1">
+                        <div className="text-[10px] text-[#8e8e93] font-mono break-all pt-1">
                           Config target: {mcpStatus?.claudeConfigPath || '~/Library/Application Support/Claude/claude_desktop_config.json'}
                         </div>
                       </div>
@@ -1440,33 +1440,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 2: Cursor IDE */}
                   {activeMcpTab === 'cursor' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-zinc-200">Cursor MCP Setup</span>
+                          <span className="text-xs font-semibold text-[#111113]">Cursor MCP Setup</span>
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={handleCopyCursorConfig}
-                              className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                              className="px-2.5 py-1 rounded-lg skeuo-btn-dark text-[11px] font-medium flex items-center gap-1.5 shadow-xs"
                             >
-                              {copiedCursor ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
+                              {copiedCursor ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                               <span>{copiedCursor ? 'Copied Full JSON!' : 'Copy Cursor Config'}</span>
                             </button>
                             <button
                               onClick={handleCopyCursorCommand}
-                              className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-medium flex items-center gap-1.5 transition-colors border border-zinc-700"
+                              className="px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] text-[11px] font-medium flex items-center gap-1.5 border border-black/[0.08]"
                             >
-                              {copiedCursorCommand ? <Check className="w-3 h-3 text-emerald-300" /> : <Terminal className="w-3 h-3" />}
+                              {copiedCursorCommand ? <Check className="w-3 h-3 text-emerald-600" /> : <Terminal className="w-3 h-3" />}
                               <span>{copiedCursorCommand ? 'Copied Command!' : 'Copy Command Only'}</span>
                             </button>
                           </div>
                         </div>
 
-                        <ol className="list-decimal pl-4 space-y-1 text-[11px] text-zinc-400 leading-relaxed">
-                          <li>Open Cursor Settings (<kbd className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">Cmd+,</kbd> or <kbd className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">Ctrl+,</kbd>) &gt; <strong>Features</strong> &gt; <strong>MCP</strong>.</li>
+                        <ol className="list-decimal pl-4 space-y-1 text-[11px] text-[#585860] leading-relaxed">
+                          <li>Open Cursor Settings (<kbd className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-800 border border-zinc-200">Cmd+,</kbd> or <kbd className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-800 border border-zinc-200">Ctrl+,</kbd>) &gt; <strong>Features</strong> &gt; <strong>MCP</strong>.</li>
                           <li>Click <strong>Add New MCP Server</strong> and paste this configuration:</li>
                         </ol>
 
-                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-purple-200 select-all overflow-x-auto">
+                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto">
                           {mcpStatus?.cursorConfig 
                             ? JSON.stringify(mcpStatus.cursorConfig, null, 2)
                             : 'Loading configuration...'}
@@ -1478,23 +1478,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 3: Claude Code CLI */}
                   {activeMcpTab === 'cli' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-zinc-200">Claude Code CLI Terminal Command</span>
+                          <span className="text-xs font-semibold text-[#111113]">Claude Code CLI Terminal Command</span>
                           <button
                             onClick={handleCopyCliCommand}
-                            className="px-2.5 py-1 rounded bg-[#705dcf] hover:bg-[#5e4db5] text-white text-[11px] font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                            className="px-2.5 py-1 rounded-lg skeuo-btn-dark text-[11px] font-medium flex items-center gap-1.5 shadow-xs"
                           >
-                            {copiedCli ? <Check className="w-3 h-3 text-emerald-200" /> : <Copy className="w-3 h-3" />}
+                            {copiedCli ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                             <span>{copiedCli ? 'Copied Command!' : 'Copy Command'}</span>
                           </button>
                         </div>
 
-                        <p className="text-[11px] text-zinc-400">
+                        <p className="text-[11px] text-[#585860]">
                           Run this single command in your terminal to enable vault memory in Claude Code:
                         </p>
 
-                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto whitespace-pre-wrap break-all">
+                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto whitespace-pre-wrap break-all">
                           {mcpStatus?.claudeCliCommand || 'claude mcp add runagon-vault-memory node ...'}
                         </div>
                       </div>
@@ -1504,21 +1504,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 4: Direct Spec / HTTP */}
                   {activeMcpTab === 'raw' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3 rounded-lg bg-black/30 border border-white/5 space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-zinc-200">Direct HTTP Endpoint</span>
+                          <span className="text-xs font-semibold text-[#111113]">Direct HTTP Endpoint</span>
                           <button
                             onClick={handleCopyMcpConfig}
-                            className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] flex items-center gap-1.5 transition-colors border border-zinc-700"
+                            className="px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] text-[11px] flex items-center gap-1.5 border border-black/[0.08]"
                           >
-                            {copiedMcp ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            {copiedMcp ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                             <span>{copiedMcp ? 'Copied!' : 'Copy URL Config'}</span>
                           </button>
                         </div>
-                        <p className="text-[11px] text-zinc-400">
+                        <p className="text-[11px] text-[#585860]">
                           For custom AI agents and HTTP MCP clients:
                         </p>
-                        <div className="bg-black/60 p-2.5 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-300 select-all overflow-x-auto">
+                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto">
                           {`{ "mcpServers": { "runagon-vault": { "url": "http://localhost:${mcpStatus?.port || 5175}/api/vault/ai/mcp" } } }`}
                         </div>
                       </div>
@@ -1526,8 +1526,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   )}
 
                   {/* Privacy & Local Security Notice */}
-                  <div className="pt-1 flex items-center gap-2 text-[10.5px] text-zinc-500">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <div className="pt-1 flex items-center gap-2 text-[10.5px] text-[#8e8e93]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span>100% Private & Local: All queries are executed directly on 127.0.0.1. Your notes never leave your computer.</span>
                   </div>
                 </div>
@@ -1537,38 +1537,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 6: About */}
             {activeSection === 'about' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-950/30 to-purple-950/20 border border-blue-500/30 flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0 shadow-lg">
-                    <img src="/logo-symbol.png" alt="Runagon" className="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(68,87,255,0.6)]" />
+                <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] flex items-center justify-center shrink-0">
+                    <img src="/logo-symbol.png" alt="Runagon" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="space-y-1">
-                    <div className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                    <div className="text-base font-bold text-[#111113] flex items-center gap-2">
                       <span>Runagon</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-300 border border-blue-500/30 font-mono">v1.0.0</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-800 font-mono">v1.0.0</span>
                     </div>
-                    <p className="text-zinc-400 text-xs leading-relaxed">
+                    <p className="text-[#585860] text-xs leading-relaxed">
                       100% private, local-first knowledge base and AI memory engine. All notes, canvases, bookmarks, CSS snippets, and graph indices live directly on your disk.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="text-zinc-500 uppercase tracking-wider text-[10px] font-semibold">Active Vault Directory</div>
-                  <div className="font-mono text-zinc-300 text-xs bg-zinc-900 p-2.5 rounded-lg border border-zinc-800 break-all select-text">
+                  <div className="text-[#8e8e93] uppercase tracking-wider text-[10px] font-semibold">Active Vault Directory</div>
+                  <div className="font-mono text-[#111113] text-xs bg-[#f8f8fa] p-2.5 rounded-xl border border-black/[0.07] break-all select-text">
                     {vaultPath}
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="text-zinc-500 uppercase tracking-wider text-[10px] font-semibold">Engine Features</div>
-                  <ul className="list-disc pl-4 space-y-1 text-zinc-400 text-xs">
-                    <li>Dynamic CSS Snippet Injection from <code className="text-zinc-300">.obsidian/snippets/</code></li>
-                    <li>Configurable Hotkeys remapped into <code className="text-zinc-300">.obsidian/hotkeys.json</code></li>
-                    <li>Web Worker AST & CachedMetadata parsing (<code className="text-zinc-300">worker.js</code>)</li>
-                    <li>Barnes-Hut Quadtree physics simulation (<code className="text-zinc-300">sim.js</code>)</li>
-                    <li>JSON Canvas 1.0 viewer & editor (<code className="text-zinc-300">.canvas</code>)</li>
+                  <div className="text-[#8e8e93] uppercase tracking-wider text-[10px] font-semibold">Engine Features</div>
+                  <ul className="list-disc pl-4 space-y-1 text-[#585860] text-xs">
+                    <li>Dynamic CSS Snippet Injection from <code className="text-[#111113] font-semibold">.obsidian/snippets/</code></li>
+                    <li>Configurable Hotkeys remapped into <code className="text-[#111113] font-semibold">.obsidian/hotkeys.json</code></li>
+                    <li>Web Worker AST & CachedMetadata parsing (<code className="text-[#111113] font-semibold">worker.js</code>)</li>
+                    <li>Barnes-Hut Quadtree physics simulation (<code className="text-[#111113] font-semibold">sim.js</code>)</li>
+                    <li>JSON Canvas 1.0 viewer & editor (<code className="text-[#111113] font-semibold">.canvas</code>)</li>
                     <li>Automatic link refactoring across vault on rename and folder move</li>
-                    <li>Automated local file recovery snapshots (<code className="text-zinc-300">.obsidian/file-recovery</code>)</li>
+                    <li>Automated local file recovery snapshots (<code className="text-[#111113] font-semibold">.obsidian/file-recovery</code>)</li>
                   </ul>
                 </div>
               </div>

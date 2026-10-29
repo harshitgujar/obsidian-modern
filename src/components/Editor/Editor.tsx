@@ -483,7 +483,7 @@ export const Editor: React.FC<EditorProps> = ({
 
         onContentChange(file.content + linkSyntax);
       }}
-      className="flex-1 flex flex-col h-full bg-[#18181b] overflow-hidden relative select-text"
+      className="flex-1 flex flex-col h-full bg-[#ffffff] overflow-hidden relative select-text"
     >
       {/* Floating Contextual Formatting Toolbar on Selection */}
       <FloatingFormatToolbar
@@ -516,10 +516,10 @@ export const Editor: React.FC<EditorProps> = ({
       )}
 
       {/* Editor Body */}
-      <div className="flex-1 overflow-y-auto relative bg-[#18181b]">
+      <div className="flex-1 overflow-y-auto relative bg-[#ffffff]">
         {/* Floating Find & Replace Panel (Obsidian-style) */}
         {showFindReplace && (
-          <div className="absolute top-3 right-5 z-40 bg-[#1e1e24]/95 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl p-2.5 flex flex-col gap-1.5 min-w-[340px] text-xs text-zinc-200">
+          <div className="absolute top-3 right-5 z-40 skeuo-card p-3 flex flex-col gap-2 min-w-[340px] text-xs text-[#111113] shadow-[0_12px_36px_rgba(0,0,0,0.12)]">
             {/* Find Row */}
             <div className="flex items-center gap-1.5">
               <div className="relative flex-1 flex items-center">
@@ -539,9 +539,9 @@ export const Editor: React.FC<EditorProps> = ({
                     }
                   }}
                   placeholder="Find in note..."
-                  className="w-full bg-[#141418] border border-zinc-700/70 focus:border-purple-500 rounded-lg pl-7 pr-16 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
+                  className="w-full bg-[#f4f4f6] border border-black/10 focus:border-black/30 rounded-full pl-8 pr-16 py-1.5 text-xs text-[#111113] placeholder:text-[#8e8e93] focus:outline-none"
                 />
-                <span className="absolute right-2 text-[10px] text-zinc-400 font-mono">
+                <span className="absolute right-3 text-[10px] text-[#8e8e93] font-mono">
                   {findText
                     ? matches.length > 0
                       ? `${currentMatchIndex + 1}/${matches.length}`
@@ -554,7 +554,7 @@ export const Editor: React.FC<EditorProps> = ({
                 <button
                   onClick={handlePrevMatch}
                   disabled={matches.length === 0}
-                  className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1 rounded hover:bg-[#ebebef] text-[#585860] hover:text-[#111113] disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous Match (Shift+Enter)"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
@@ -562,7 +562,7 @@ export const Editor: React.FC<EditorProps> = ({
                 <button
                   onClick={handleNextMatch}
                   disabled={matches.length === 0}
-                  className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-1 rounded hover:bg-[#ebebef] text-[#585860] hover:text-[#111113] disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next Match (Enter)"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
@@ -572,7 +572,7 @@ export const Editor: React.FC<EditorProps> = ({
                     setShowFindReplace(false);
                     if (onCloseFindReplace) onCloseFindReplace();
                   }}
-                  className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                  className="p-1 rounded hover:bg-[#ebebef] text-[#8e8e93] hover:text-[#111113]"
                   title="Close (Esc)"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -588,12 +588,12 @@ export const Editor: React.FC<EditorProps> = ({
                   value={replaceText}
                   onChange={e => setReplaceText(e.target.value)}
                   placeholder="Replace with..."
-                  className="flex-1 bg-[#141418] border border-zinc-700/70 focus:border-purple-500 rounded-lg px-2.5 py-1 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
+                  className="flex-1 bg-[#f4f4f6] border border-black/10 focus:border-black/30 rounded-full px-3 py-1.5 text-xs text-[#111113] placeholder:text-[#8e8e93] focus:outline-none"
                 />
                 <button
                   onClick={handleReplaceCurrent}
                   disabled={matches.length === 0}
-                  className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[11px] font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 rounded-lg skeuo-btn text-[11px] font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Replace current occurrence"
                 >
                   Replace
@@ -601,7 +601,7 @@ export const Editor: React.FC<EditorProps> = ({
                 <button
                   onClick={handleReplaceAll}
                   disabled={matches.length === 0}
-                  className="px-2 py-1 rounded bg-purple-600/80 hover:bg-purple-600 text-white text-[11px] font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="px-2.5 py-1 rounded-lg skeuo-btn-dark text-[11px] font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Replace all occurrences"
                 >
                   All
@@ -619,23 +619,23 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (isImage) {
             return (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#141416] overflow-auto select-none">
-                <div className="max-w-4xl max-h-[80vh] flex flex-col items-center gap-4 bg-[#18181b] p-4 rounded-xl border border-zinc-800 shadow-2xl">
+              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#f4f4f6] overflow-auto select-none">
+                <div className="max-w-4xl max-h-[80vh] flex flex-col items-center gap-4 skeuo-card p-4">
                   <img
                     src={`/api/vault/file/raw?path=${encodeURIComponent(file.path)}`}
                     alt={file.name}
                     className="max-h-[66vh] max-w-full object-contain rounded-lg"
                   />
-                  <div className="flex items-center justify-between w-full text-xs text-zinc-400 px-2 pt-2 border-t border-zinc-800">
+                  <div className="flex items-center justify-between w-full text-xs text-[#585860] px-2 pt-2 border-t border-black/[0.06]">
                     <div className="flex items-center gap-2">
-                      <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-                      <span className="font-mono text-zinc-300">{file.name}</span>
+                      <ImageIcon className="w-3.5 h-3.5 text-[#18181b]" />
+                      <span className="font-mono text-[#111113]">{file.name}</span>
                       <span>•</span>
                       <span>{(file.size / 1024).toFixed(1)} KB</span>
                     </div>
                     <button
                       onClick={() => vault.openInDefaultApp(file.path)}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span>Open in default app</span>
@@ -648,14 +648,14 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (isAudio) {
             return (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#141416] select-none">
-                <div className="w-full max-w-md bg-[#18181b] p-6 rounded-2xl border border-zinc-800 shadow-2xl flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="flex-1 flex flex-col items-center justify-center p-6 h-full bg-[#f4f4f6] select-none">
+                <div className="w-full max-w-md skeuo-card p-6 flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-[#ececf0] border border-black/[0.08] flex items-center justify-center text-[#18181b]">
                     <Music className="w-8 h-8" />
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-zinc-100 text-sm">{file.name}</h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">Audio recording • {(file.size / 1024).toFixed(1)} KB</p>
+                    <h3 className="font-semibold text-[#111113] text-sm">{file.name}</h3>
+                    <p className="text-xs text-[#8e8e93] mt-0.5">Audio recording • {(file.size / 1024).toFixed(1)} KB</p>
                   </div>
                   <audio
                     controls
@@ -669,7 +669,7 @@ export const Editor: React.FC<EditorProps> = ({
 
           if (isPdf) {
             return (
-              <div className="flex-1 flex flex-col h-full bg-[#141416]">
+              <div className="flex-1 flex flex-col h-full bg-[#f4f4f6]">
                 <iframe
                   src={`/api/vault/file/raw?path=${encodeURIComponent(file.path)}`}
                   title={file.name}
@@ -786,15 +786,15 @@ export const Editor: React.FC<EditorProps> = ({
 
           /* Source Mode (Raw CodeMirror 6 with Line Numbers) */
           return (
-            <div className="w-full h-full flex flex-col overflow-hidden bg-[#1e1e1e]">
-              <div className="px-4 py-1.5 bg-[#181818] border-b border-[#282828] flex items-center justify-between text-[11px] text-zinc-400 shrink-0">
+            <div className="w-full h-full flex flex-col overflow-hidden bg-white">
+              <div className="px-4 py-1.5 bg-[#f4f4f6] border-b border-black/[0.07] flex items-center justify-between text-[11px] text-[#585860] shrink-0">
                 <div className="flex items-center gap-2">
-                  <Code className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="font-mono text-zinc-300">Source Mode</span>
-                  <span className="text-zinc-600">•</span>
+                  <Code className="w-3.5 h-3.5 text-[#18181b]" />
+                  <span className="font-mono text-[#111113] font-medium">Source Mode</span>
+                  <span className="text-[#8e8e93]">•</span>
                   <span>Raw Markdown & Line Numbers</span>
                 </div>
-                <div className="flex items-center gap-2 text-zinc-500 font-mono text-[10px]">
+                <div className="flex items-center gap-2 text-[#8e8e93] font-mono text-[10px]">
                   <span>{file.content.split('\n').length} lines</span>
                   <span>•</span>
                   <span>{file.content.length} chars</span>
@@ -952,8 +952,8 @@ export const Editor: React.FC<EditorProps> = ({
 
       {/* Quick Action Toast Feedback */}
       {toastMessage && (
-        <div className="absolute bottom-6 right-6 z-50 bg-[#1e1e24]/95 text-zinc-100 text-xs px-3.5 py-2 rounded-xl border border-purple-500/40 shadow-2xl backdrop-blur-xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <Check className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="absolute bottom-6 right-6 z-50 skeuo-card text-[#111113] text-xs px-3.5 py-2 flex items-center gap-2 shadow-[0_12px_36px_rgba(0,0,0,0.1)] animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <Check className="w-3.5 h-3.5 text-[#18181b]" />
           <span className="font-medium">{toastMessage}</span>
         </div>
       )}

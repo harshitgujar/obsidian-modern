@@ -208,33 +208,43 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/65 backdrop-blur-2xl z-50 flex items-start justify-center pt-20 select-none animate-in fade-in duration-150"
+      className="fixed inset-0 bg-black/25 backdrop-blur-md z-50 flex items-start justify-center pt-20 select-none animate-in fade-in duration-150"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="glass-panel-elevated w-full max-w-xl rounded-2xl overflow-hidden flex flex-col text-sm shadow-[0_24px_64px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)]"
+        className="skeuo-modal w-full max-w-xl overflow-hidden flex flex-col text-sm text-[#111113] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.14),0_1px_3px_rgba(0,0,0,0.05)] border border-black/[0.08]"
       >
-        {/* Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-white/[0.08] bg-white/[0.03]">
-          <Search className="w-4 h-4 text-purple-400 mr-3 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value);
-              setSelectedIndex(0);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Search by note title, content, or create new..."
-            className="flex-1 bg-transparent text-white placeholder-zinc-500 focus:outline-none text-base"
-          />
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.08] transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        {/* Input Bar with Floating Pill matching Reference */}
+        <div className="p-3 pb-2 border-b border-black/[0.06] bg-white">
+          <div className="flex items-center px-3.5 py-2 bg-[#f4f4f6] rounded-full border border-black/[0.07] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+            <Search className="w-4 h-4 text-[#18181b] mr-2.5 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => {
+                setQuery(e.target.value);
+                setSelectedIndex(0);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Search by note title, content, or create new..."
+              className="flex-1 bg-transparent text-[#111113] placeholder-[#8e8e93] focus:outline-none text-sm"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="text-[#8e8e93] hover:text-[#111113] p-0.5 rounded-full mr-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-[#8e8e93] hover:text-[#111113] p-1 rounded-full hover:bg-black/[0.05] transition-all"
+            >
+              <kbd className="text-[10px] bg-[#ebebef] border border-black/[0.06] px-1.5 py-0.5 rounded-full font-mono">esc</kbd>
+            </button>
+          </div>
         </div>
 
         {/* Results List */}
@@ -242,7 +252,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
           {/* Section 1: Note Titles */}
           {matchedTitles.length > 0 && (
             <div>
-              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-[#8e8e93] tracking-wider">
                 Notes & Canvases
               </div>
               {matchedTitles.map(file => {
@@ -257,33 +267,33 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onSelectFile(file.path);
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#705dcf] text-white shadow-sm'
-                        : 'text-zinc-300 hover:bg-zinc-800/50'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       {isCanvas ? (
-                        <LayoutGrid className="w-4 h-4 text-orange-400 shrink-0" />
+                        <LayoutGrid className="w-4 h-4 text-[#18181b] shrink-0" />
                       ) : (
-                        <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-purple-400'}`} />
+                        <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#18181b]' : 'text-[#8e8e93]'}`} />
                       )}
                       <span className="font-medium truncate">
                         {file.name.replace(/\.md$/, '')}
                       </span>
                       {file.folder && (
-                        <span className={`text-xs truncate ${isSelected ? 'text-white/70' : 'text-zinc-500'}`}>{file.folder}</span>
+                        <span className={`text-xs truncate ${isSelected ? 'text-[#585860]' : 'text-[#8e8e93]'}`}>{file.folder}</span>
                       )}
                       {isCanvas && (
-                        <span className="text-[9px] px-1 rounded bg-orange-950/80 text-orange-300 border border-orange-700/40 font-mono uppercase">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-black/[0.05] text-[#585860] border border-black/[0.06] font-mono uppercase">
                           canvas
                         </span>
                       )}
                     </div>
 
                     {isSelected && (
-                      <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
+                      <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                     )}
                   </div>
                 );
@@ -293,9 +303,9 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
           {/* Section 2: Content Matches (In-File Search) */}
           {activeContentMatches.length > 0 && (
-            <div className="pt-1.5 border-t border-zinc-800/80">
-              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider flex items-center gap-1.5">
-                <AlignLeft className="w-3 h-3 text-zinc-400" />
+            <div className="pt-1.5 border-t border-black/[0.06]">
+              <div className="px-2.5 py-1 text-[10px] uppercase font-semibold text-[#8e8e93] tracking-wider flex items-center gap-1.5">
+                <AlignLeft className="w-3 h-3 text-[#8e8e93]" />
                 <span>Text Matches in Notes</span>
               </div>
               {activeContentMatches.map(match => {
@@ -309,25 +319,25 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onSelectFile(match.file.path);
                       onClose();
                     }}
-                    className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
+                    className={`flex flex-col gap-0.5 px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#705dcf] text-white shadow-sm'
-                        : 'text-zinc-300 hover:bg-zinc-800/50'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
-                    <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
+                    <div className="flex items-center justify-between text-xs font-semibold text-[#111113]">
                       <div className="flex items-center gap-2 truncate">
-                        <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-[#8e8e93] shrink-0" />
                         <span>{match.file.name.replace(/\.md$/, '')}</span>
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[10px] text-[#8e8e93] font-mono">
                           line {match.lineNumber}
                         </span>
                       </div>
                       {isSelected && (
-                        <CornerDownLeft className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                       )}
                     </div>
-                    <div className="text-[11px] text-zinc-400 truncate font-mono pl-5">
+                    <div className="text-[11px] text-[#585860] truncate font-mono pl-5">
                       {match.snippet}
                     </div>
                   </div>
@@ -338,7 +348,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
           {/* Section 3: Option to create note if doesn't exist */}
           {hasCreate && (
-            <div className="pt-1.5 border-t border-zinc-800/80">
+            <div className="pt-1.5 border-t border-black/[0.06]">
               {(() => {
                 const idx = currentIndex++;
                 const isSelected = idx === selectedIndex;
@@ -348,20 +358,20 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       onCreateFile(query.trim());
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#705dcf] text-white shadow-sm'
-                        : 'text-emerald-400 hover:bg-zinc-800/50'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        : 'border-transparent text-[#18181b] hover:bg-[#f4f4f6]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Plus className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-400'}`} />
+                      <Plus className="w-4 h-4 shrink-0 text-[#18181b]" />
                       <span>
                         Create note: <strong>"{query.trim()}"</strong>
                       </span>
                     </div>
                     {isSelected && (
-                      <CornerDownLeft className="w-3.5 h-3.5 text-white/90 shrink-0" />
+                      <CornerDownLeft className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
                     )}
                   </div>
                 );
@@ -371,7 +381,7 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
 
           {/* Section 4: Full Vault Search Action in Sidebar */}
           {hasVaultSearch && (
-            <div className="pt-1.5 border-t border-zinc-800/80">
+            <div className="pt-1.5 border-t border-black/[0.06]">
               {(() => {
                 const idx = currentIndex++;
                 const isSelected = idx === selectedIndex;
@@ -381,19 +391,19 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
                       if (onOpenVaultSearch) onOpenVaultSearch(query.trim());
                       onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors border-none ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-[#705dcf] text-white shadow-sm'
-                        : 'text-zinc-400 hover:bg-zinc-800/50'
+                        ? 'bg-[#ebebef] text-[#111113] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] border-black/[0.05]'
+                        : 'border-transparent text-[#585860] hover:bg-[#f4f4f6] hover:text-[#111113]'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Search className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-zinc-400'}`} />
+                      <Search className="w-3.5 h-3.5 text-[#8e8e93]" />
                       <span>
                         Search entire vault for <strong>"{query.trim()}"</strong> in sidebar
                       </span>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-zinc-500" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#8e8e93]" />
                   </div>
                 );
               })()}
@@ -402,22 +412,22 @@ export const QuickSwitcher: React.FC<QuickSwitcherProps> = ({
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-4 py-2 border-t border-zinc-800/80 bg-zinc-950/60 text-[11px] text-zinc-500 flex items-center justify-between">
+        <div className="px-4 py-2.5 border-t border-black/[0.06] bg-[#f8f8fa] text-[11px] text-[#585860] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span>
-              <strong>↑↓</strong> navigate
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">↑↓</kbd> navigate
             </span>
-            <span>
-              <strong>↵</strong> open
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">↵</kbd> open
             </span>
-            <span>
-              <strong>Shift+↵</strong> open to right
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">⇧↵</kbd> split
             </span>
-            <span>
-              <strong>esc</strong> close
+            <span className="flex items-center gap-1">
+              <kbd className="bg-[#ebebef] px-1.5 py-0.5 rounded text-[#111113] font-mono border border-black/[0.06]">esc</kbd> close
             </span>
           </div>
-          <span>Universal Switcher (⌘O)</span>
+          <span className="font-medium text-[#111113]">Universal Switcher</span>
         </div>
       </div>
     </div>
