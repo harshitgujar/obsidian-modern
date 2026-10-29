@@ -18,18 +18,13 @@ import {
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  Maximize2,
-  Minimize2,
   Presentation,
   FileCode,
   Settings,
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Bookmark,
-  Save,
-  CheckCircle2,
-  Loader2
+  Bookmark
 } from 'lucide-react';
 
 interface TabBarProps {
@@ -237,43 +232,6 @@ export const TabBar: React.FC<TabBarProps> = ({
           </button>
         )}
 
-        {/* Save Button / Live Disk Status */}
-        {onSave && (
-          <button
-            onClick={onSave}
-            title={
-              isSaving
-                ? 'Writing to disk...'
-                : hasUnsavedChanges
-                ? 'Save note to disk (⌘S)'
-                : 'All changes saved to disk (⌘S)'
-            }
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              isSaving
-                ? 'bg-[#ececf0] text-[#111113] animate-pulse border border-black/[0.08]'
-                : hasUnsavedChanges
-                ? 'skeuo-btn-dark'
-                : 'skeuo-btn text-[#585860]'
-            }`}
-          >
-            {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#111113]" />
-            ) : hasUnsavedChanges ? (
-              <Save className="w-3.5 h-3.5 text-white" />
-            ) : (
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#18181b]" />
-            )}
-            <span className="text-[11px]">
-              {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save' : 'Saved'}
-            </span>
-            {hasUnsavedChanges && (
-              <kbd className="hidden lg:inline text-[9px] bg-white/20 px-1 py-0.2 rounded text-white font-mono">
-                ⌘S
-              </kbd>
-            )}
-          </button>
-        )}
-
         {/* Bookmark Button */}
         {onToggleBookmark && (
           <button
@@ -307,19 +265,6 @@ export const TabBar: React.FC<TabBarProps> = ({
             className="p-1.5 text-[#585860] hover:text-rose-600 hover:bg-black/[0.05] rounded-xl transition-all"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-
-        {/* Zen Mode / Focus Mode Toggle */}
-        {onToggleZenMode && (
-          <button
-            onClick={onToggleZenMode}
-            title={isZenMode ? 'Exit Focus Mode (Cmd+Shift+F)' : 'Focus Mode (Cmd+Shift+F)'}
-            className={`p-1.5 rounded-xl transition-all ${
-              isZenMode ? 'skeuo-btn-dark' : 'skeuo-btn text-[#585860] hover:text-[#111113]'
-            }`}
-          >
-            {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
         )}
 

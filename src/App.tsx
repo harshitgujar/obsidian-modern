@@ -1805,20 +1805,20 @@ export const App: React.FC = () => {
         totalNotesCount={files.filter(f => f.extension === 'md').length}
         totalCanvasesCount={files.filter(f => f.extension === 'canvas').length}
         activeFile={activeFile}
-        activeViewMode={activeTab?.viewMode || 'live'}
         backlinksCount={activeBacklinks.length}
         isGraphActive={isGraphViewActive}
         graphStats={{ nodesCount: graphData.nodes.length, edgesCount: graphData.edges.length }}
         canvasStats={activeCanvasStats}
-        isZenMode={isZenMode}
+        isSaving={isSaving}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSave={() => handleManualSave(activeFile?.path)}
+        onOpenVaultSwitcher={() => setIsVaultModalOpen(true)}
         showWordCount={corePluginsConfig['word-count'] !== false}
         showBacklinks={corePluginsConfig['backlink'] !== false}
-        onCycleViewMode={handleCycleActiveViewMode}
         onOpenBacklinks={() => {
           setIsInspectorOpen(true);
           setInspectorActiveTab('backlinks');
         }}
-        onToggleAIChat={handleToggleAIChat}
       />
 
       {/* Quick Switcher Modal (Ctrl+O) */}
