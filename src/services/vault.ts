@@ -285,15 +285,38 @@ export class VaultManager {
         body: JSON.stringify({ path: clean })
       });
       if (res.ok) {
-        if (!this.folders.includes(clean)) {
+        const data = await res.json().catch(() => null);
+        if (data?.folders && Array.isArray(data.folders)) {
+          this.folders = data.folders;
+        } else if (!this.folders.includes(clean)) {
           this.folders.push(clean);
           this.folders.sort();
-          this.notifyChange();
         }
+        if (data?.files && Array.isArray(data.files)) {
+          this.files = data.files.map((f: any) => ({
+            id: f.path,
+            name: f.name,
+            path: f.path,
+            folder: f.folder,
+            extension: f.extension,
+            content: f.content || '',
+            size: f.size || 0,
+            createdAt: f.createdAt || Date.now(),
+            updatedAt: f.updatedAt || Date.now(),
+            isBinary: f.isBinary
+          }));
+        }
+        this.notifyChange();
         return true;
       }
     } catch {}
-    return false;
+
+    if (!this.folders.includes(clean)) {
+      this.folders.push(clean);
+      this.folders.sort();
+      this.notifyChange();
+    }
+    return true;
   }
 
   async deleteNote(pathOrId: string): Promise<boolean> {
@@ -307,14 +330,45 @@ export class VaultManager {
         body: JSON.stringify({ path: targetPath })
       });
       if (res.ok) {
-        this.files = this.files.filter(f => f.path !== targetPath);
+        const data = await res.json().catch(() => null);
+        if (data?.files && Array.isArray(data.files)) {
+          this.files = data.files.map((f: any) => ({
+            id: f.path,
+            name: f.name,
+            path: f.path,
+            folder: f.folder,
+            extension: f.extension,
+            content: f.content || '',
+            size: f.size || 0,
+            createdAt: f.createdAt || Date.now(),
+            updatedAt: f.updatedAt || Date.now(),
+            isBinary: f.isBinary
+          }));
+        } else {
+          this.files = this.files.filter(
+            f => f.path !== targetPath && f.folder !== targetPath && !f.path.startsWith(targetPath + '/')
+          );
+        }
+        if (data?.folders && Array.isArray(data.folders)) {
+          this.folders = data.folders;
+        } else {
+          this.folders = this.folders.filter(f => f !== targetPath && !f.startsWith(targetPath + '/'));
+        }
         this.notifyChange();
         return true;
       }
     } catch {}
 
-    this.files = this.files.filter(f => f.path !== targetPath);
+    this.files = this.files.filter(
+      f => f.path !== targetPath && f.folder !== targetPath && !f.path.startsWith(targetPath + '/')
+    );
+    this.folders = this.folders.filter(f => f !== targetPath && !f.startsWith(targetPath + '/'));
+    this.notifyChange();
     return true;
+  }
+
+  async deleteFolder(folderPath: string): Promise<boolean> {
+    return this.deleteNote(folderPath);
   }
 
   async renameNote(oldPath: string, newTitleOrPath: string): Promise<{ newPath: string; updatedLinksCount: number } | undefined> {

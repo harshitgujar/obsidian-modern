@@ -854,8 +854,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onContextMenu={e => handleContextMenuOpen(e, file)}
                       className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl cursor-pointer transition-all duration-150 border ${
                         isActive
-                          ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
-                          : 'border-transparent text-[#585860] hover:bg-[#ebebef] hover:text-[#111113]'
+                          ? (isDarkTheme ? 'bg-[#2a2a2e] text-[#5c6cff] font-medium border-white/10 shadow-xs' : 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]')
+                          : (isDarkTheme ? 'border-transparent text-zinc-300 hover:bg-white/[0.06] hover:text-white' : 'border-transparent text-[#585860] hover:bg-[#ebebef] hover:text-[#111113]')
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate flex-1 min-w-0">
@@ -872,7 +872,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               if (e.key === 'Escape') setEditingFilePath(null);
                             }}
                             autoFocus
-                            className="bg-white text-[#111113] px-1 py-0.5 rounded border border-black/20 focus:outline-none w-32 shadow-sm"
+                            className={`px-1 py-0.5 rounded border focus:outline-none w-32 shadow-sm ${
+                              isDarkTheme ? 'bg-[#2a2a2e] text-zinc-100 border-white/20' : 'bg-white text-[#111113] border-black/20'
+                            }`}
                           />
                         ) : (
                           <span className="truncate">{file.name.replace(/\.(md|canvas|png|jpg|jpeg|webp|gif|svg|base|pdf|webm|mp3|wav|ogg|m4a)$/, '')}</span>
@@ -925,31 +927,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }
                         }
                       }}
-                      className="group flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[#1c1c1e] hover:bg-[#ebebef] cursor-pointer font-medium transition-all"
+                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl cursor-pointer font-medium transition-all ${
+                        isDarkTheme
+                          ? 'text-zinc-200 hover:bg-white/[0.06]'
+                          : 'text-[#1c1c1e] hover:bg-[#ebebef]'
+                      }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         {isCollapsed ? (
-                          <ChevronRight className="w-3.5 h-3.5 text-[#8e8e93] shrink-0" />
+                          <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#8e8e93]'}`} />
                         ) : (
-                          <ChevronDown className="w-3.5 h-3.5 text-[#8e8e93] shrink-0" />
+                          <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#8e8e93]'}`} />
                         )}
                         {isCollapsed ? (
-                          <Folder className="w-3.5 h-3.5 text-[#585860] shrink-0" />
+                          <Folder className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#585860]'}`} />
                         ) : (
-                          <FolderOpen className="w-3.5 h-3.5 text-[#585860] shrink-0" />
+                          <FolderOpen className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#585860]'}`} />
                         )}
                         <span className="truncate">{folderName}</span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-[#585860] bg-black/[0.05] border border-black/[0.05] px-1.5 py-0.2 rounded-full font-mono">{folderFiles.length}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono border ${
+                          isDarkTheme
+                            ? 'text-zinc-400 bg-white/[0.05] border-white/10'
+                            : 'text-[#585860] bg-black/[0.05] border-black/[0.05]'
+                        }`}>{folderFiles.length}</span>
                         <button
                           onClick={e => {
                             e.stopPropagation();
                             onCreateFile(folderName, 'md');
                           }}
                           title={`New note in ${folderName}`}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-zinc-100 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-blue-500 transition-opacity"
                         >
                           <FilePlus className="w-3 h-3" />
                         </button>
@@ -979,7 +989,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
 
                     {!isCollapsed && (
-                      <div className="pl-3.5 space-y-0.5 border-l border-zinc-800/60 ml-2">
+                      <div className={`pl-3.5 space-y-0.5 border-l ml-2 ${isDarkTheme ? 'border-zinc-700/60' : 'border-zinc-300/80'}`}>
                         {folderFiles.map(renderFileRow)}
                       </div>
                     )}

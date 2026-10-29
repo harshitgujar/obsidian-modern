@@ -519,7 +519,9 @@ export const App: React.FC = () => {
     const updatedFiles = vault.getFiles();
     setPanes(prevPanes =>
       prevPanes.map(pane => {
-        const remaining = pane.tabs.filter(t => t.filePath !== filePath);
+        const remaining = pane.tabs.filter(
+          t => t.filePath !== filePath && !t.filePath.startsWith(filePath + '/')
+        );
         if (remaining.length === 0 && updatedFiles.length > 0) {
           const fallbackTab: TabItem = {
             id: `tab-${Date.now()}`,
@@ -534,7 +536,7 @@ export const App: React.FC = () => {
         return { ...pane, tabs: remaining, activeTabId: nextActive };
       })
     );
-  }, [syncFromVaultManager]);
+  }, [syncFromVaultManager, appConfig.defaultViewMode]);
 
   const handleRenameFile = useCallback(async (oldPath: string, newTitle: string) => {
     const res = await vault.renameNote(oldPath, newTitle);

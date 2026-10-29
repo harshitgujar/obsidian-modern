@@ -1108,7 +1108,9 @@ export class ObsidianVaultServer {
           const absPath = this.safeJoinVault(body.path);
           this.suppressWatchUntil = Date.now() + 250;
           fs.mkdirSync(absPath, { recursive: true });
-          return sendJson(200, { ok: true, path: body.path });
+          const { files, folders } = this.scanVault();
+          this.broadcastSSE({ type: 'vault-changed', path: body.path, ts: Date.now() });
+          return sendJson(200, { ok: true, path: body.path, files, folders });
         }
 
         if (pathname === '/api/vault/file/rename' && req.method === 'POST') {
@@ -1145,6 +1147,7 @@ export class ObsidianVaultServer {
           if (!body.path) return sendJson(400, { error: 'Missing path' });
           const deleted = this.deleteFileOrFolder(body.path);
           const { files, folders } = this.scanVault();
+          this.broadcastSSE({ type: 'vault-changed', path: body.path, ts: Date.now() });
           return sendJson(200, { ok: deleted, files, folders });
         }
 
