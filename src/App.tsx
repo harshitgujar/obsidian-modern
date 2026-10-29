@@ -1813,7 +1813,6 @@ export const App: React.FC = () => {
         isZenMode={isZenMode}
         showWordCount={corePluginsConfig['word-count'] !== false}
         showBacklinks={corePluginsConfig['backlink'] !== false}
-        onOpenVaultSwitcher={() => setIsVaultModalOpen(true)}
         onCycleViewMode={handleCycleActiveViewMode}
         onOpenBacklinks={() => {
           setIsInspectorOpen(true);

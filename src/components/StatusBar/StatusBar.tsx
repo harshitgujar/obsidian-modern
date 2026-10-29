@@ -1,6 +1,6 @@
 import React from 'react';
 import { VaultFile, EditorViewMode } from '../../types';
-import { HardDrive, CheckCircle2, FileText, LayoutDashboard, Share2, Sparkles } from 'lucide-react';
+import { CheckCircle2, FileText, LayoutDashboard, Share2, Sparkles } from 'lucide-react';
 
 interface StatusBarProps {
   vaultName: string;
@@ -56,17 +56,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   return (
     <footer className="glass-statusbar h-[26px] text-[11px] text-[#585860] font-sans flex items-center justify-between px-3.5 select-none z-30 shrink-0 border-t border-black/[0.07] bg-white">
-      {/* Left side: Vault and Sync Status */}
+      {/* Left side: Sync Status & Stats */}
       <div className="flex items-center gap-2.5">
-        <button
-          onClick={onOpenVaultSwitcher}
-          className="px-2 py-0.5 rounded-full flex items-center gap-1.5 text-[#111113] hover:bg-[#ebebef] bg-[#f4f4f6] border border-black/[0.06] transition-all cursor-pointer shadow-none"
-          title="Click to Switch Vault"
-        >
-          <HardDrive className="w-3 h-3 text-[#384cff]" />
-          <span className="font-medium truncate max-w-[140px]">{vaultName}</span>
-        </button>
-
         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/[0.04] text-[#111113] text-[10px] border border-black/[0.04]">
           <CheckCircle2 className="w-3 h-3 text-[#384cff]" />
           <span>Synced to disk</span>
