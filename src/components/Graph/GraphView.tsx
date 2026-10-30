@@ -22,7 +22,9 @@ import {
   Columns,
   Share2,
   Filter,
-  Palette
+  Palette,
+  Boxes,
+  Check
 } from 'lucide-react';
 
 export interface GraphSettings {
@@ -32,6 +34,7 @@ export interface GraphSettings {
   hideUnresolved: boolean;
   showOrphans: boolean;
   showArrow: boolean;
+  showExtractedEdges?: boolean;
   showInferredEdges: boolean;
   colorByCommunity: boolean;
   textFadeMultiplier: number; // 0.5 to 2.0
@@ -63,6 +66,7 @@ const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   hideUnresolved: false,
   showOrphans: true,
   showArrow: true,
+  showExtractedEdges: true,
   showInferredEdges: true,
   colorByCommunity: false,
   textFadeMultiplier: 1.0,
@@ -122,6 +126,17 @@ export const GraphView: React.FC<GraphViewProps> = ({
     inCount: number;
     outCount: number;
   } | null>(null);
+  const [hoveredEdgeInfo, setHoveredEdgeInfo] = useState<{
+    edge: GraphEdge;
+    sourceNode: GraphNode;
+    targetNode: GraphNode;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
+
+  // Subsystem Communities (Leiden) State
+  const [activeCommunityId, setActiveCommunityId] = useState<number | null>(null);
+  const [showCommunitiesDrawer, setShowCommunitiesDrawer] = useState(false);
 
   // Time-lapse Animation state
   const [isTimelapseRunning, setIsTimelapseRunning] = useState(false);
@@ -210,7 +225,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
       nodes = nodes.filter(n => connected.has(n.id));
     }
 
-    // 5b. Hide inferred AI edges if disabled
+    // 5b. Dual-Edge Model filtering (Extracted vs Inferred AI edges)
+    if (settings.showExtractedEdges === false) {
+      edges = edges.filter(e => e.kind === 'inferred');
+    }
     if (!settings.showInferredEdges) {
       edges = edges.filter(e => e.kind !== 'inferred');
     }
@@ -229,6 +247,33 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
     return { nodes, edges };
   }, [data, isMini, activeFileId, settings]);
+
+  // Derived counts for dual-edge model
+  const extractedEdgesCount = useMemo(() => {
+    return filteredData.edges.filter(e => e.kind !== 'inferred').length;
+  }, [filteredData.edges]);
+
+  const inferredEdgesCount = useMemo(() => {
+    return filteredData.edges.filter(e => e.kind === 'inferred').length;
+  }, [filteredData.edges]);
+
+  // Subsystem Communities grouping (Leiden clusters)
+  const communities = useMemo(() => {
+    const map = new Map<number, { id: number; name: string; color: string; nodes: GraphNode[] }>();
+    filteredData.nodes.forEach(node => {
+      const cId = node.communityId ?? 0;
+      if (!map.has(cId)) {
+        map.set(cId, {
+          id: cId,
+          name: node.communityName || `Subsystem #${cId + 1}`,
+          color: node.communityColor || '#384cff',
+          nodes: []
+        });
+      }
+      map.get(cId)!.nodes.push(node);
+    });
+    return Array.from(map.values()).sort((a, b) => b.nodes.length - a.nodes.length);
+  }, [filteredData.nodes]);
 
   // Synchronize simulation nodes without resetting coordinates; initialize new nodes smoothly
   useEffect(() => {
@@ -584,7 +629,17 @@ export const GraphView: React.FC<GraphViewProps> = ({
         ctx.moveTo(s.x, s.y);
         ctx.lineTo(currentTargetX, currentTargetY);
 
-        if (isConnectingNow) {
+        const isHoveredEdge = hoveredEdgeInfo && (
+          (edge.source === hoveredEdgeInfo.edge.source && edge.target === hoveredEdgeInfo.edge.target) ||
+          (edge.source === hoveredEdgeInfo.edge.target && edge.target === hoveredEdgeInfo.edge.source)
+        );
+
+        if (isHoveredEdge) {
+          ctx.strokeStyle = isInferred ? '#c026d3' : '#384cff';
+          ctx.lineWidth = baseEdgeWidth * 3.2;
+          ctx.globalAlpha = 1.0;
+          ctx.stroke();
+        } else if (isConnectingNow) {
           // Minimal tactile connection line actively forming
           ctx.strokeStyle = isInferred ? '#a855f7' : '#384cff';
           ctx.lineWidth = baseEdgeWidth * 2.2;
@@ -673,7 +728,9 @@ export const GraphView: React.FC<GraphViewProps> = ({
       for (const node of nodes) {
         const isTarget = node.id === activeOrHovered;
         const isNeighbor = highlightNeighbors.has(node.id);
-        const isDimmed = activeOrHovered && !isNeighbor;
+        const isEdgeEndpoint = hoveredEdgeInfo && (node.id === hoveredEdgeInfo.edge.source || node.id === hoveredEdgeInfo.edge.target);
+        const isCommunityMatch = activeCommunityId === null || node.communityId === activeCommunityId;
+        const isDimmed = (activeOrHovered && !isNeighbor) || (!isCommunityMatch) || (hoveredEdgeInfo && !isEdgeEndpoint);
         const baseRadius = Math.max(4, Math.min(22, (4 + Math.sqrt(node.val || 1) * 2.8) * settings.nodeSizeMultiplier));
 
         ctx.save();
@@ -818,7 +875,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       running = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [stepSimulation, transform, hoveredNodeId, activeFileId, isMini, settings, isTimelapseRunning, animProgress]);
+  }, [stepSimulation, transform, hoveredNodeId, hoveredEdgeInfo, activeCommunityId, activeFileId, isMini, settings, isTimelapseRunning, animProgress]);
 
   // Pointer interactions
   const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -850,6 +907,66 @@ export const GraphView: React.FC<GraphViewProps> = ({
       }
     }
     return null;
+  };
+
+  const findEdgeAt = (x: number, y: number): { edge: GraphEdge; sourceNode: GraphNode; targetNode: GraphNode } | null => {
+    const nodes = simNodesRef.current;
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const edges = simEdgesRef.current;
+    const threshold = 7 / transform.k;
+    let closest: { edge: GraphEdge; sourceNode: GraphNode; targetNode: GraphNode } | null = null;
+    let minDistance = threshold;
+
+    for (let i = edges.length - 1; i >= 0; i--) {
+      const e = edges[i];
+      const s = nodeMap.get(e.source);
+      const t = nodeMap.get(e.target);
+      if (!s || !t) continue;
+
+      const dx = t.x - s.x;
+      const dy = t.y - s.y;
+      const l2 = dx * dx + dy * dy;
+      let dist = 0;
+      if (l2 === 0) {
+        dist = Math.hypot(x - s.x, y - s.y);
+      } else {
+        let u = ((x - s.x) * dx + (y - s.y) * dy) / l2;
+        u = Math.max(0, Math.min(1, u));
+        dist = Math.hypot(x - (s.x + u * dx), y - (s.y + u * dy));
+      }
+
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = { edge: e, sourceNode: s, targetNode: t };
+      }
+    }
+    return closest;
+  };
+
+  const handleFocusCommunity = (comm: { id: number; nodes: GraphNode[] }) => {
+    if (activeCommunityId === comm.id) {
+      setActiveCommunityId(null);
+      return;
+    }
+    setActiveCommunityId(comm.id);
+    if (!settings.colorByCommunity) {
+      updateSetting('colorByCommunity', true);
+    }
+    if (comm.nodes.length === 0) return;
+    let sumX = 0;
+    let sumY = 0;
+    comm.nodes.forEach(n => {
+      sumX += n.x;
+      sumY += n.y;
+    });
+    const avgX = sumX / comm.nodes.length;
+    const avgY = sumY / comm.nodes.length;
+    setTransform(prev => ({
+      ...prev,
+      x: -avgX * 1.15,
+      y: -avgY * 1.15,
+      k: Math.max(0.85, Math.min(2.0, 1.15))
+    }));
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -899,8 +1016,25 @@ export const GraphView: React.FC<GraphViewProps> = ({
         inCount,
         outCount
       });
+      setHoveredEdgeInfo(null);
     } else {
       setHoverInfo(null);
+      if (!isMini) {
+        const edgeHit = findEdgeAt(coords.x, coords.y);
+        if (edgeHit) {
+          setHoveredEdgeInfo({
+            edge: edgeHit.edge,
+            sourceNode: edgeHit.sourceNode,
+            targetNode: edgeHit.targetNode,
+            clientX: e.clientX,
+            clientY: e.clientY
+          });
+        } else {
+          setHoveredEdgeInfo(null);
+        }
+      } else {
+        setHoveredEdgeInfo(null);
+      }
     }
   };
 
@@ -1079,6 +1213,128 @@ export const GraphView: React.FC<GraphViewProps> = ({
         </div>
       )}
 
+      {/* Top Left Floating Edge Filter & Community Legend Strip */}
+      {!isMini && (
+        <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-white/95 border border-black/[0.08] rounded-xl p-1 shadow-xs text-xs select-none">
+          {/* Extracted Edge Pill Toggle */}
+          <button
+            onClick={() => updateSetting('showExtractedEdges', settings.showExtractedEdges === false ? true : false)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+              settings.showExtractedEdges !== false
+                ? 'bg-blue-500/10 text-[#384cff] font-medium border border-blue-500/20'
+                : 'text-zinc-400 hover:text-zinc-600 opacity-60'
+            }`}
+            title="Toggle Deterministic Code & Wikilink Edges (100% confidence)"
+          >
+            <span className="w-3.5 h-0.5 bg-[#384cff] rounded-full inline-block" />
+            <span className="text-[11px]">Extracted</span>
+            <span className="text-[9px] font-mono opacity-80">({extractedEdgesCount})</span>
+          </button>
+
+          {/* Inferred Edge Pill Toggle */}
+          <button
+            onClick={() => updateSetting('showInferredEdges', !settings.showInferredEdges)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+              settings.showInferredEdges
+                ? 'bg-purple-500/10 text-purple-600 font-medium border border-purple-500/20'
+                : 'text-zinc-400 hover:text-zinc-600 opacity-60'
+            }`}
+            title="Toggle Semantic AI Inferred Edges"
+          >
+            <span className="w-3.5 h-0.5 border-t border-dashed border-purple-500 inline-block" />
+            <span className="text-[11px]">Inferred (AI)</span>
+            <span className="text-[9px] font-mono opacity-80">({inferredEdgesCount})</span>
+          </button>
+
+          {/* Subsystems Drawer Toggle */}
+          <div className="h-4 w-px bg-black/[0.08] mx-0.5" />
+          <button
+            onClick={() => setShowCommunitiesDrawer(prev => !prev)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+              showCommunitiesDrawer || activeCommunityId !== null
+                ? 'bg-[#18181b] text-white font-medium shadow-xs'
+                : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+            }`}
+            title="Explore Subsystem Communities (Leiden Partitioning)"
+          >
+            <Boxes className="w-3.5 h-3.5 text-[#384cff]" />
+            <span className="text-[11px]">Subsystems</span>
+            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-black/10">
+              {communities.length}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Subsystem Communities Drawer */}
+      {showCommunitiesDrawer && !isMini && (
+        <div className="absolute top-14 left-3 z-30 w-72 max-h-[75vh] overflow-y-auto bg-white border border-black/[0.08] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] p-3 text-xs text-[#111113] space-y-2.5 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06]">
+            <div>
+              <div className="font-semibold text-xs flex items-center gap-1.5">
+                <Boxes className="w-3.5 h-3.5 text-[#384cff]" />
+                <span>Leiden Subsystems</span>
+              </div>
+              <p className="text-[10px] text-[#8e8e93]">
+                {communities.length} modular organic clusters detected
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              {activeCommunityId !== null && (
+                <button
+                  onClick={() => setActiveCommunityId(null)}
+                  className="text-[10px] text-[#384cff] hover:underline font-medium"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setShowCommunitiesDrawer(false)}
+                className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            {communities.map(comm => {
+              const isSelected = activeCommunityId === comm.id;
+              return (
+                <div
+                  key={comm.id}
+                  onClick={() => handleFocusCommunity(comm)}
+                  className={`p-2 rounded-xl cursor-pointer border transition-all ${
+                    isSelected
+                      ? 'bg-blue-500/10 border-[#384cff]/40 shadow-xs'
+                      : 'border-black/[0.04] hover:bg-black/[0.03]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 truncate">
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+                        style={{ backgroundColor: comm.color }}
+                      />
+                      <span className="font-medium truncate text-xs">
+                        {comm.name}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#8e8e93] shrink-0">
+                      {comm.nodes.length} notes
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#8e8e93] font-mono truncate mt-1 pl-5">
+                    {comm.nodes.slice(0, 3).map(n => n.label.replace(/\.md$/, '')).join(', ')}
+                    {comm.nodes.length > 3 ? '...' : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Top Right Action Strip: Split, Settings, Close */}
       {!isMini && (
         <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
@@ -1176,6 +1432,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     checked={settings.showOrphans}
                     onChange={e => updateSetting('showOrphans', e.target.checked)}
                     className="accent-zinc-900 w-3.5 h-3.5"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113]">
+                  <span className="flex items-center gap-1.5">
+                    <span>Extracted code edges</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-[#384cff] font-mono font-medium">AST</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={settings.showExtractedEdges !== false}
+                    onChange={e => updateSetting('showExtractedEdges', e.target.checked)}
+                    className="accent-[#384cff] w-3.5 h-3.5"
                   />
                 </label>
 
@@ -1472,6 +1741,50 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <div className="text-[9px] text-[#8e8e93] italic pt-0.5">
             Click to open · Ctrl+Click to split
           </div>
+        </div>
+      )}
+
+      {/* Floating Edge Tooltip: Dual-Edge Model (Extracted vs Inferred) */}
+      {hoveredEdgeInfo && !hoverInfo && !isMini && (
+        <div
+          className="fixed z-40 pointer-events-none p-2.5 rounded-2xl bg-white border border-black/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-xs text-[#111113] flex flex-col gap-1.5 animate-in fade-in duration-75"
+          style={{
+            left: `${Math.min(window.innerWidth - 260, hoveredEdgeInfo.clientX + 14)}px`,
+            top: `${Math.min(window.innerHeight - 150, hoveredEdgeInfo.clientY + 14)}px`
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#111113]">
+            <span className="truncate max-w-[100px]">
+              {hoveredEdgeInfo.sourceNode.label.replace(/\.md$/, '')}
+            </span>
+            <span className="text-[#8e8e93] font-mono">→</span>
+            <span className="truncate max-w-[100px]">
+              {hoveredEdgeInfo.targetNode.label.replace(/\.md$/, '')}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06]">
+            {hoveredEdgeInfo.edge.kind === 'inferred' ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-purple-500/15 text-purple-600 border border-purple-500/20 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" />
+                <span>INFERRED ({Math.round((hoveredEdgeInfo.edge.confidence ?? 0.75) * 100)}%)</span>
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-blue-500/15 text-[#384cff] border border-blue-500/20 flex items-center gap-1">
+                <Check className="w-2.5 h-2.5" />
+                <span>EXTRACTED (100%)</span>
+              </span>
+            )}
+            <span className="text-[10px] text-[#585860] font-mono">
+              {hoveredEdgeInfo.edge.sourceType || (hoveredEdgeInfo.edge.kind === 'inferred' ? 'semantic' : 'wikilink')}
+            </span>
+          </div>
+
+          {hoveredEdgeInfo.edge.label && (
+            <div className="text-[10px] text-[#8e8e93] italic">
+              {hoveredEdgeInfo.edge.label}
+            </div>
+          )}
         </div>
       )}
 

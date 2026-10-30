@@ -569,11 +569,16 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[11px] font-medium border border-black/[0.06] shadow-xs transition-all select-none"
                           >
                             {isGraph ? (
-                              <Share2 className="w-2.5 h-2.5 shrink-0 text-zinc-600" />
+                              <Share2 className="w-2.5 h-2.5 shrink-0 text-[#384cff]" />
                             ) : (
                               <ExternalLink className="w-2.5 h-2.5 shrink-0 text-zinc-600" />
                             )}
                             <span className="truncate max-w-[130px]">{src.noteTitle}</span>
+                            {isGraph && (
+                              <span className="text-[9px] px-1 py-0.2 rounded font-mono bg-blue-500/15 text-[#384cff] font-semibold">
+                                Topology
+                              </span>
+                            )}
                             <span className="text-[9px] text-[#585860] font-mono font-semibold">
                               {src.score}%
                             </span>

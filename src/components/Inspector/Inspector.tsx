@@ -11,7 +11,8 @@ import {
   ChevronRight, 
   ChevronDown,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  Boxes
 } from 'lucide-react';
 
 interface InspectorProps {
@@ -65,6 +66,38 @@ export const Inspector: React.FC<InspectorProps> = ({
   });
 
   const outlinks = metadata?.outlinks || [];
+
+  const activeNode = activeFile
+    ? graphData.nodes.find(n => n.id === activeFile.path || n.path === activeFile.path)
+    : undefined;
+
+  const extractedOutlinks = activeFile
+    ? graphData.edges.filter(e => e.source === activeFile.path && e.kind !== 'inferred')
+    : [];
+
+  const extractedInlinks = activeFile
+    ? graphData.edges.filter(e => e.target === activeFile.path && e.kind !== 'inferred')
+    : [];
+
+  const inferredTies = activeFile ? [
+    ...graphData.edges
+      .filter(e => (e.source === activeFile.path || e.target === activeFile.path) && e.kind === 'inferred')
+      .map(e => {
+        const otherId = e.source === activeFile.path ? e.target : e.source;
+        return {
+          path: otherId,
+          name: otherId.replace(/^.*[\\\/]/, '').replace(/\.md$/, ''),
+          confidence: Math.round((e.confidence ?? 0.75) * 100),
+          isUnlinkedMention: e.sourceType === 'unlinked-mention'
+        };
+      }),
+    ...unlinkedMentions.map(u => ({
+      path: u.filePath,
+      name: u.fileName.replace(/\.md$/, ''),
+      confidence: 75,
+      isUnlinkedMention: true
+    }))
+  ].filter((item, idx, arr) => arr.findIndex(x => x.path === item.path) === idx) : [];
 
   return (
     <div className="w-80 bg-[#f8f8fa] border-l border-black/[0.07] flex flex-col h-full select-none shrink-0 text-xs text-[#111113]">
@@ -140,6 +173,19 @@ export const Inspector: React.FC<InspectorProps> = ({
               <Share2 className="w-4 h-4 shrink-0" />
             </button>
           )}
+
+          {/* Topology Tab (GraphRAG) */}
+          <button
+            onClick={() => handleTabClick('topology')}
+            title="GraphRAG Topology (Subsystem Community & Dual-Edges)"
+            className={`flex-1 flex items-center justify-center py-1.5 px-1 rounded-full transition-all min-w-0 border ${
+              activeTab === 'topology'
+                ? 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]'
+                : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+            }`}
+          >
+            <Boxes className="w-4 h-4 shrink-0" />
+          </button>
 
           {/* AI Assistant Tab */}
           <button
@@ -337,6 +383,132 @@ export const Inspector: React.FC<InspectorProps> = ({
               onSelectNode={onNavigateFile}
               isMini={true}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Tab 5: GraphRAG Topology & Communities */}
+      {activeFile && activeTab === 'topology' && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {/* Subsystem Community Badge Card */}
+          <div className="p-3 rounded-2xl bg-white border border-black/[0.07] shadow-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-[#8e8e93] uppercase tracking-wider">
+                Subsystem Community
+              </span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-blue-500/10 text-[#384cff]">
+                Leiden Modularity
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span
+                className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs"
+                style={{ backgroundColor: activeNode?.communityColor || '#384cff' }}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold text-[#111113] truncate">
+                  {activeNode?.communityName || `Subsystem #${(activeNode?.communityId ?? 0) + 1}`}
+                </div>
+                <div className="text-[10px] text-[#8e8e93]">
+                  Partition ID: #{activeNode?.communityId ?? 0}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Extracted Outlinks (100% Deterministic) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#585860]">
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Extracted Outlinks ({extractedOutlinks.length})</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/10 text-[#384cff] font-mono font-medium">100% Deterministic</span>
+            </div>
+            {extractedOutlinks.length === 0 ? (
+              <div className="text-[#8e8e93] italic text-[11px] p-2 bg-white/60 rounded-xl border border-black/[0.04]">
+                No deterministic outlinks from this note.
+              </div>
+            ) : (
+              extractedOutlinks.map((link, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => onNavigateFile(link.target)}
+                  className="p-2 rounded-xl bg-white border border-black/[0.06] hover:border-[#384cff]/30 cursor-pointer flex items-center justify-between text-xs hover:shadow-xs transition-all"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#384cff] shrink-0" />
+                    <span className="truncate font-medium">{link.target.replace(/\.md$/, '')}</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#8e8e93] shrink-0">{link.sourceType || 'code-import'}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Extracted Inbound Backlinks (100% Deterministic) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#585860]">
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Extracted Inbound ({extractedInlinks.length})</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/10 text-[#384cff] font-mono font-medium">100% Deterministic</span>
+            </div>
+            {extractedInlinks.length === 0 ? (
+              <div className="text-[#8e8e93] italic text-[11px] p-2 bg-white/60 rounded-xl border border-black/[0.04]">
+                No deterministic links point to this note.
+              </div>
+            ) : (
+              extractedInlinks.map((link, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => onNavigateFile(link.source)}
+                  className="p-2 rounded-xl bg-white border border-black/[0.06] hover:border-[#384cff]/30 cursor-pointer flex items-center justify-between text-xs hover:shadow-xs transition-all"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Link className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                    <span className="truncate font-medium">{link.source.replace(/\.md$/, '')}</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-[#8e8e93] shrink-0">{link.sourceType || 'wikilink'}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Inferred Semantic Ties (GraphRAG AI) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#585860]">
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Inferred Semantic Ties ({inferredTies.length})</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-600 font-mono font-medium">AI Inferred</span>
+            </div>
+            {inferredTies.length === 0 ? (
+              <div className="text-[#8e8e93] italic text-[11px] p-2 bg-white/60 rounded-xl border border-black/[0.04]">
+                No unlinked mentions or fuzzy semantic connections found.
+              </div>
+            ) : (
+              inferredTies.map((tie, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => onNavigateFile(tie.path)}
+                  className="p-2 rounded-xl bg-white border border-purple-500/20 hover:border-purple-500/40 cursor-pointer flex items-center justify-between text-xs hover:shadow-xs transition-all"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span className="truncate font-medium">{tie.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[9px] font-mono text-purple-600 font-semibold">{tie.confidence}%</span>
+                    {tie.isUnlinkedMention && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          onLinkMention(tie.path, activeFile.name.replace(/\.md$/, ''));
+                        }}
+                        title="Convert to [[Wikilink]]"
+                        className="p-1 rounded-md text-zinc-400 hover:text-[#384cff] hover:bg-black/[0.04]"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

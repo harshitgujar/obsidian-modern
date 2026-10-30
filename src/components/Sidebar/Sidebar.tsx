@@ -45,7 +45,8 @@ import {
   Music,
   FileCode,
   Sparkles,
-  Plus
+  Plus,
+  Cpu
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -88,6 +89,7 @@ interface SidebarProps {
   onExportPdf?: (filePath: string) => void;
   onToggleAIChat?: () => void;
   isAIChatActive?: boolean;
+  onOpenCodeIngest?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -129,7 +131,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   corePluginsConfig = {},
   onExportPdf,
   onToggleAIChat,
-  isAIChatActive = false
+  isAIChatActive = false,
+  onOpenCodeIngest
 }) => {
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
   const [editingFilePath, setEditingFilePath] = useState<string | null>(null);
@@ -621,6 +624,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <FolderPlus className="w-3.5 h-3.5" />
               </button>
+              {onOpenCodeIngest && (
+                <button
+                  onClick={onOpenCodeIngest}
+                  title="Ingest & Map Codebase (AST GraphRAG)"
+                  className="p-1 rounded text-[#585860] hover:text-[#384cff] hover:bg-[#ebebef] transition-colors"
+                >
+                  <Cpu className="w-3.5 h-3.5" />
+                </button>
+              )}
 
               {/* Sort Menu */}
               <div className="relative">

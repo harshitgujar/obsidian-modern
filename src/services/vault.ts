@@ -467,7 +467,7 @@ export class VaultManager {
     return false;
   }
 
-  async ingestCodebase(targetDir?: string): Promise<{ ok: boolean; filesAnalyzed?: number; canvasPath?: string; reportPath?: string; godNodes?: any[] }> {
+  async ingestCodebase(targetDir?: string): Promise<{ ok: boolean; filesAnalyzed?: number; symbolsDiscovered?: number; dependenciesFound?: number; canvasPath?: string; reportPath?: string; godNodes?: any[]; error?: string }> {
     try {
       const res = await fetch('/api/vault/code/ingest', {
         method: 'POST',

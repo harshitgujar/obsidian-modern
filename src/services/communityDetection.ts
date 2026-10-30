@@ -1,4 +1,4 @@
-import { GraphNode, GraphEdge } from '../types';
+import type { GraphNode, GraphEdge } from '../types/index.ts';
 
 export interface CommunityResult {
   communities: Map<string, number>; // nodeId -> communityId
@@ -194,8 +194,10 @@ export function detectCommunities(nodes: GraphNode[], edges: GraphEdge[]): Commu
       if (m.folder) {
         folderCounts.set(m.folder, (folderCounts.get(m.folder) || 0) + 1);
       }
-      for (const t of m.tags) {
-        tagCounts.set(t, (tagCounts.get(t) || 0) + 1);
+      if (m.tags && Array.isArray(m.tags)) {
+        for (const t of m.tags) {
+          tagCounts.set(t, (tagCounts.get(t) || 0) + 1);
+        }
       }
     }
 

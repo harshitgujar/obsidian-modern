@@ -26,6 +26,7 @@ import { VaultSwitcherModal } from './components/Modals/VaultSwitcherModal';
 import { FileRecoveryModal } from './components/Modals/FileRecoveryModal';
 import { TemplatePickerModal } from './components/Modals/TemplatePickerModal';
 import { ExportPdfModal } from './components/Modals/ExportPdfModal';
+import { CodebaseIngestModal } from './components/Modals/CodebaseIngestModal';
 import { SlideDeck } from './components/Presentation/SlideDeck';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { 
@@ -128,6 +129,7 @@ export const App: React.FC = () => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [pdfTargetFile, setPdfTargetFile] = useState<VaultFile | undefined>(undefined);
+  const [isCodeIngestModalOpen, setIsCodeIngestModalOpen] = useState(false);
 
   // Audio Recorder State
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
@@ -1346,15 +1348,9 @@ export const App: React.FC = () => {
     },
     {
       id: 'vault:ingest-codebase',
-      title: 'GraphRAG: Ingest Codebase & Generate Architecture Map',
+      title: 'GraphRAG: Ingest Codebase & Generate Architecture Map (AST)',
       category: 'GraphRAG',
-      action: async () => {
-        const res = await vault.ingestCodebase();
-        if (res && res.ok) {
-          syncFromVaultManager();
-          handleSelectFile('ARCHITECTURE.canvas');
-        }
-      }
+      action: () => setIsCodeIngestModalOpen(true)
     }
   ], [
     handleCreateFile,
@@ -1626,6 +1622,7 @@ export const App: React.FC = () => {
           onSearchChange={setSearchFilter}
           onToggleAIChat={handleToggleAIChat}
           isAIChatActive={isInspectorOpen && inspectorActiveTab === 'aiChat'}
+          onOpenCodeIngest={() => setIsCodeIngestModalOpen(true)}
         />
       )}
 
@@ -1930,6 +1927,16 @@ export const App: React.FC = () => {
         onClose={() => setIsTemplateModalOpen(false)}
         files={files}
         onSelectTemplate={handleInsertTemplate}
+      />
+
+      {/* Codebase GraphRAG Ingest Modal */}
+      <CodebaseIngestModal
+        isOpen={isCodeIngestModalOpen}
+        onClose={() => setIsCodeIngestModalOpen(false)}
+        onOpenPath={path => {
+          syncFromVaultManager();
+          handleSelectFile(path);
+        }}
       />
 
       {/* Fullscreen Slide Deck Presentation */}
