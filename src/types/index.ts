@@ -54,15 +54,25 @@ export interface GraphNode {
   folder: string;
   tags: string[];
   nodeType?: 'file' | 'tag' | 'attachment' | 'unresolved';
+  communityId?: number;
+  communityName?: string;
+  communityColor?: string;
   x: number;
   y: number;
   vx: number;
   vy: number;
 }
 
+export type EdgeKind = 'extracted' | 'inferred';
+export type EdgeSourceType = 'wikilink' | 'canvas' | 'code-import' | 'unlinked-mention' | 'semantic-similarity';
+
 export interface GraphEdge {
   source: string;
   target: string;
+  kind?: EdgeKind;
+  confidence?: number;
+  sourceType?: EdgeSourceType;
+  label?: string;
 }
 
 export interface GraphData {

@@ -32,6 +32,8 @@ export interface GraphSettings {
   hideUnresolved: boolean;
   showOrphans: boolean;
   showArrow: boolean;
+  showInferredEdges: boolean;
+  colorByCommunity: boolean;
   textFadeMultiplier: number; // 0.5 to 2.0
   nodeSizeMultiplier: number; // 0.5 to 2.2
   lineSizeMultiplier: number; // 0.5 to 2.5
@@ -61,6 +63,8 @@ const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   hideUnresolved: false,
   showOrphans: true,
   showArrow: true,
+  showInferredEdges: true,
+  colorByCommunity: false,
   textFadeMultiplier: 1.0,
   nodeSizeMultiplier: 1.0,
   lineSizeMultiplier: 1.0,
@@ -204,6 +208,11 @@ export const GraphView: React.FC<GraphViewProps> = ({
         connected.add(e.target);
       });
       nodes = nodes.filter(n => connected.has(n.id));
+    }
+
+    // 5b. Hide inferred AI edges if disabled
+    if (!settings.showInferredEdges) {
+      edges = edges.filter(e => e.kind !== 'inferred');
     }
 
     // 6. Search query
@@ -564,14 +573,20 @@ export const GraphView: React.FC<GraphViewProps> = ({
         const isSourceOfHovered = activeOrHovered && edge.source === activeOrHovered;
         const isTargetOfHovered = activeOrHovered && edge.target === activeOrHovered;
         const baseEdgeWidth = Math.max(0.6, 1.2 * settings.lineSizeMultiplier) / transform.k;
+        const isInferred = edge.kind === 'inferred';
 
         ctx.beginPath();
+        if (isInferred) {
+          ctx.setLineDash([4 / transform.k, 4 / transform.k]);
+        } else {
+          ctx.setLineDash([]);
+        }
         ctx.moveTo(s.x, s.y);
         ctx.lineTo(currentTargetX, currentTargetY);
 
         if (isConnectingNow) {
-          // Minimal tactile connection line actively forming in brand blue
-          ctx.strokeStyle = '#384cff';
+          // Minimal tactile connection line actively forming
+          ctx.strokeStyle = isInferred ? '#a855f7' : '#384cff';
           ctx.lineWidth = baseEdgeWidth * 2.2;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
@@ -579,33 +594,42 @@ export const GraphView: React.FC<GraphViewProps> = ({
           // Bead traveling along the line to target node
           ctx.beginPath();
           ctx.arc(currentTargetX, currentTargetY, 3.5 / transform.k, 0, Math.PI * 2);
-          ctx.fillStyle = '#384cff';
+          ctx.fillStyle = isInferred ? '#a855f7' : '#384cff';
           ctx.fill();
         } else if (isSourceOfHovered) {
-          // Outgoing edge: vibrant electric brand blue
-          ctx.strokeStyle = isDark ? '#6372ff' : '#384cff';
+          // Outgoing edge: vibrant electric brand blue or violet if inferred
+          ctx.strokeStyle = isInferred 
+            ? (isDark ? '#c084fc' : '#9333ea') 
+            : (isDark ? '#6372ff' : '#384cff');
           ctx.lineWidth = baseEdgeWidth * 2.4;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (isTargetOfHovered) {
-          // Incoming edge: bright azure blue
-          ctx.strokeStyle = isDark ? '#38bdf8' : '#0284c7';
+          // Incoming edge: bright azure blue or magenta if inferred
+          ctx.strokeStyle = isInferred 
+            ? (isDark ? '#e879f9' : '#c026d3') 
+            : (isDark ? '#38bdf8' : '#0284c7');
           ctx.lineWidth = baseEdgeWidth * 2.4;
           ctx.globalAlpha = 1.0;
           ctx.stroke();
         } else if (activeOrHovered) {
           // Dimmed non-connected edge
-          ctx.strokeStyle = isDark ? 'rgba(99, 114, 255, 0.09)' : 'rgba(56, 76, 255, 0.09)';
+          ctx.strokeStyle = isInferred
+            ? (isDark ? 'rgba(168, 85, 247, 0.08)' : 'rgba(147, 51, 234, 0.08)')
+            : (isDark ? 'rgba(99, 114, 255, 0.09)' : 'rgba(56, 76, 255, 0.09)');
           ctx.lineWidth = baseEdgeWidth * 0.5;
           ctx.globalAlpha = 0.15;
           ctx.stroke();
         } else {
-          // Resting state edge: clean, handsome blue matching brand
-          ctx.strokeStyle = isDark ? 'rgba(99, 114, 255, 0.45)' : 'rgba(56, 76, 255, 0.38)';
-          ctx.lineWidth = baseEdgeWidth * 1.15;
-          ctx.globalAlpha = 0.85;
+          // Resting state edge: clean solid blue for extracted, dashed purple for inferred AI edges
+          ctx.strokeStyle = isInferred
+            ? (isDark ? 'rgba(192, 132, 252, 0.45)' : 'rgba(147, 51, 234, 0.4)')
+            : (isDark ? 'rgba(99, 114, 255, 0.45)' : 'rgba(56, 76, 255, 0.38)');
+          ctx.lineWidth = isInferred ? baseEdgeWidth * 0.95 : baseEdgeWidth * 1.15;
+          ctx.globalAlpha = isInferred ? 0.75 : 0.85;
           ctx.stroke();
         }
+        ctx.setLineDash([]);
 
         // Draw Arrowhead pointing from s to t (only when connection line has finished drawing)
         if (settings.showArrow && !isMini && lineT >= 0.95) {
@@ -697,9 +721,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
           ctx.arc(node.x, node.y, baseRadius, 0, Math.PI * 2);
         }
 
-        // Vibrant non-black node color centered on brand Runagon palette
-        const nodeColor = (node.color && node.color !== '#18181b' && node.color !== '#000000') ? node.color : '#384cff';
-        ctx.fillStyle = nodeColor;
+        // Vibrant non-black node color centered on brand Runagon palette or Leiden community
+        let effectiveColor = (node.color && node.color !== '#18181b' && node.color !== '#000000') ? node.color : '#384cff';
+        if (settings.colorByCommunity && node.communityColor) {
+          effectiveColor = node.communityColor;
+        }
+        ctx.fillStyle = effectiveColor;
         ctx.fill();
 
         // Node border: Crisp white rim gives a tactile, beveled physical pebble effect on light bg
@@ -1151,6 +1178,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     className="accent-zinc-900 w-3.5 h-3.5"
                   />
                 </label>
+
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113]">
+                  <span className="flex items-center gap-1.5">
+                    <span>Inferred AI edges</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono font-medium">AI</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={settings.showInferredEdges}
+                    onChange={e => updateSetting('showInferredEdges', e.target.checked)}
+                    className="accent-[#384cff] w-3.5 h-3.5"
+                  />
+                </label>
               </div>
             )}
           </div>
@@ -1167,6 +1207,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
             {!collapsedSections.groups && (
               <div className="space-y-2 pt-1 pl-1">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113] pb-1 border-b border-black/[0.04]">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#384cff]" />
+                    <span className="font-medium text-[11px]">Communities (Leiden)</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={settings.colorByCommunity}
+                    onChange={e => updateSetting('colorByCommunity', e.target.checked)}
+                    className="accent-[#384cff] w-3.5 h-3.5"
+                  />
+                </label>
+
                 {settings.colorGroups.map((group, idx) => (
                   <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-[#f8f8fa] border border-black/[0.06]">
                     <div className="flex items-center gap-2 truncate">

@@ -1343,6 +1343,18 @@ export const App: React.FC = () => {
       title: 'Export vault as ZIP archive',
       category: 'Vault',
       action: () => vault.exportAsZip()
+    },
+    {
+      id: 'vault:ingest-codebase',
+      title: 'GraphRAG: Ingest Codebase & Generate Architecture Map',
+      category: 'GraphRAG',
+      action: async () => {
+        const res = await vault.ingestCodebase();
+        if (res && res.ok) {
+          syncFromVaultManager();
+          handleSelectFile('ARCHITECTURE.canvas');
+        }
+      }
     }
   ], [
     handleCreateFile,

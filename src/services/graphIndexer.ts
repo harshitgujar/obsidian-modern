@@ -1,11 +1,14 @@
 import { VaultFile, NoteMetadata, GraphData, GraphNode, GraphEdge, BacklinkMention } from '../types';
 import { parseNoteMetadata } from '../workers/metadataWorker';
+import { detectCommunities, CommunityResult } from './communityDetection';
 
 export interface GraphIndexOptions {
   showTags?: boolean;
   showAttachments?: boolean;
   hideUnresolved?: boolean;
   showOrphans?: boolean;
+  showInferredEdges?: boolean;
+  colorByCommunity?: boolean;
   colorGroups?: Array<{ query: string; color: string }>;
 }
 
@@ -38,6 +41,7 @@ export class GraphIndexer {
       showAttachments = false,
       hideUnresolved = false,
       showOrphans = true,
+      showInferredEdges = true,
       colorGroups = []
     } = normalizedOptions;
 
@@ -163,7 +167,13 @@ export class GraphIndexer {
 
         if (targetFile) {
           if (targetFile.path !== file.path) {
-            edges.push({ source: file.path, target: targetFile.path });
+            edges.push({
+              source: file.path,
+              target: targetFile.path,
+              kind: 'extracted',
+              confidence: 1.0,
+              sourceType: file.extension === 'canvas' ? 'canvas' : 'wikilink'
+            });
             const count = (backlinkCountMap.get(targetFile.path) || 0) + 1;
             backlinkCountMap.set(targetFile.path, count);
 
@@ -200,7 +210,13 @@ export class GraphIndexer {
               vy: 0
             });
           }
-          edges.push({ source: file.path, target: unresolvedId });
+          edges.push({
+            source: file.path,
+            target: unresolvedId,
+            kind: 'extracted',
+            confidence: 0.8,
+            sourceType: 'wikilink'
+          });
         }
       }
 
@@ -226,7 +242,13 @@ export class GraphIndexer {
               vy: 0
             });
           }
-          edges.push({ source: file.path, target: tagId });
+          edges.push({
+            source: file.path,
+            target: tagId,
+            kind: 'extracted',
+            confidence: 1.0,
+            sourceType: 'wikilink'
+          });
         }
       }
 
@@ -253,13 +275,19 @@ export class GraphIndexer {
                 vy: 0
               });
             }
-            edges.push({ source: file.path, target: attachId });
+            edges.push({
+              source: file.path,
+              target: attachId,
+              kind: 'extracted',
+              confidence: 1.0,
+              sourceType: 'wikilink'
+            });
           }
         }
       }
     }
 
-    // 3. Third pass: Unlinked mentions
+    // 3. Third pass: Unlinked mentions (INFERRED edges)
     for (const targetFile of mdAndCanvasFiles) {
       if (targetFile.extension !== 'md') continue;
       const targetTitle = targetFile.name.replace(/\.md$/, '');
@@ -289,6 +317,18 @@ export class GraphIndexer {
             isLinked: false
           });
           this.unlinkedMentionsCache.set(targetFile.path, existingUnlinked);
+
+          // Inferred edge from source to target note (fuzzy/semantic relation)
+          if (showInferredEdges) {
+            edges.push({
+              source: sourceFile.path,
+              target: targetFile.path,
+              kind: 'inferred',
+              confidence: 0.75,
+              sourceType: 'unlinked-mention',
+              label: targetTitle
+            });
+          }
         }
       }
     }
@@ -302,6 +342,18 @@ export class GraphIndexer {
     }
 
     let allNodes = Array.from(nodesMap.values());
+
+    // 4. Fourth pass: Leiden / Louvain Community Clustering
+    const communityResult = detectCommunities(allNodes, edges);
+    for (const node of allNodes) {
+      const cId = communityResult.communities.get(node.id) ?? 0;
+      node.communityId = cId;
+      node.communityName = communityResult.communityNames.get(cId) || `Subsystem ${cId + 1}`;
+      node.communityColor = communityResult.communityColors.get(cId) || '#384cff';
+      if (normalizedOptions.colorByCommunity && node.communityColor) {
+        node.color = node.communityColor;
+      }
+    }
 
     // Filter orphans if showOrphans is false
     if (!showOrphans) {

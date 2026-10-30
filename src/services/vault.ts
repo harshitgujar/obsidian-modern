@@ -467,6 +467,22 @@ export class VaultManager {
     return false;
   }
 
+  async ingestCodebase(targetDir?: string): Promise<{ ok: boolean; filesAnalyzed?: number; canvasPath?: string; reportPath?: string; godNodes?: any[] }> {
+    try {
+      const res = await fetch('/api/vault/code/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetDir })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        await this.refreshState();
+        return data;
+      }
+    } catch {}
+    return { ok: false };
+  }
+
   async resetSandboxVault(): Promise<boolean> {
     try {
       const res = await fetch('/api/vaults/sandbox', { method: 'POST' });

@@ -41,6 +41,17 @@ export interface RAGSearchResult {
   score: number;            // Normalized similarity score (0 to 1)
   matchType: 'semantic' | 'lexical' | 'hybrid' | 'graph';
   graphSource?: string;     // e.g. "Linked via [[Architecture]]"
+  topologyHeader?: string;  // e.g. "Connected: [[vectorStore.ts]], Backlinks: [[obsidianBackend.ts]]"
+}
+
+export interface SubgraphTopologyResult {
+  root: string;
+  title: string;
+  filePath: string;
+  extractedOutlinks: string[];
+  extractedBacklinks: string[];
+  inferredConnections: string[];
+  totalConnected: number;
 }
 
 export interface AIProviderConfig {

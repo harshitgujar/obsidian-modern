@@ -45,6 +45,20 @@ export class VaultMCPServer {
         }
       },
       {
+        name: 'get_subgraph_topology',
+        description: 'Returns the 1-hop topological knowledge graph map for a note or code file (extracted links, backlinks, and inferred connections) without loading entire file bodies.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            filePathOrTitle: {
+              type: 'string',
+              description: 'The note title or relative file path to inspect.'
+            }
+          },
+          required: ['filePathOrTitle']
+        }
+      },
+      {
         name: 'get_vault_ai_status',
         description: 'Returns the current index health, number of chunks, and active embedding model.',
         inputSchema: {
@@ -92,6 +106,19 @@ export class VaultMCPServer {
           {
             type: 'text',
             text: JSON.stringify(related, null, 2)
+          }
+        ]
+      };
+    }
+
+    if (name === 'get_subgraph_topology') {
+      const target = String(args.filePathOrTitle || '');
+      const topology = this.ragEngine.getSubgraphTopology(target);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(topology, null, 2)
           }
         ]
       };

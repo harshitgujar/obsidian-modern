@@ -1,6 +1,6 @@
 import { VectorStore } from './vectorStore';
 import { EmbeddingProvider } from './embeddingProvider';
-import { DocumentChunk, RAGSearchResult, AIProviderConfig, RAGStatus, RAGSearchFilter } from './types';
+import { DocumentChunk, RAGSearchResult, AIProviderConfig, RAGStatus, RAGSearchFilter, SubgraphTopologyResult } from './types';
 
 export class RAGEngine {
   private vectorStore: VectorStore;
@@ -271,7 +271,79 @@ export class RAGEngine {
     const seedChunks = primaryHits.slice(0, 2).map(h => h.chunk);
     const graphExpansion = this.expandGraphNeighborhood(seedChunks, selectedIds, 2, filter);
 
-    return [...primaryHits, ...graphExpansion];
+    const finalHits = [...primaryHits, ...graphExpansion];
+
+    // 5. Graph Topology Enrichment (Dual-Edge EXTRACTED & INFERRED metadata)
+    for (const hit of finalHits) {
+      const topo = this.getSubgraphTopology(hit.chunk.filePath);
+      const parts: string[] = [];
+      if (topo.extractedOutlinks.length > 0) {
+        parts.push(`Out: ${topo.extractedOutlinks.slice(0, 3).map(o => `[[${o}]]`).join(', ')}`);
+      }
+      if (topo.extractedBacklinks.length > 0) {
+        parts.push(`In: ${topo.extractedBacklinks.slice(0, 3).map(b => `[[${b}]]`).join(', ')}`);
+      }
+      if (topo.inferredConnections.length > 0) {
+        parts.push(`Inferred: ${topo.inferredConnections.slice(0, 2).map(inf => `[[${inf}]]`).join(', ')}`);
+      }
+      if (parts.length > 0) {
+        hit.topologyHeader = parts.join(' | ');
+      }
+    }
+
+    return finalHits;
+  }
+
+  /**
+   * Returns a 1-hop topological subgraph representation (extracted links, backlinks, inferred ties)
+   * for a given note.
+   */
+  public getSubgraphTopology(filePathOrTitle: string): SubgraphTopologyResult {
+    const allChunks = this.vectorStore.getAllChunks();
+    const cleanTitle = filePathOrTitle.replace(/\.[^/.]+$/, '').split('/').pop() || filePathOrTitle;
+
+    const noteChunks = allChunks.filter(
+      c => c.filePath === filePathOrTitle || c.noteTitle.toLowerCase() === cleanTitle.toLowerCase()
+    );
+
+    const actualTitle = noteChunks[0]?.noteTitle || cleanTitle;
+    const actualPath = noteChunks[0]?.filePath || filePathOrTitle;
+
+    // 1. EXTRACTED Outlinks (explicitly linked by this note)
+    const extractedOutlinks = Array.from(
+      new Set(noteChunks.flatMap(c => c.outlinks || []))
+    );
+
+    // 2. EXTRACTED Backlinks (other notes linking into this note)
+    const backlinkChunks = this.vectorStore.findChunksLinkingTo(actualTitle);
+    const extractedBacklinks = Array.from(
+      new Set(backlinkChunks.map(c => c.noteTitle).filter(t => t !== actualTitle))
+    );
+
+    // 3. INFERRED connections (semantic nearest neighbors with cosine > 0.80)
+    const inferredConnections: string[] = [];
+    if (noteChunks[0]?.vector) {
+      const semHits = this.vectorStore.searchVector(noteChunks[0].vector, 4, { excludePath: actualPath });
+      for (const h of semHits) {
+        if (!extractedOutlinks.includes(h.chunk.noteTitle) && !extractedBacklinks.includes(h.chunk.noteTitle)) {
+          if (!inferredConnections.includes(h.chunk.noteTitle)) {
+            inferredConnections.push(h.chunk.noteTitle);
+          }
+        }
+      }
+    }
+
+    const totalConnected = extractedOutlinks.length + extractedBacklinks.length + inferredConnections.length;
+
+    return {
+      root: actualPath,
+      title: actualTitle,
+      filePath: actualPath,
+      extractedOutlinks,
+      extractedBacklinks,
+      inferredConnections,
+      totalConnected
+    };
   }
 
   /**
@@ -313,8 +385,9 @@ export class RAGEngine {
   public buildPromptContext(query: string, searchResults: RAGSearchResult[]): { systemPrompt: string; userPrompt: string } {
     const contextBlocks = searchResults.map((res, i) => {
       const graphNote = res.graphSource ? ` [Knowledge Graph: ${res.graphSource}]` : '';
+      const topoNote = res.topologyHeader ? ` [Topology: ${res.topologyHeader}]` : '';
       const breadcrumbNote = res.chunk.breadcrumbs?.length > 1 ? ` (Context: ${res.chunk.breadcrumbs.join(' > ')})` : '';
-      return `[Chunk ${i + 1}] Source: ${res.chunk.wikilink}${breadcrumbNote}${graphNote}\n${res.chunk.content.trim()}`;
+      return `[Chunk ${i + 1}] Source: ${res.chunk.wikilink}${breadcrumbNote}${graphNote}${topoNote}\n${res.chunk.content.trim()}`;
     }).join('\n\n---\n\n');
 
     const systemPrompt = `You are the Runagon Vault Copilot. You have direct read access to the user's personal knowledge base.

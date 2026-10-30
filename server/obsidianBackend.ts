@@ -7,6 +7,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import JSZip from 'jszip';
 import { RAGEngine } from './rag/ragEngine';
 import { VaultMCPServer } from './rag/mcpServer';
+import { CodeExtractor } from './ast/codeExtractor';
 
 export interface VaultEntry {
   id: string;
@@ -1234,6 +1235,16 @@ export class ObsidianVaultServer {
           });
           res.end(zipBuffer);
           return;
+        }
+
+        if (pathname === '/api/vault/code/ingest' && req.method === 'POST') {
+          const body = await readJsonBody();
+          const targetDir = body.targetDir ? path.resolve(body.targetDir) : this.activeVaultPath;
+          const codeFiles = CodeExtractor.scanCodebase(targetDir);
+          const result = CodeExtractor.generateArtifacts(this.activeVaultPath, codeFiles);
+          const { files, folders } = this.scanVault();
+          this.broadcastSSE({ type: 'vault-changed', path: 'ARCHITECTURE.canvas', ts: Date.now() });
+          return sendJson(200, { ok: true, ...result, files, folders });
         }
 
         if (pathname === '/api/vaults/remove' && req.method === 'POST') {
