@@ -222,6 +222,20 @@ const TOOLS = [
     }
   },
   {
+    name: 'get_subgraph_topology',
+    description: 'Returns the 1-hop topological knowledge graph map for a note or code file (extracted links, backlinks, and inferred connections) without loading entire file bodies.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePathOrTitle: {
+          type: 'string',
+          description: 'The note title or relative file path to inspect.'
+        }
+      },
+      required: ['filePathOrTitle']
+    }
+  },
+  {
     name: 'get_vault_ai_status',
     description: 'Returns index statistics, number of indexed notes, chunk counts, and model health.',
     inputSchema: {
@@ -333,6 +347,26 @@ rl.on('line', async line => {
                 {
                   notice: 'Runagon app is offline. Related notes derived from static outlinks.',
                   related: offlineRelated
+                },
+                null,
+                2
+              )
+            }
+          ]
+        });
+      } else if (toolName === 'get_subgraph_topology') {
+        const offlineRelated = getRelatedNotesOffline(toolArgs.filePathOrTitle || '');
+        sendJsonRpc(id, {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  notice: 'Runagon app is offline. Topology derived from static cached links.',
+                  root: toolArgs.filePathOrTitle,
+                  extractedOutlinks: offlineRelated.map(r => r.noteTitle),
+                  extractedBacklinks: [],
+                  inferredConnections: []
                 },
                 null,
                 2
