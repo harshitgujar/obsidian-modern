@@ -290,8 +290,8 @@ export const TabBar: React.FC<TabBarProps> = ({
               setShowMoreMenu(prev => !prev);
             }}
             title="More actions"
-            className={`p-1.5 rounded-lg transition-colors ${
-              showMoreMenu ? 'text-zinc-100 bg-zinc-800' : 'hover:text-zinc-100 hover:bg-zinc-800/60'
+            className={`p-1.5 rounded-lg transition-colors text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/60 ${
+              showMoreMenu ? 'bg-black/[0.08] dark:bg-zinc-800 text-[#111113] dark:text-zinc-100' : ''
             }`}
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
@@ -299,7 +299,7 @@ export const TabBar: React.FC<TabBarProps> = ({
 
           {showMoreMenu && (
             <div
-              className="absolute right-0 top-full mt-1.5 w-56 bg-[#18181e]/95 backdrop-blur-xl border border-zinc-700/80 rounded-xl shadow-2xl p-1 z-50 text-xs text-zinc-300 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-100"
+              className="absolute right-0 top-full mt-1.5 w-56 bg-white/95 dark:bg-[#18181e]/95 backdrop-blur-xl border border-black/[0.08] dark:border-zinc-700/80 rounded-xl shadow-2xl p-1 z-50 text-xs text-[#585860] dark:text-zinc-300 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-100"
               onClick={e => e.stopPropagation()}
             >
               {onOpenCommandPalette && (
@@ -308,13 +308,13 @@ export const TabBar: React.FC<TabBarProps> = ({
                     setShowMoreMenu(false);
                     onOpenCommandPalette();
                   }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#384cff] dark:text-purple-400" />
                     <span>Command Palette</span>
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">⌘P</span>
+                  <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌘P</span>
                 </button>
               )}
 
@@ -324,13 +324,13 @@ export const TabBar: React.FC<TabBarProps> = ({
                     setShowMoreMenu(false);
                     onOpenTemplates();
                   }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <FileCode className="w-3.5 h-3.5 text-purple-400" />
+                    <FileCode className="w-3.5 h-3.5 text-[#384cff] dark:text-purple-400" />
                     <span>Insert Template...</span>
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">⌘T</span>
+                  <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌘T</span>
                 </button>
               )}
 
@@ -340,13 +340,13 @@ export const TabBar: React.FC<TabBarProps> = ({
                     setShowMoreMenu(false);
                     onToggleGraph();
                   }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                    <Share2 className="w-3.5 h-3.5 text-[#384cff] dark:text-purple-400" />
                     <span>Interactive Graph View</span>
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">⌘G</span>
+                  <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌘G</span>
                 </button>
               )}
 
@@ -356,30 +356,30 @@ export const TabBar: React.FC<TabBarProps> = ({
                     setShowMoreMenu(false);
                     onOpenSlides();
                   }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <Presentation className="w-3.5 h-3.5 text-purple-400" />
+                    <Presentation className="w-3.5 h-3.5 text-[#384cff] dark:text-purple-400" />
                     <span>Start Slide Deck</span>
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">⌥P</span>
+                  <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌥P</span>
                 </button>
               )}
 
-              <div className="w-full h-[1px] bg-zinc-800 my-1" />
+              <div className="w-full h-[1px] bg-black/[0.06] dark:bg-zinc-800 my-1" />
 
               <button
                 onClick={() => {
                   setShowMoreMenu(false);
                   if (onFindReplace) onFindReplace();
                 }}
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <Search className="w-3.5 h-3.5 text-zinc-400" />
+                  <Search className="w-3.5 h-3.5 text-[#8e8e93] dark:text-zinc-400" />
                   <span>Find & Replace in Note</span>
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">⌘F</span>
+                <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌘F</span>
               </button>
 
               <button
@@ -388,9 +388,9 @@ export const TabBar: React.FC<TabBarProps> = ({
                   if (onExportPdf) onExportPdf();
                   else window.print();
                 }}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
               >
-                <Printer className="w-3.5 h-3.5 text-zinc-400" />
+                <Printer className="w-3.5 h-3.5 text-[#8e8e93] dark:text-zinc-400" />
                 <span className="flex-1">Export to PDF...</span>
               </button>
 
@@ -400,9 +400,9 @@ export const TabBar: React.FC<TabBarProps> = ({
                     setShowMoreMenu(false);
                     onOpenSettings();
                   }}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-zinc-800 hover:text-white text-left transition-colors"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
                 >
-                  <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                  <Settings className="w-3.5 h-3.5 text-[#8e8e93] dark:text-zinc-400" />
                   <span className="flex-1">Vault Settings...</span>
                 </button>
               )}

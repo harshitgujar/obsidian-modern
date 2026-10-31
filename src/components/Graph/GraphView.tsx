@@ -556,12 +556,16 @@ export const GraphView: React.FC<GraphViewProps> = ({
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
+      // Explicitly paint base canvas background according to active theme
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark');
+      ctx.fillStyle = isDark ? '#121214' : '#f4f4f6';
+      ctx.fillRect(0, 0, width, height);
+
       // Camera Viewport
       ctx.translate(width / 2 + transform.x, height / 2 + transform.y);
       ctx.scale(transform.k, transform.k);
 
-      // 1. Draw subtle minimal skeuomorphic dot grid on light background
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      // 1. Draw subtle minimal skeuomorphic dot grid on background
       if (!isMini) {
         const gridSize = 40;
         const left = (-width / 2 - transform.x) / transform.k;
