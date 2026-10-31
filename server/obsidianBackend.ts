@@ -352,6 +352,17 @@ export class ObsidianVaultServer {
         fs.writeFileSync(cfgPath, JSON.stringify(defaultVal, null, 2));
       }
     }
+
+    // Ensure mcpBridge.cjs is written to vault .obsidian directory so external AIs (Claude, Cursor, CLI) can always connect on any platform
+    const vaultBridge = path.join(obsidianDir, 'mcpBridge.cjs');
+    if (!fs.existsSync(vaultBridge)) {
+      const sourceBridge = this.getBridgeScriptPath();
+      if (fs.existsSync(sourceBridge) && sourceBridge !== vaultBridge) {
+        try {
+          fs.copyFileSync(sourceBridge, vaultBridge);
+        } catch {}
+      }
+    }
   }
 
   private sseDebounceTimer: NodeJS.Timeout | null = null;
@@ -912,10 +923,28 @@ export class ObsidianVaultServer {
   }
 
   public getBridgeScriptPath(): string {
-    const repoBridge = path.resolve(__dirname, 'rag', 'mcpBridge.cjs');
-    if (fs.existsSync(repoBridge)) return repoBridge;
-
     const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
+    if (fs.existsSync(vaultBridge)) return vaultBridge;
+
+    const candidates = [
+      path.resolve(__dirname, 'rag', 'mcpBridge.cjs'),
+      path.resolve(__dirname, 'mcpBridge.cjs'),
+      path.resolve(__dirname, '..', 'server', 'rag', 'mcpBridge.cjs'),
+      path.resolve(process.cwd(), 'server', 'rag', 'mcpBridge.cjs')
+    ];
+
+    for (const c of candidates) {
+      if (fs.existsSync(c)) {
+        try {
+          fs.mkdirSync(path.join(this.activeVaultPath, '.obsidian'), { recursive: true });
+          fs.copyFileSync(c, vaultBridge);
+          return vaultBridge;
+        } catch {
+          return c;
+        }
+      }
+    }
+
     return vaultBridge;
   }
 
