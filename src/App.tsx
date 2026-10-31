@@ -27,6 +27,7 @@ import { FileRecoveryModal } from './components/Modals/FileRecoveryModal';
 import { TemplatePickerModal } from './components/Modals/TemplatePickerModal';
 import { ExportPdfModal } from './components/Modals/ExportPdfModal';
 import { CodebaseIngestModal } from './components/Modals/CodebaseIngestModal';
+import { ExternalAIConnectModal } from './components/Modals/ExternalAIConnectModal';
 import { SlideDeck } from './components/Presentation/SlideDeck';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { 
@@ -130,6 +131,7 @@ export const App: React.FC = () => {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [pdfTargetFile, setPdfTargetFile] = useState<VaultFile | undefined>(undefined);
   const [isCodeIngestModalOpen, setIsCodeIngestModalOpen] = useState(false);
+  const [isExternalAIModalOpen, setIsExternalAIModalOpen] = useState(false);
 
   // Audio Recorder State
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
@@ -1261,6 +1263,13 @@ export const App: React.FC = () => {
       action: handleToggleAIChat
     },
     {
+      id: 'ai:connect-external',
+      title: 'AI: Connect External AI (Claude Desktop, Cursor, Windsurf)...',
+      category: 'AI Assistant',
+      shortcut: 'Ctrl+Shift+M',
+      action: () => setIsExternalAIModalOpen(true)
+    },
+    {
       id: 'editor:toggle-source',
       title: 'Toggle Live Preview / Source mode',
       category: 'Editor',
@@ -1624,6 +1633,7 @@ export const App: React.FC = () => {
           onToggleAIChat={handleToggleAIChat}
           isAIChatActive={isInspectorOpen && inspectorActiveTab === 'aiChat'}
           onOpenCodeIngest={() => setIsCodeIngestModalOpen(true)}
+          onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
         />
       )}
 
@@ -1694,6 +1704,7 @@ export const App: React.FC = () => {
                     onOpenSettings={() => setIsSettingsOpen(true)}
                     onOpenSlides={() => setIsPresentationOpen(true)}
                     onToggleGraph={handleToggleGraphView}
+                    onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
                   />
 
                   <div className="flex-1 overflow-hidden relative">
@@ -1877,6 +1888,7 @@ export const App: React.FC = () => {
         onOpenFileRecoveryModal={() => setIsRecoveryModalOpen(true)}
         onLoadWorkspace={handleLoadWorkspace}
         onSaveCurrentWorkspace={handleSaveWorkspace}
+        onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
       />
 
       {/* Export to PDF Modal */}
@@ -1938,6 +1950,13 @@ export const App: React.FC = () => {
           syncFromVaultManager();
           handleSelectFile(path);
         }}
+      />
+
+      {/* External AI Connect (Claude Desktop, Cursor, Windsurf) Modal */}
+      <ExternalAIConnectModal
+        isOpen={isExternalAIModalOpen}
+        onClose={() => setIsExternalAIModalOpen(false)}
+        vaultName={vaultName}
       />
 
       {/* Fullscreen Slide Deck Presentation */}

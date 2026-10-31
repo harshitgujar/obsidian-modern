@@ -895,31 +895,197 @@ export class ObsidianVaultServer {
     return path.join(home, '.config', 'Claude', 'claude_desktop_config.json');
   }
 
-  public getNodeBinary(): string {
-    // 1. Try finding active node in PATH via which/where
+  public getCursorConfigPath(): string {
+    const home = os.homedir();
+    return path.join(home, '.cursor', 'mcp.json');
+  }
+
+  public getWindsurfConfigPath(): string {
+    const home = os.homedir();
+    return path.join(home, '.codeium', 'windsurf', 'mcp_config.json');
+  }
+
+  public getExecutionConfig(): {
+    command: string;
+    args: string[];
+    env?: Record<string, string>;
+    isNodeInstalled: boolean;
+    runtimeType: 'system_node' | 'electron_node';
+  } {
+    const bridgePath = this.getBridgeScriptPath();
+    const vaultPath = this.activeVaultPath;
+    const port = String(this.currentServerPort);
+    const standardArgs = [bridgePath, vaultPath, port];
+
+    // 1. Check if a real system node is accessible in PATH or common paths
+    let systemNode: string | null = null;
     try {
       const cmd = process.platform === 'win32' ? 'where.exe node' : 'which node';
       const output = execSync(cmd, { encoding: 'utf8', timeout: 1000 }).trim().split('\n')[0].trim();
-      if (output && fs.existsSync(output)) return output;
+      if (output && fs.existsSync(output)) {
+        systemNode = output;
+      }
     } catch {}
 
-    // 2. If running under normal Node, process.execPath is the exact node binary
-    if (process.execPath && !process.execPath.toLowerCase().includes('electron') && !process.execPath.toLowerCase().includes('runagon') && !process.execPath.toLowerCase().includes('obsidian')) {
-      return process.execPath;
+    if (!systemNode) {
+      const candidates = [
+        path.join(os.homedir(), '.local', 'bin', 'node'),
+        '/opt/homebrew/bin/node',
+        '/usr/local/bin/node',
+        '/usr/bin/node',
+        'C:\\Program Files\\nodejs\\node.exe'
+      ];
+      for (const c of candidates) {
+        if (fs.existsSync(c)) {
+          systemNode = c;
+          break;
+        }
+      }
     }
 
-    // 3. Check known directories
-    const candidates = [
-      path.join(os.homedir(), '.local', 'bin', 'node'),
-      '/opt/homebrew/bin/node',
-      '/usr/local/bin/node',
-      '/usr/bin/node',
-      'C:\\Program Files\\nodejs\\node.exe'
-    ];
-    for (const c of candidates) {
-      if (fs.existsSync(c)) return c;
+    if (systemNode) {
+      return {
+        command: systemNode,
+        args: standardArgs,
+        isNodeInstalled: true,
+        runtimeType: 'system_node'
+      };
     }
-    return 'node';
+
+    // 2. If node is not found, use Runagon / Electron binary as the Node runtime!
+    // Electron natively supports running as Node when ELECTRON_RUN_AS_NODE=1 is in env
+    const execPath = process.execPath;
+    if (execPath && fs.existsSync(execPath)) {
+      return {
+        command: execPath,
+        args: standardArgs,
+        env: {
+          ELECTRON_RUN_AS_NODE: '1'
+        },
+        isNodeInstalled: false,
+        runtimeType: 'electron_node'
+      };
+    }
+
+    return {
+      command: 'node',
+      args: standardArgs,
+      isNodeInstalled: false,
+      runtimeType: 'system_node'
+    };
+  }
+
+  public getNodeBinary(): string {
+    const execConfig = this.getExecutionConfig();
+    return execConfig.command;
+  }
+
+  public getExternalMCPStatus(configFilePath: string): {
+    configPath: string;
+    isDetected: boolean;
+    isConnected: boolean;
+    connectedVaultPath?: string;
+  } {
+    const configDir = path.dirname(configFilePath);
+    const isDetected = fs.existsSync(configDir) || fs.existsSync(configFilePath);
+    let isConnected = false;
+    let connectedVaultPath: string | undefined;
+
+    if (fs.existsSync(configFilePath)) {
+      try {
+        const raw = fs.readFileSync(configFilePath, 'utf8');
+        const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
+        const parsed = JSON.parse(clean);
+        const entry = parsed.mcpServers?.['runagon-vault-memory'] || parsed.mcpServers?.['obsidian-vault-memory'];
+        if (entry) {
+          isConnected = true;
+          connectedVaultPath = entry?.args?.[1];
+        }
+      } catch {}
+    }
+
+    return {
+      configPath: configFilePath,
+      isDetected,
+      isConnected,
+      connectedVaultPath
+    };
+  }
+
+  public updateExternalMCPConfig(
+    configFilePath: string,
+    action: 'install' | 'uninstall'
+  ): { ok: boolean; message: string; isConnected: boolean; configPath: string } {
+    const configDir = path.dirname(configFilePath);
+    fs.mkdirSync(configDir, { recursive: true });
+
+    let config: any = { mcpServers: {} };
+    if (fs.existsSync(configFilePath)) {
+      try {
+        const raw = fs.readFileSync(configFilePath, 'utf8');
+        const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
+        config = JSON.parse(clean) || { mcpServers: {} };
+        if (!config.mcpServers || typeof config.mcpServers !== 'object') {
+          config.mcpServers = {};
+        }
+        // Backup previous configuration
+        fs.writeFileSync(`${configFilePath}.bak`, raw, 'utf8');
+      } catch {
+        config = { mcpServers: {} };
+      }
+    }
+
+    if (action === 'install') {
+      const execConfig = this.getExecutionConfig();
+      // Ensure bridge script is placed in the vault's .obsidian folder
+      const bridgePath = this.getBridgeScriptPath();
+      const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
+      if (fs.existsSync(bridgePath) && bridgePath !== vaultBridge) {
+        try {
+          fs.mkdirSync(path.join(this.activeVaultPath, '.obsidian'), { recursive: true });
+          fs.copyFileSync(bridgePath, vaultBridge);
+        } catch {}
+      }
+
+      const serverDef: any = {
+        command: execConfig.command,
+        args: execConfig.args
+      };
+      if (execConfig.env) {
+        serverDef.env = execConfig.env;
+      }
+
+      config.mcpServers['runagon-vault-memory'] = serverDef;
+      // Clean up legacy naming if present
+      delete config.mcpServers['obsidian-vault-memory'];
+
+      fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
+      return {
+        ok: true,
+        message: 'Successfully connected Runagon Vault Memory!',
+        isConnected: true,
+        configPath: configFilePath
+      };
+    } else {
+      let changed = false;
+      if (config.mcpServers?.['runagon-vault-memory']) {
+        delete config.mcpServers['runagon-vault-memory'];
+        changed = true;
+      }
+      if (config.mcpServers?.['obsidian-vault-memory']) {
+        delete config.mcpServers['obsidian-vault-memory'];
+        changed = true;
+      }
+      if (changed || fs.existsSync(configFilePath)) {
+        fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
+      }
+      return {
+        ok: true,
+        message: 'Disconnected Runagon Vault Memory.',
+        isConnected: false,
+        configPath: configFilePath
+      };
+    }
   }
 
   public getBridgeScriptPath(): string {
@@ -1432,139 +1598,129 @@ export class ObsidianVaultServer {
           return;
         }
 
-        // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Agents)
+        // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Windsurf, Agents)
         if (pathname === '/api/vault/ai/mcp/status' && req.method === 'GET') {
-          const configPath = this.getClaudeConfigPath();
-          const isConfigPresent = fs.existsSync(configPath);
-          let isClaudeConnected = false;
-          let existingServers: string[] = [];
+          const claudePath = this.getClaudeConfigPath();
+          const cursorPath = this.getCursorConfigPath();
+          const windsurfPath = this.getWindsurfConfigPath();
 
-          let connectedVaultPath: string | undefined;
-          if (isConfigPresent) {
-            try {
-              const raw = fs.readFileSync(configPath, 'utf8');
-              const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
-              const parsed = JSON.parse(clean);
-              const mcpEntry = parsed.mcpServers?.['runagon-vault-memory'] || parsed.mcpServers?.['obsidian-vault-memory'];
-              if (mcpEntry) {
-                isClaudeConnected = true;
-                connectedVaultPath = mcpEntry?.args?.[1];
-              }
-              if (parsed.mcpServers) {
-                existingServers = Object.keys(parsed.mcpServers);
-              }
-            } catch {}
-          }
+          const claudeStatus = this.getExternalMCPStatus(claudePath);
+          const cursorStatus = this.getExternalMCPStatus(cursorPath);
+          const windsurfStatus = this.getExternalMCPStatus(windsurfPath);
 
-          const nodeBinary = this.getNodeBinary();
-          const bridgePath = this.getBridgeScriptPath();
-          const vaultPath = this.activeVaultPath;
-          const port = this.currentServerPort;
-
-          const cursorConfig = {
-            name: 'runagon-vault-memory',
-            command: nodeBinary,
-            args: [bridgePath, vaultPath, String(port)]
+          const execConfig = this.getExecutionConfig();
+          const mcpServerDef: any = {
+            command: execConfig.command,
+            args: execConfig.args
           };
+          if (execConfig.env) {
+            mcpServerDef.env = execConfig.env;
+          }
 
           const claudeDesktopSnippet = {
             mcpServers: {
-              'runagon-vault-memory': {
-                command: nodeBinary,
-                args: [bridgePath, vaultPath, String(port)]
-              }
+              'runagon-vault-memory': mcpServerDef
             }
           };
 
-          const claudeCliCommand = `claude mcp add runagon-vault-memory ${nodeBinary} "${bridgePath}" "${vaultPath}" "${port}"`;
+          const cursorSnippet = {
+            mcpServers: {
+              'runagon-vault-memory': mcpServerDef
+            }
+          };
+
+          const windsurfSnippet = {
+            mcpServers: {
+              'runagon-vault-memory': mcpServerDef
+            }
+          };
+
+          const httpUrl = `http://localhost:${this.currentServerPort}/api/vault/ai/mcp`;
+          const claudeCliCommand = `claude mcp add runagon-vault-memory ${execConfig.command} "${execConfig.args[0]}" "${execConfig.args[1]}" "${execConfig.args[2]}"`;
 
           return sendJson(200, {
             ok: true,
-            claudeConfigPath: configPath,
-            isConfigPresent,
-            isClaudeConnected,
-            connectedVaultPath,
-            isDifferentVault: Boolean(isClaudeConnected && connectedVaultPath && connectedVaultPath !== vaultPath),
-            existingServers,
-            nodeBinary,
-            bridgePath,
-            vaultPath,
-            port,
-            cursorConfig,
+            execConfig,
+            serverPort: this.currentServerPort,
+            httpUrl,
             claudeDesktopSnippet,
-            claudeCliCommand
+            cursorSnippet,
+            windsurfSnippet,
+            cursorConfig: mcpServerDef,
+            claudeCliCommand,
+            nodeBinary: execConfig.command,
+            bridgePath: execConfig.args[0],
+            vaultPath: this.activeVaultPath,
+            port: this.currentServerPort,
+            claude: claudeStatus,
+            cursor: cursorStatus,
+            windsurf: windsurfStatus,
+            // Backward compatibility fields
+            claudeConfigPath: claudeStatus.configPath,
+            isConfigPresent: claudeStatus.isDetected,
+            isClaudeConnected: claudeStatus.isConnected,
+            connectedVaultPath: claudeStatus.connectedVaultPath,
+            isDifferentVault: Boolean(claudeStatus.isConnected && claudeStatus.connectedVaultPath && claudeStatus.connectedVaultPath !== this.activeVaultPath)
           });
         }
 
         if (pathname === '/api/vault/ai/mcp/install-claude' && req.method === 'POST') {
-          const configPath = this.getClaudeConfigPath();
-          const configDir = path.dirname(configPath);
-          fs.mkdirSync(configDir, { recursive: true });
-
-          let config: any = { mcpServers: {} };
-          if (fs.existsSync(configPath)) {
-            try {
-              const raw = fs.readFileSync(configPath, 'utf8');
-              const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
-              config = JSON.parse(clean) || { mcpServers: {} };
-              if (!config.mcpServers) config.mcpServers = {};
-              fs.writeFileSync(`${configPath}.bak`, raw, 'utf8');
-            } catch {}
-          }
-
-          const nodeBinary = this.getNodeBinary();
-          const bridgePath = this.getBridgeScriptPath();
-          const vaultPath = this.activeVaultPath;
-
-          const vaultBridge = path.join(this.activeVaultPath, '.obsidian', 'mcpBridge.cjs');
-          if (fs.existsSync(bridgePath)) {
-            try {
-              fs.mkdirSync(path.join(this.activeVaultPath, '.obsidian'), { recursive: true });
-              fs.copyFileSync(bridgePath, vaultBridge);
-            } catch {}
-          }
-
-          config.mcpServers['runagon-vault-memory'] = {
-            command: nodeBinary,
-            args: [bridgePath, vaultPath, String(this.currentServerPort)]
-          };
-          if (config.mcpServers['obsidian-vault-memory']) {
-            delete config.mcpServers['obsidian-vault-memory'];
-          }
-
-          fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-
+          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'install');
           return sendJson(200, {
-            ok: true,
-            message: 'Successfully connected Runagon Vault Memory to Claude Desktop!',
-            configPath,
-            isClaudeConnected: true
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isClaudeConnected: result.isConnected
           });
         }
 
         if (pathname === '/api/vault/ai/mcp/uninstall-claude' && req.method === 'POST') {
-          const configPath = this.getClaudeConfigPath();
-          if (fs.existsSync(configPath)) {
-            try {
-              const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-              let changed = false;
-              if (config.mcpServers?.['runagon-vault-memory']) {
-                delete config.mcpServers['runagon-vault-memory'];
-                changed = true;
-              }
-              if (config.mcpServers?.['obsidian-vault-memory']) {
-                delete config.mcpServers['obsidian-vault-memory'];
-                changed = true;
-              }
-              if (changed) {
-                fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-              }
-            } catch {}
-          }
+          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'uninstall');
           return sendJson(200, {
-            ok: true,
-            message: 'Disconnected Runagon Vault Memory from Claude Desktop.',
-            isClaudeConnected: false
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isClaudeConnected: result.isConnected
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/install-cursor' && req.method === 'POST') {
+          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'install');
+          return sendJson(200, {
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isCursorConnected: result.isConnected
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/uninstall-cursor' && req.method === 'POST') {
+          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'uninstall');
+          return sendJson(200, {
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isCursorConnected: result.isConnected
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/install-windsurf' && req.method === 'POST') {
+          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'install');
+          return sendJson(200, {
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isWindsurfConnected: result.isConnected
+          });
+        }
+
+        if (pathname === '/api/vault/ai/mcp/uninstall-windsurf' && req.method === 'POST') {
+          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'uninstall');
+          return sendJson(200, {
+            ok: result.ok,
+            message: result.message,
+            configPath: result.configPath,
+            isWindsurfConnected: result.isConnected
           });
         }
 

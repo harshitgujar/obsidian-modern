@@ -46,7 +46,8 @@ import {
   FileCode,
   Sparkles,
   Plus,
-  Cpu
+  Cpu,
+  Zap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -90,6 +91,7 @@ interface SidebarProps {
   onToggleAIChat?: () => void;
   isAIChatActive?: boolean;
   onOpenCodeIngest?: () => void;
+  onOpenExternalAIConnect?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -132,7 +134,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onExportPdf,
   onToggleAIChat,
   isAIChatActive = false,
-  onOpenCodeIngest
+  onOpenCodeIngest,
+  onOpenExternalAIConnect
 }) => {
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
   const [editingFilePath, setEditingFilePath] = useState<string | null>(null);
@@ -558,6 +561,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <Sparkles className="w-4 h-4" />
+            </button>
+          )}
+
+          {onOpenExternalAIConnect && (
+            <button
+              onClick={onOpenExternalAIConnect}
+              title="Connect External AI (Claude Desktop, Cursor, Windsurf)"
+              className="p-2 rounded-xl transition-all duration-200 border border-transparent text-[#585860] hover:text-[#384cff] hover:bg-black/[0.05] dark:text-zinc-400 dark:hover:text-[#8896ff] dark:hover:bg-zinc-800/60"
+            >
+              <Zap className="w-4 h-4 text-amber-500" />
             </button>
           )}
         </div>

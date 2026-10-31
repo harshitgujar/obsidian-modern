@@ -57,6 +57,7 @@ interface SettingsModalProps {
   onOpenFileRecoveryModal: () => void;
   onLoadWorkspace?: (name: string) => void;
   onSaveCurrentWorkspace?: (name: string) => void;
+  onOpenExternalAIConnect?: () => void;
 }
 
 export type SettingsSection = 
@@ -88,7 +89,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSaveHotkeysConfig,
   onOpenFileRecoveryModal,
   onLoadWorkspace,
-  onSaveCurrentWorkspace
+  onSaveCurrentWorkspace,
+  onOpenExternalAIConnect
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>(initialSection || 'editor');
 
@@ -1299,17 +1301,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </p>
                     </div>
 
-                    {/* Claude status pill */}
-                    {mcpStatus && (
-                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1.5 ${
-                        mcpStatus.isClaudeConnected 
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                          : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
-                        <span>{mcpStatus.isClaudeConnected ? 'Claude Connected' : 'Claude Ready'}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {onOpenExternalAIConnect && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onOpenExternalAIConnect();
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white flex items-center gap-1.5 shadow-xs transition-colors shrink-0 cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Open 1-Click Connector</span>
+                        </button>
+                      )}
+
+                      {/* Claude status pill */}
+                      {mcpStatus && (
+                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1.5 ${
+                          mcpStatus.isClaudeConnected 
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                            : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                          <span>{mcpStatus.isClaudeConnected ? 'Claude Connected' : 'Claude Ready'}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Hub Tabs */}

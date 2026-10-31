@@ -556,13 +556,33 @@ This section outlines the **exact tangible outcome, system deliverable, and end-
 * **Test Steps**:
   1. Inspect the `release/` directory.
   2. **Windows Packages**:
-     * Verify [`Runagon-1.0.0-windows-portable.exe`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon-1.0.0-windows-portable.exe) (~103 MB) runs directly without requiring an installer.
-     * Verify [`Runagon Setup 1.0.0.exe`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon%20Setup%201.0.0.exe) (~103 MB) runs the NSIS setup wizard and creates desktop/start-menu shortcuts.
+     * Verify [`Runagon-1.0.0-windows-portable.exe`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon-1.0.0-windows-portable.exe) (~98 MB) runs directly without requiring an installer.
+     * Verify [`Runagon Setup 1.0.0.exe`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon%20Setup%201.0.0.exe) (~99 MB) runs the NSIS setup wizard and creates desktop/start-menu shortcuts.
   3. **Linux Packages**:
-     * Verify [`Runagon-1.0.0.AppImage`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon-1.0.0.AppImage) (~127 MB) has execute permissions (`chmod +x`) and launches on Linux x64 systems.
+     * Verify [`Runagon-1.0.0.AppImage`](file:///Users/harshitgujar/Documents/antigravity/nifty-maxwell/release/Runagon-1.0.0.AppImage) (~122 MB) has execute permissions (`chmod +x`) and launches on Linux x64 systems.
 * **Expected Functional Result**: Binary packages install and execute self-contained without missing Electron dependencies.
 * **Tangible Outcome Produced**: Release-ready standalone binaries in `release/`.
 * **User Impact**: Frictionless distribution to any end-user desktop without developer setup.
+* **Pass/Fail**: [ ]
+
+#### TC-18: Non-Technical 1-Click External AI Connector (Claude, Cursor, Windsurf)
+* **Objective**: Verify that non-technical users on Windows and Mac can connect external AI applications to Runagon with 1-click and zero Node.js / command-line setup.
+* **Test Steps**:
+  1. Click the amber lightning bolt icon in the left ribbon or press `Ctrl+Shift+M` (`Cmd+Shift+M` on Mac).
+  2. Verify the "Connect External AI" modal opens with status detection cards for Claude Desktop, Cursor IDE, Windsurf IDE, and Web/CLI Agents.
+  3. Verify that the "Bundled Engine: Zero-Setup Node" indicator is active.
+  4. On the Claude Desktop card, click `[ ⚡ 1-Click Connect ]`:
+     - Verify green success notification: "Successfully connected Runagon Vault Memory!"
+     - Verify the status badge updates to "Connected" with a green dot.
+     - Verify Claude Desktop's config file has been automatically updated with the bridge and active vault path.
+  5. On the Cursor IDE card, click `[ ⚡ 1-Click Connect ]`:
+     - Verify Cursor `mcp.json` is automatically updated and status switches to "Connected".
+     - Click `[ JSON ]` and verify the clipboard receives valid MCP configuration JSON.
+  6. Expand the FAQ questions at the bottom of the modal:
+     - Verify the answers explain zero Node.js requirements, complete local privacy, and example user prompts.
+* **Expected Functional Result**: Zero-configuration MCP installation writes valid JSON configs without manual user terminal intervention.
+* **Tangible Outcome Produced**: External AI applications can seamlessly invoke `search_vault_memory` and knowledge graph topology tools on the user's vault.
+* **User Impact**: Non-technical users enjoy frictionless interoperability between their personal Runagon vault and modern AI desktop assistants without any developer tooling.
 * **Pass/Fail**: [ ]
 
 ---
@@ -593,3 +613,4 @@ When reporting defects during manual test runs, use the following standardized s
 - [x] **GraphRAG Reranking**: 1-hop topology expansion functioning in AI Chat.
 - [x] **Dual Theme System**: Flawless light/dark switching across tabs, editor, and graph canvas.
 - [x] **Cross-Platform Release**: Windows Portable/NSIS and Linux AppImage binaries verified.
+- [x] **1-Click External AI Hub**: Zero-Node MCP connection verified for Claude, Cursor, and Windsurf.

@@ -24,7 +24,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Bookmark
+  Bookmark,
+  Zap
 } from 'lucide-react';
 
 interface TabBarProps {
@@ -64,6 +65,7 @@ interface TabBarProps {
   onOpenSettings?: () => void;
   onOpenSlides?: () => void;
   onToggleGraph?: () => void;
+  onOpenExternalAIConnect?: () => void;
 }
 
 export const TabBar: React.FC<TabBarProps> = ({
@@ -102,7 +104,8 @@ export const TabBar: React.FC<TabBarProps> = ({
   onOpenTemplates,
   onOpenSettings,
   onOpenSlides,
-  onToggleGraph
+  onToggleGraph,
+  onOpenExternalAIConnect
 }) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
@@ -363,6 +366,22 @@ export const TabBar: React.FC<TabBarProps> = ({
                     <span>Start Slide Deck</span>
                   </span>
                   <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌥P</span>
+                </button>
+              )}
+
+              {onOpenExternalAIConnect && (
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    onOpenExternalAIConnect();
+                  }}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-black/[0.05] hover:text-[#111113] dark:hover:bg-zinc-800 dark:hover:text-white text-left transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Connect External AI...</span>
+                  </span>
+                  <span className="text-[10px] text-[#8e8e93] dark:text-zinc-500 font-mono">⌘⇧M</span>
                 </button>
               )}
 
