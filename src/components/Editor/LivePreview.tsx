@@ -310,9 +310,9 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   const [newPropVal, setNewPropVal] = useState('');
 
   // Notion-style inline title editing
-  const [inlineTitle, setInlineTitle] = useState(file.name.replace(/\.md$/, ''));
+  const [inlineTitle, setInlineTitle] = useState((file.name || '').replace(/\.md$/, ''));
   useEffect(() => {
-    setInlineTitle(file.name.replace(/\.md$/, ''));
+    setInlineTitle((file.name || '').replace(/\.md$/, ''));
   }, [file.name]);
 
   // Notion-style block editing
@@ -366,19 +366,22 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       embedContext: {
         rawEmbedText,
         onRemoveEmbed: () => {
-          const newContent = file.content.replace(rawEmbedText, '').replace(/\n\n\n+/g, '\n\n');
+          const currentContent = file.content || '';
+          const newContent = currentContent.replace(rawEmbedText, '').replace(/\n\n\n+/g, '\n\n');
           onContentChange?.(newContent);
         },
         onResetSize: () => {
+          const currentContent = file.content || '';
           const rawTarget = rawEmbedText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim();
-          const newContent = file.content.replace(rawEmbedText, `![[${rawTarget}]]`);
+          const newContent = currentContent.replace(rawEmbedText, `![[${rawTarget}]]`);
           onContentChange?.(newContent);
         },
         onSwapFile: (newFilePath: string) => {
+          const currentContent = file.content || '';
           const newEmbed = rawEmbedText.startsWith('![[')
             ? `![[${newFilePath}]]`
             : `![${newFilePath}](${newFilePath})`;
-          const newContent = file.content.replace(rawEmbedText, newEmbed);
+          const newContent = currentContent.replace(rawEmbedText, newEmbed);
           onContentChange?.(newContent);
         }
       }
@@ -386,7 +389,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   };
 
   const commitBlockEdit = (realLineIndex: number, newText: string) => {
-    const lines = file.content.split('\n');
+    const lines = (file.content || '').split('\n');
     if (realLineIndex >= 0 && realLineIndex < lines.length) {
       lines[realLineIndex] = newText;
       onContentChange?.(lines.join('\n'));
@@ -395,7 +398,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   const deleteBlock = (lineIdx: number) => {
     const realLineIdx = startLineOffset + lineIdx;
-    const lines = file.content.split('\n');
+    const lines = (file.content || '').split('\n');
     if (realLineIdx >= 0 && realLineIdx < lines.length) {
       lines.splice(realLineIdx, 1);
       onContentChange?.(lines.join('\n'));
@@ -404,7 +407,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   };
 
   const insertNewBlock = (blockTemplate: string, afterIndex?: number | null) => {
-    const lines = file.content.split('\n');
+    const lines = (file.content || '').split('\n');
     const targetIdx = afterIndex !== undefined && afterIndex !== null 
       ? startLineOffset + afterIndex + 1 
       : lines.length;
@@ -1207,7 +1210,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         );
 
         // Suppress redundant H1 if it duplicates the inline title at the top of note
-        const cleanFileName = file.name.replace(/\.md$/, '').trim().toLowerCase();
+        const cleanFileName = (file.name || '').replace(/\.md$/, '').trim().toLowerCase();
         const isDuplicateDocTitle = level === 1 && i <= 3 && hText.trim().toLowerCase() === cleanFileName;
 
         if (isDuplicateDocTitle) {
@@ -1468,7 +1471,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             onChange={e => setInlineTitle(e.target.value)}
             onBlur={() => {
               const trimmed = inlineTitle.trim();
-              const currentBase = file.name.replace(/\.md$/, '');
+              const currentBase = (file.name || '').replace(/\.md$/, '');
               if (trimmed && trimmed !== currentBase && onRenameFile) {
                 onRenameFile(file, `${trimmed}.md`);
               }
@@ -1487,7 +1490,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         </div>
       ) : (
         <h1 className="inline-title font-bold text-3xl md:text-4xl text-[#111113] dark:text-[#f4f4f6] tracking-tight mb-6 pb-2 border-b border-black/[0.08] dark:border-white/[0.08]">
-          {file.name.replace(/\.md$/, '')}
+          {(file.name || '').replace(/\.md$/, '')}
         </h1>
       )}
 
@@ -1674,10 +1677,10 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         >
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#111113] dark:text-[#f4f4f6] mb-2 border-b border-black/[0.06] dark:border-white/[0.08] pb-1.5">
             <FileText className="w-3.5 h-3.5 text-[#384cff] dark:text-[#6372ff]" />
-            <span>{hoverPreview.targetFile.name.replace(/\.md$/, '')}</span>
+            <span>{(hoverPreview.targetFile.name || '').replace(/\.md$/, '')}</span>
           </div>
           <div className="text-[11px] text-[#585860] dark:text-[#a1a1aa] whitespace-pre-wrap leading-relaxed">
-            {hoverPreview.targetFile.content.replace(/^---[\s\S]*?---/, '').trim().slice(0, 350)}
+            {(hoverPreview.targetFile.content || '').replace(/^---[\s\S]*?---/, '').trim().slice(0, 350)}
           </div>
         </div>
       )}

@@ -217,6 +217,11 @@ function createWindow(targetUrl) {
     }
   });
 
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const levelNames = ['VERBOSE', 'INFO', 'WARNING', 'ERROR'];
+    console.log(`[Renderer] [${levelNames[level] || level}] ${message} (${sourceId}:${line})`);
+  });
+
   const url = targetUrl || process.env.VITE_DEV_SERVER_URL || `file://${path.join(__dirname, '../dist/index.html')}`;
   win.loadURL(url);
 }

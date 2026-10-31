@@ -117,12 +117,12 @@ export const Editor: React.FC<EditorProps> = ({
   const findInputRef = useRef<HTMLInputElement | null>(null);
 
   // Notion-Style Editable Title & Block Inserter
-  const [inlineTitle, setInlineTitle] = useState(file.name.replace(/\.md$/, ''));
+  const [inlineTitle, setInlineTitle] = useState((file.name || '').replace(/\.md$/, ''));
   const [showBlockMenu, setShowBlockMenu] = useState(false);
   const [showTablePickerInBlockMenu, setShowTablePickerInBlockMenu] = useState(false);
 
   useEffect(() => {
-    setInlineTitle(file.name.replace(/\.md$/, ''));
+    setInlineTitle((file.name || '').replace(/\.md$/, ''));
   }, [file.path, file.name]);
 
   // Context Menu State
@@ -176,6 +176,7 @@ export const Editor: React.FC<EditorProps> = ({
   const matches = useMemo(() => {
     if (!findText) return [];
     try {
+      const fileContent = file.content || '';
       const flags = matchCase ? 'g' : 'gi';
       const pattern = useRegex
         ? findText
@@ -183,7 +184,7 @@ export const Editor: React.FC<EditorProps> = ({
       const regex = new RegExp(pattern, flags);
       const results: { index: number; length: number }[] = [];
       let m: RegExpExecArray | null;
-      while ((m = regex.exec(file.content)) !== null) {
+      while ((m = regex.exec(fileContent)) !== null) {
         results.push({ index: m.index, length: m[0].length });
         if (!regex.global) break;
       }
@@ -225,10 +226,11 @@ export const Editor: React.FC<EditorProps> = ({
   const handleReplaceCurrent = () => {
     if (!matches.length || currentMatchIndex >= matches.length) return;
     const match = matches[currentMatchIndex];
+    const rawContent = file.content || '';
     const newContent =
-      file.content.slice(0, match.index) +
+      rawContent.slice(0, match.index) +
       replaceText +
-      file.content.slice(match.index + match.length);
+      rawContent.slice(match.index + match.length);
     onContentChange(newContent);
   };
 
@@ -240,7 +242,7 @@ export const Editor: React.FC<EditorProps> = ({
         ? findText
         : findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(pattern, flags);
-      const newContent = file.content.replace(regex, replaceText);
+      const newContent = (file.content || '').replace(regex, replaceText);
       onContentChange(newContent);
     } catch {}
   };
@@ -316,7 +318,7 @@ export const Editor: React.FC<EditorProps> = ({
         return;
       }
 
-      const current = file.content;
+      const current = file.content || '';
       onContentChange(current + `\n${block}\n`);
     },
     [viewMode, onViewModeChange, file.content, onContentChange]
@@ -334,7 +336,7 @@ export const Editor: React.FC<EditorProps> = ({
       }
 
       const prefix = '#'.repeat(level) + ' ';
-      onContentChange(file.content + `\n${prefix}Heading\n`);
+      onContentChange((file.content || '') + `\n${prefix}Heading\n`);
     },
     [viewMode, onViewModeChange, file.content, onContentChange]
   );
@@ -347,10 +349,11 @@ export const Editor: React.FC<EditorProps> = ({
 
     const selection = window.getSelection();
     const selText = selection ? selection.toString() : '';
-    if (selText && file.content.includes(selText)) {
-      const idx = file.content.indexOf(selText);
+    const content = file.content || '';
+    if (selText && content.includes(selText)) {
+      const idx = content.indexOf(selText);
       if (idx !== -1) {
-        onContentChange(file.content.slice(0, idx) + file.content.slice(idx + selText.length));
+        onContentChange(content.slice(0, idx) + content.slice(idx + selText.length));
       }
     }
   }, [file.content, onContentChange]);
@@ -483,7 +486,7 @@ export const Editor: React.FC<EditorProps> = ({
             ? `\n![[${target.name}]]\n`
             : `\n[[${target.name.replace(/\.md$/, '')}]]\n`;
 
-        onContentChange(file.content + linkSyntax);
+        onContentChange((file.content || '') + linkSyntax);
       }}
       className="flex-1 flex flex-col h-full bg-[#ffffff] overflow-hidden relative select-text"
     >
@@ -614,7 +617,7 @@ export const Editor: React.FC<EditorProps> = ({
         )}
 
         {(() => {
-          const lowerExt = file.extension.toLowerCase();
+          const lowerExt = (file.extension || '').toLowerCase();
           const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lowerExt);
           const isAudio = ['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lowerExt);
           const isPdf = lowerExt === 'pdf';
@@ -738,7 +741,7 @@ export const Editor: React.FC<EditorProps> = ({
                     onChange={e => setInlineTitle(e.target.value)}
                     onBlur={() => {
                       const trimmed = inlineTitle.trim();
-                      const currentBase = file.name.replace(/\.md$/, '');
+                      const currentBase = (file.name || '').replace(/\.md$/, '');
                       if (trimmed && trimmed !== currentBase && onRenameFile) {
                         onRenameFile(file, `${trimmed}.md`);
                       }
@@ -761,7 +764,7 @@ export const Editor: React.FC<EditorProps> = ({
                 <div className="flex-1 min-h-[450px]">
                   <CodeMirrorEditor
                     ref={editorRef}
-                    value={file.content}
+                    value={file.content || ''}
                     onChange={onContentChange}
                     livePreview={viewMode !== 'source'}
                     showLineNumbers={viewMode === 'source' && showLineNumbers}

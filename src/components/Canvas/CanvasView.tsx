@@ -93,7 +93,7 @@ interface SubCanvasMiniViewportProps {
 const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFile, onOpen }) => {
   const data: CanvasData = useMemo(() => {
     try {
-      const parsed = JSON.parse(canvasFile.content);
+      const parsed = JSON.parse(canvasFile.content || '{}');
       return {
         nodes: Array.isArray(parsed.nodes) ? parsed.nodes : [],
         edges: Array.isArray(parsed.edges) ? parsed.edges : []
@@ -373,7 +373,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   // Parse canvas data from file.content
   const initialCanvasData: CanvasData = useMemo(() => {
     try {
-      const parsed = JSON.parse(file.content);
+      const parsed = JSON.parse(file.content || '{}');
       return {
         nodes: Array.isArray(parsed.nodes) ? parsed.nodes : [],
         edges: Array.isArray(parsed.edges) ? parsed.edges : []
@@ -2385,7 +2385,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                     if (referencedFile) {
                       return (
                         <div className="prose prose-invert prose-xs leading-relaxed space-y-1.5">
-                          {referencedFile.content
+                          {(referencedFile.content || '')
                             .slice(0, 500)
                             .replace(/^---[\s\S]*?---/, '')
                             .split('\n')

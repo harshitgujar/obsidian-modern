@@ -83,7 +83,7 @@ export const Inspector: React.FC<InspectorProps> = ({
     ...graphData.edges
       .filter(e => (e.source === activeFile.path || e.target === activeFile.path) && e.kind === 'inferred')
       .map(e => {
-        const otherId = e.source === activeFile.path ? e.target : e.source;
+        const otherId = String((e.source === activeFile.path ? e.target : e.source) || '');
         return {
           path: otherId,
           name: otherId.replace(/^.*[\\\/]/, '').replace(/\.md$/, ''),
@@ -93,7 +93,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       }),
     ...unlinkedMentions.map(u => ({
       path: u.filePath,
-      name: u.fileName.replace(/\.md$/, ''),
+      name: (u.fileName || '').replace(/\.md$/, ''),
       confidence: 75,
       isUnlinkedMention: true
     }))
@@ -255,7 +255,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                     >
                       <div className="flex items-center gap-1.5 text-purple-400 font-medium">
                         <FileText className="w-3 h-3 shrink-0" />
-                        <span className="truncate group-hover:underline">{b.fileName.replace(/\.md$/, '')}</span>
+                        <span className="truncate group-hover:underline">{String(b.fileName || '').replace(/\.md$/, '')}</span>
                       </div>
                       {b.contextSnippet && (
                         <p className="mt-1 text-[11px] text-zinc-400 line-clamp-2">
@@ -299,10 +299,10 @@ export const Inspector: React.FC<InspectorProps> = ({
                           onClick={() => onNavigateFile(um.filePath)}
                           className="font-medium text-zinc-300 hover:text-purple-300 cursor-pointer truncate"
                         >
-                          {um.fileName.replace(/\.md$/, '')}
+                          {String(um.fileName || '').replace(/\.md$/, '')}
                         </span>
                         <button
-                          onClick={() => onLinkMention(um.filePath, activeFile.name.replace(/\.md$/, ''))}
+                          onClick={() => onLinkMention(um.filePath, String(activeFile.name || '').replace(/\.md$/, ''))}
                           className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg skeuo-btn-dark text-[10px] font-medium transition-all"
                           title="Convert to [[Wikilink]]"
                         >
@@ -374,7 +374,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       {activeFile && activeTab === 'localGraph' && (
         <div className="flex-1 p-2 flex flex-col">
           <div className="text-[11px] text-[#585860] mb-2 font-medium">
-            Local connections for <span className="text-[#111113] font-semibold">{activeFile.name.replace(/\.md$/, '')}</span>
+            Local connections for <span className="text-[#111113] font-semibold">{String(activeFile.name || '').replace(/\.md$/, '')}</span>
           </div>
           <div className="flex-1 rounded-xl overflow-hidden border border-black/[0.08] bg-[#f4f4f6]">
             <GraphView
@@ -435,7 +435,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 >
                   <div className="flex items-center gap-2 truncate">
                     <ArrowUpRight className="w-3.5 h-3.5 text-[#384cff] shrink-0" />
-                    <span className="truncate font-medium">{link.target.replace(/\.md$/, '')}</span>
+                    <span className="truncate font-medium">{String(link.target || '').replace(/\.md$/, '')}</span>
                   </div>
                   <span className="text-[9px] font-mono text-[#8e8e93] shrink-0">{link.sourceType || 'code-import'}</span>
                 </div>
@@ -462,7 +462,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 >
                   <div className="flex items-center gap-2 truncate">
                     <Link className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                    <span className="truncate font-medium">{link.source.replace(/\.md$/, '')}</span>
+                    <span className="truncate font-medium">{String(link.source || '').replace(/\.md$/, '')}</span>
                   </div>
                   <span className="text-[9px] font-mono text-[#8e8e93] shrink-0">{link.sourceType || 'wikilink'}</span>
                 </div>
@@ -497,7 +497,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                       <button
                         onClick={e => {
                           e.stopPropagation();
-                          onLinkMention(tie.path, activeFile.name.replace(/\.md$/, ''));
+                          onLinkMention(tie.path, String(activeFile.name || '').replace(/\.md$/, ''));
                         }}
                         title="Convert to [[Wikilink]]"
                         className="p-1 rounded-md text-zinc-400 hover:text-[#384cff] hover:bg-black/[0.04]"

@@ -222,7 +222,7 @@ class ImageEmbedWidget extends WidgetType {
       const cleanPath = this.rawText.replace(/^!\[\[|\]\]$/g, '').split('|')[0].trim();
       const files = this.getAllFiles ? this.getAllFiles() : (this.allFiles || []);
       const targetFile = files.find(
-        f => f.path === cleanPath || f.name === cleanPath || f.name.replace(/\.[^/.]+$/, '') === cleanPath
+        f => f.path === cleanPath || f.name === cleanPath || (f.name && f.name.replace(/\.[^/.]+$/, '') === cleanPath)
       );
       this.onContextMenu?.(e, targetFile, this.rawText);
     });
@@ -286,14 +286,14 @@ class NoteEmbedWidget extends WidgetType {
       f.path === `${cleanTitle}.md` || 
       f.name === cleanTitle || 
       f.name === `${cleanTitle}.md` ||
-      f.name.replace(/\.md$/, '') === cleanTitle
+      (f.name && f.name.replace(/\.md$/, '') === cleanTitle)
     );
 
     const body = document.createElement('div');
     body.className = 'p-3.5 text-xs text-[#111113] leading-relaxed font-sans space-y-2 border-l-2 border-[#18181b] bg-[#f4f4f6]/50';
 
     if (targetFile) {
-      let contentToShow = targetFile.content.replace(/^---[\s\S]*?---\n*/, '').trim();
+      let contentToShow = (targetFile.content || '').replace(/^---[\s\S]*?---\n*/, '').trim();
 
       if (this.fragment) {
         const cleanHeading = this.fragment.replace(/^[#^]/, '').trim().toLowerCase();

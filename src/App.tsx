@@ -30,6 +30,7 @@ import { CodebaseIngestModal } from './components/Modals/CodebaseIngestModal';
 import { ExternalAIConnectModal } from './components/Modals/ExternalAIConnectModal';
 import { SlideDeck } from './components/Presentation/SlideDeck';
 import { StatusBar } from './components/StatusBar/StatusBar';
+import { ErrorBoundary } from './components/Common/ErrorBoundary';
 import { 
   PanelLeftClose, 
   PanelLeftOpen, 
@@ -692,7 +693,7 @@ export const App: React.FC = () => {
     if (!sourceFile) return;
 
     const regex = new RegExp(`(?<!\\[\\[)\\b${keyword}\\b(?!\\]\\])`, 'i');
-    const updated = sourceFile.content.replace(regex, `[[${keyword}]]`);
+    const updated = (sourceFile.content || '').replace(regex, `[[${keyword}]]`);
     await vault.saveNote(sourceFilePath, updated);
     syncFromVaultManager();
   }, [syncFromVaultManager]);
@@ -813,11 +814,11 @@ export const App: React.FC = () => {
     const today = now.toISOString().slice(0, 10);
     const timeStr = now.toTimeString().slice(0, 5);
     const expanded = templateContent
-      .replace(/\{\{title\}\}/g, activeFile.name.replace(/\.md$/, ''))
+      .replace(/\{\{title\}\}/g, (activeFile.name || '').replace(/\.md$/, ''))
       .replace(/\{\{date\}\}/g, today)
       .replace(/\{\{time\}\}/g, timeStr);
 
-    const nextContent = `${activeFile.content}\n\n${expanded}`;
+    const nextContent = `${activeFile.content || ''}\n\n${expanded}`;
     await handleContentChange(activeFile.path, nextContent);
   }, [activeFile, handleContentChange]);
 
@@ -1141,7 +1142,7 @@ export const App: React.FC = () => {
         const newFile = await vault.createNote(title.trim(), '', selection.trim(), 'md');
         syncFromVaultManager();
         if (activeFile) {
-          const updated = activeFile.content.replace(selection, `[[${title.trim()}]]`);
+          const updated = (activeFile.content || '').replace(selection, `[[${title.trim()}]]`);
           await handleContentChange(activeFile.path, updated);
         }
         handleSelectFile(newFile.path);
@@ -1160,8 +1161,8 @@ export const App: React.FC = () => {
           alert(`Target note "${targetTitle}" not found.`);
           return;
         }
-        const cleanName = activeFile.name.replace(/\.md$/, '');
-        const merged = `${target.content}\n\n---\n\n# Merged from [[${cleanName}]]\n\n${activeFile.content}`;
+        const cleanName = (activeFile.name || '').replace(/\.md$/, '');
+        const merged = `${target.content || ''}\n\n---\n\n# Merged from [[${cleanName}]]\n\n${activeFile.content || ''}`;
         await handleContentChange(target.path, merged);
         await handleDeleteFile(activeFile.path);
         handleSelectFile(target.path);
@@ -1304,7 +1305,7 @@ export const App: React.FC = () => {
       shortcut: 'Ctrl+D',
       action: () => {
         if (activeFile) {
-          handleToggleBookmark(activeFile.path, activeFile.name.replace(/\.[^/.]+$/, ''));
+          handleToggleBookmark(activeFile.path, (activeFile.name || '').replace(/\.[^/.]+$/, ''));
         }
       }
     },
@@ -1438,7 +1439,7 @@ export const App: React.FC = () => {
       if (isCmdOrCtrl && e.key.toLowerCase() === 'd') {
         e.preventDefault();
         if (activeFile) {
-          handleToggleBookmark(activeFile.path, activeFile.name.replace(/\.[^/.]+$/, ''));
+          handleToggleBookmark(activeFile.path, (activeFile.name || '').replace(/\.[^/.]+$/, ''));
         }
         return;
       }
@@ -1535,7 +1536,7 @@ export const App: React.FC = () => {
   // Synchronize dynamic window title with active note & vault name
   useEffect(() => {
     if (activeFile) {
-      const noteTitle = activeFile.name.replace(/\.[^/.]+$/, '');
+      const noteTitle = (activeFile.name || '').replace(/\.[^/.]+$/, '');
       document.title = `${noteTitle} - ${vaultName || 'Vault'} - Runagon`;
     } else {
       document.title = vaultName ? `${vaultName} - Runagon` : 'Runagon';
@@ -1675,7 +1676,7 @@ export const App: React.FC = () => {
                     onGoForward={handleGoForward}
                     onToggleBookmark={() => {
                       if (paneFile) {
-                        handleToggleBookmark(paneFile.path, paneFile.name.replace(/\.[^/.]+$/, ''));
+                        handleToggleBookmark(paneFile.path, (paneFile.name || '').replace(/\.[^/.]+$/, ''));
                       }
                     }}
                     onSave={() => handleManualSave(paneFile?.path)}
@@ -1708,79 +1709,81 @@ export const App: React.FC = () => {
                   />
 
                   <div className="flex-1 overflow-hidden relative">
-                    {isGraphTab ? (
-                      <GraphView
-                        data={graphData}
-                        activeFileId={activeFilePath}
-                        onSelectNode={filePath => {
-                          handleSelectFile(filePath, pane.id);
-                        }}
-                        isMini={false}
-                        initialSettings={graphConfig}
-                        onSettingsChange={settings => {
-                          setGraphConfig(settings);
-                          vault.saveConfig('graph', settings);
-                        }}
-                        onClose={() => handleCloseTabInPane(pane.id, currentPaneTab.id)}
-                        onSplitRight={filePath => {
-                          handleSplitPaneRight(filePath || currentPaneTab.filePath);
-                        }}
-                      />
-                    ) : !paneFile ? (
-                      <div className="flex items-center justify-center h-full text-[#8e8e93] dark:text-[#71717a] text-sm select-none">
-                        No file open. Press Ctrl+O to open a note or canvas.
-                      </div>
-                    ) : paneFile.extension === 'canvas' ? (
-                      <CanvasView
-                        file={paneFile}
-                        allFiles={files}
-                        onSaveContent={content => handleContentChange(paneFile.path, content)}
-                        onNavigateFile={target => handleSelectFile(target, pane.id)}
-                      />
-                    ) : (
-                      <Editor
-                        file={paneFile}
-                        allFiles={files}
-                        metadata={paneMeta}
-                        backlinks={paneBacklinks}
-                        viewMode={currentPaneTab?.viewMode || 'live'}
-                        showLineNumbers={appConfig.showLineNumber !== false}
-                        readableLineLength={appConfig.readableLineLength !== false}
-                        strictLineBreaks={Boolean(appConfig.strictLineBreaks)}
-                        showFrontmatter={appConfig.showFrontmatter !== false}
-                        foldHeading={appConfig.foldHeading !== false}
-                        findReplaceOpen={findReplacePaneId === pane.id}
-                        isBookmarked={bookmarks.some(b => b.path === paneFile.path)}
-                        onCloseFindReplace={() => setFindReplacePaneId(null)}
-                        onViewModeChange={mode => handleViewModeChangeInPane(pane.id, mode)}
-                        onContentChange={content => handleContentChange(paneFile.path, content)}
-                        onNavigateLink={handleNavigateLink}
-                        onTagClick={tag => {
-                          setSearchFilter(`tag:${tag}`);
-                          setActiveSidebarTab('search');
-                          setIsSidebarOpen(true);
-                        }}
-                        onStartPresentation={() => setIsPresentationOpen(true)}
-                        onToggleBookmark={() => handleToggleBookmark(paneFile.path, paneFile.name.replace(/\.md$/, ''))}
-                        onCopyNoteLink={() => {
-                          navigator.clipboard.writeText(`[[${paneFile.name.replace(/\.md$/, '')}]]`);
-                        }}
-                        onOpenFile={handleSelectFile}
-                        onOpenSplit={path => handleSplitPaneRight(path)}
-                        onRenameFile={(f, newName) => handleRenameFile(f.path, newName)}
-                        onDeleteFile={handleDeleteFile}
-                        onDuplicateFile={handleDuplicateFile}
-                        onRevealInNavigation={handleRevealInNavigation}
-                        onOpenLocalGraph={path => handleOpenGraphView(pane.id)}
-                        onExportPdf={() => {
-                          if (paneFile) {
-                            setPdfTargetFile(paneFile);
-                            setIsPdfModalOpen(true);
-                          }
-                        }}
-                        folders={folders}
-                      />
-                    )}
+                    <ErrorBoundary key={currentPaneTab?.id || pane.id} componentName="Note Editor / View">
+                      {isGraphTab ? (
+                        <GraphView
+                          data={graphData}
+                          activeFileId={activeFilePath}
+                          onSelectNode={filePath => {
+                            handleSelectFile(filePath, pane.id);
+                          }}
+                          isMini={false}
+                          initialSettings={graphConfig}
+                          onSettingsChange={settings => {
+                            setGraphConfig(settings);
+                            vault.saveConfig('graph', settings);
+                          }}
+                          onClose={() => handleCloseTabInPane(pane.id, currentPaneTab.id)}
+                          onSplitRight={filePath => {
+                            handleSplitPaneRight(filePath || currentPaneTab.filePath);
+                          }}
+                        />
+                      ) : !paneFile ? (
+                        <div className="flex items-center justify-center h-full text-[#8e8e93] dark:text-[#71717a] text-sm select-none">
+                          No file open. Press Ctrl+O to open a note or canvas.
+                        </div>
+                      ) : paneFile.extension === 'canvas' ? (
+                        <CanvasView
+                          file={paneFile}
+                          allFiles={files}
+                          onSaveContent={content => handleContentChange(paneFile.path, content)}
+                          onNavigateFile={target => handleSelectFile(target, pane.id)}
+                        />
+                      ) : (
+                        <Editor
+                          file={paneFile}
+                          allFiles={files}
+                          metadata={paneMeta}
+                          backlinks={paneBacklinks}
+                          viewMode={currentPaneTab?.viewMode || 'live'}
+                          showLineNumbers={appConfig.showLineNumber !== false}
+                          readableLineLength={appConfig.readableLineLength !== false}
+                          strictLineBreaks={Boolean(appConfig.strictLineBreaks)}
+                          showFrontmatter={appConfig.showFrontmatter !== false}
+                          foldHeading={appConfig.foldHeading !== false}
+                          findReplaceOpen={findReplacePaneId === pane.id}
+                          isBookmarked={bookmarks.some(b => b.path === paneFile.path)}
+                          onCloseFindReplace={() => setFindReplacePaneId(null)}
+                          onViewModeChange={mode => handleViewModeChangeInPane(pane.id, mode)}
+                          onContentChange={content => handleContentChange(paneFile.path, content)}
+                          onNavigateLink={handleNavigateLink}
+                          onTagClick={tag => {
+                            setSearchFilter(`tag:${tag}`);
+                            setActiveSidebarTab('search');
+                            setIsSidebarOpen(true);
+                          }}
+                          onStartPresentation={() => setIsPresentationOpen(true)}
+                          onToggleBookmark={() => handleToggleBookmark(paneFile.path, (paneFile.name || '').replace(/\.md$/, ''))}
+                          onCopyNoteLink={() => {
+                            navigator.clipboard.writeText(`[[${(paneFile.name || '').replace(/\.md$/, '')}]]`);
+                          }}
+                          onOpenFile={handleSelectFile}
+                          onOpenSplit={path => handleSplitPaneRight(path)}
+                          onRenameFile={(f, newName) => handleRenameFile(f.path, newName)}
+                          onDeleteFile={handleDeleteFile}
+                          onDuplicateFile={handleDuplicateFile}
+                          onRevealInNavigation={handleRevealInNavigation}
+                          onOpenLocalGraph={path => handleOpenGraphView(pane.id)}
+                          onExportPdf={() => {
+                            if (paneFile) {
+                              setPdfTargetFile(paneFile);
+                              setIsPdfModalOpen(true);
+                            }
+                          }}
+                          folders={folders}
+                        />
+                      )}
+                    </ErrorBoundary>
                   </div>
                 </div>
               );
@@ -1790,24 +1793,26 @@ export const App: React.FC = () => {
 
       {/* 3. Right Inspector (Backlinks, Outgoing Links, Outline, Local Graph, AI Chat) */}
       {isInspectorOpen && !isGraphViewActive && (activeFile || inspectorActiveTab === 'aiChat') && (
-        <Inspector
-          activeFile={activeFile}
-          metadata={activeMetadata}
-          backlinks={activeBacklinks}
-          unlinkedMentions={activeUnlinkedMentions}
-          graphData={graphData}
-          corePluginsConfig={corePluginsConfig}
-          onNavigateFile={handleNavigateLink}
-          onLinkMention={handleLinkMention}
-          activeTab={inspectorActiveTab}
-          onSelectTab={setInspectorActiveTab}
-          onInsertTextAtCursor={handleInsertTextAtCursor}
-          onCreateNoteFromResponse={handleCreateNoteFromResponse}
-          onOpenSettings={() => {
-            setSettingsInitialSection('ai');
-            setIsSettingsOpen(true);
-          }}
-        />
+        <ErrorBoundary componentName="Inspector Pane">
+          <Inspector
+            activeFile={activeFile}
+            metadata={activeMetadata}
+            backlinks={activeBacklinks}
+            unlinkedMentions={activeUnlinkedMentions}
+            graphData={graphData}
+            corePluginsConfig={corePluginsConfig}
+            onNavigateFile={handleNavigateLink}
+            onLinkMention={handleLinkMention}
+            activeTab={inspectorActiveTab}
+            onSelectTab={setInspectorActiveTab}
+            onInsertTextAtCursor={handleInsertTextAtCursor}
+            onCreateNoteFromResponse={handleCreateNoteFromResponse}
+            onOpenSettings={() => {
+              setSettingsInitialSection('ai');
+              setIsSettingsOpen(true);
+            }}
+          />
+        </ErrorBoundary>
       )}
       </div>
 
