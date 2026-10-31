@@ -107,17 +107,21 @@ const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFil
     if (data.nodes.length === 0) return { minX: 0, minY: 0, width: 400, height: 300 };
     let mx = Infinity, my = Infinity, maxX = -Infinity, maxY = -Infinity;
     data.nodes.forEach(n => {
-      mx = Math.min(mx, n.x);
-      my = Math.min(my, n.y);
-      maxX = Math.max(maxX, n.x + (n.width || 250));
-      maxY = Math.max(maxY, n.y + (n.height || 150));
+      const nx = typeof n.x === 'number' ? n.x : 0;
+      const ny = typeof n.y === 'number' ? n.y : 0;
+      const nw = typeof n.width === 'number' ? n.width : 250;
+      const nh = typeof n.height === 'number' ? n.height : 150;
+      mx = Math.min(mx, nx);
+      my = Math.min(my, ny);
+      maxX = Math.max(maxX, nx + nw);
+      maxY = Math.max(maxY, ny + nh);
     });
     const pad = 40;
     return {
-      minX: mx - pad,
-      minY: my - pad,
-      width: Math.max(100, (maxX - mx) + pad * 2),
-      height: Math.max(100, (maxY - my) + pad * 2)
+      minX: mx === Infinity ? 0 : mx - pad,
+      minY: my === Infinity ? 0 : my - pad,
+      width: Math.max(100, (maxX - (mx === Infinity ? 0 : mx)) + pad * 2),
+      height: Math.max(100, (maxY - (my === Infinity ? 0 : my)) + pad * 2)
     };
   }, [data.nodes]);
 
@@ -501,16 +505,24 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   }, [canvasData.nodes]);
 
   // Calculate connection port coordinate on a node
-  const getPortPos = useCallback((node: CanvasNodeData, side: Side) => {
+  const getPortPos = useCallback((node?: CanvasNodeData, side?: Side): { x: number; y: number } => {
+    if (!node) return { x: 0, y: 0 };
+    const nx = typeof node.x === 'number' ? node.x : 0;
+    const ny = typeof node.y === 'number' ? node.y : 0;
+    const nw = typeof node.width === 'number' ? node.width : 250;
+    const nh = typeof node.height === 'number' ? node.height : 140;
+
     switch (side) {
       case 'top':
-        return { x: node.x + node.width / 2, y: node.y };
+        return { x: nx + nw / 2, y: ny };
       case 'right':
-        return { x: node.x + node.width, y: node.y + node.height / 2 };
+        return { x: nx + nw, y: ny + nh / 2 };
       case 'bottom':
-        return { x: node.x + node.width / 2, y: node.y + node.height };
+        return { x: nx + nw / 2, y: ny + nh };
       case 'left':
-        return { x: node.x, y: node.y + node.height / 2 };
+        return { x: nx, y: ny + nh / 2 };
+      default:
+        return { x: nx + nw / 2, y: ny + nh / 2 };
     }
   }, []);
 
@@ -605,11 +617,19 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     canvasData.nodes.forEach(n => {
-      minX = Math.min(minX, n.x);
-      minY = Math.min(minY, n.y);
-      maxX = Math.max(maxX, n.x + n.width);
-      maxY = Math.max(maxY, n.y + n.height);
+      const nx = typeof n.x === 'number' ? n.x : 0;
+      const ny = typeof n.y === 'number' ? n.y : 0;
+      const nw = typeof n.width === 'number' ? n.width : 250;
+      const nh = typeof n.height === 'number' ? n.height : 140;
+      minX = Math.min(minX, nx);
+      minY = Math.min(minY, ny);
+      maxX = Math.max(maxX, nx + nw);
+      maxY = Math.max(maxY, ny + nh);
     });
+
+    if (minX === Infinity || maxX === -Infinity) {
+      minX = 0; maxX = 400; minY = 0; maxY = 300;
+    }
 
     const padding = 120;
     const boundWidth = (maxX - minX) + padding * 2;
