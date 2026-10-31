@@ -323,6 +323,7 @@ export const App: React.FC = () => {
   // Theme & Base font size synchronization
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', isDarkTheme);
     if (appearanceConfig.baseFontSize) {
       document.documentElement.style.fontSize = `${appearanceConfig.baseFontSize}px`;
     }

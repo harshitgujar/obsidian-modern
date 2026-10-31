@@ -138,6 +138,25 @@ export const GraphView: React.FC<GraphViewProps> = ({
   const [activeCommunityId, setActiveCommunityId] = useState<number | null>(null);
   const [showCommunitiesDrawer, setShowCommunitiesDrawer] = useState(false);
 
+  // Reactive Theme State (Dark vs Light)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark');
+      setIsDark(dark);
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    return () => observer.disconnect();
+  }, []);
+
   // Time-lapse Animation state
   const [isTimelapseRunning, setIsTimelapseRunning] = useState(false);
   const [animProgress, setAnimProgress] = useState<number>(0);
@@ -1131,7 +1150,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   };
 
   return (
-    <div className={`relative w-full h-full bg-[#f4f4f6] overflow-hidden select-none ${isMini ? 'rounded-xl border border-black/[0.08]' : ''}`}>
+    <div className={`relative w-full h-full bg-[#f4f4f6] dark:bg-[#121214] overflow-hidden select-none ${isMini ? 'rounded-xl border border-black/[0.08] dark:border-white/[0.08]' : ''}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-full cursor-grab active:cursor-grabbing block"
@@ -1141,141 +1160,145 @@ export const GraphView: React.FC<GraphViewProps> = ({
         onWheel={handleWheel}
       />
 
-      {/* Top Left Search Input Bar & Animated Timelapse Controls */}
+      {/* Top Left Floating Control Center (Unified Search, Timelapse, Dual-Edges & Subsystems) */}
       {!isMini && (
-        <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
-              value={settings.search}
-              onChange={e => updateSetting('search', e.target.value)}
-              placeholder="Search graph..."
-              className="graph-control-input bg-white text-xs text-[#111113] pl-8 pr-6 py-1.5 rounded-xl border border-black/[0.08] shadow-sm focus:outline-none focus:border-zinc-400 w-48"
-            />
-            {settings.search && (
+        <div className="absolute top-3 left-3 z-30 flex flex-col gap-2 select-none pointer-events-auto">
+          {/* Row 1: Search Input Bar & Animated Timelapse Controls */}
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] shadow-xs text-xs text-[#111113] dark:text-[#f4f4f6]">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
+              <input
+                type="text"
+                value={settings.search}
+                onChange={e => updateSetting('search', e.target.value)}
+                placeholder="Search graph..."
+                className="bg-transparent text-xs text-[#111113] dark:text-[#f4f4f6] placeholder-zinc-400 dark:placeholder-zinc-500 pl-8 pr-6 py-1.5 rounded-xl border border-transparent focus:border-[#384cff]/40 dark:focus:border-[#6372ff]/40 focus:outline-none w-44 transition-all"
+              />
+              {settings.search && (
+                <button
+                  onClick={() => updateSetting('search', '')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.08] my-auto" />
+
+            {/* Time-lapse Play / Pause button */}
+            <button
+              onClick={handleToggleTimelapse}
+              title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                isTimelapseRunning
+                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] border-transparent shadow-sm'
+                  : 'bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#111113] dark:text-[#f4f4f6] border-black/[0.06] dark:border-white/[0.08]'
+              }`}
+            >
+              {isTimelapseRunning ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-current" />
+                  <span>Pause ({animProgress}/{filteredData.nodes.length})</span>
+                </>
+              ) : animProgress < filteredData.nodes.length && animProgress > 1 ? (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current text-zinc-700 dark:text-zinc-300" />
+                  <span>Resume ({animProgress}/{filteredData.nodes.length})</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current text-zinc-700 dark:text-zinc-300" />
+                  <span>{animProgress >= filteredData.nodes.length && animProgress > 1 ? 'Replay' : 'Animate'}</span>
+                </>
+              )}
+            </button>
+
+            {/* Show full graph if paused partway */}
+            {animProgress < filteredData.nodes.length && animProgress > 1 && !isTimelapseRunning && (
               <button
-                onClick={() => updateSetting('search', '')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                onClick={handleResetTimelapse}
+                title="Show Full Graph"
+                className="p-1.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#585860] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] transition-colors"
               >
-                <X className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
             )}
+
+            {/* Reheat Simulation Forces Button */}
+            <button
+              onClick={handleReheatSimulation}
+              title="Reheat Simulation Forces"
+              className="p-1.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#585860] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] transition-colors"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Time-lapse Play / Pause button */}
-          <button
-            onClick={handleToggleTimelapse}
-            title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
-            className={`graph-control-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-              isTimelapseRunning
-                ? 'bg-[#18181b] text-white border-transparent shadow-sm'
-                : 'bg-white hover:bg-[#f4f4f6] text-[#111113] border-black/[0.08] shadow-xs'
-            }`}
-          >
-            {isTimelapseRunning ? (
-              <>
-                <Pause className="w-3.5 h-3.5 text-white fill-white" />
-                <span>Pause ({animProgress}/{filteredData.nodes.length})</span>
-              </>
-            ) : animProgress < filteredData.nodes.length && animProgress > 1 ? (
-              <>
-                <Play className="w-3.5 h-3.5 text-zinc-700 fill-zinc-700" />
-                <span>Resume ({animProgress}/{filteredData.nodes.length})</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-3.5 h-3.5 text-zinc-700 fill-zinc-700" />
-                <span>{animProgress >= filteredData.nodes.length && animProgress > 1 ? 'Replay' : 'Animate'}</span>
-              </>
-            )}
-          </button>
-
-          {/* Show full graph if paused partway */}
-          {animProgress < filteredData.nodes.length && animProgress > 1 && !isTimelapseRunning && (
+          {/* Row 2: Dual-Edge Filters & Subsystem Communities */}
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] shadow-xs text-xs text-[#111113] dark:text-[#f4f4f6] w-fit">
+            {/* Extracted Edge Pill Toggle */}
             <button
-              onClick={handleResetTimelapse}
-              title="Show Full Graph"
-              className="graph-control-btn p-1.5 rounded-xl bg-white hover:bg-[#f4f4f6] text-[#585860] hover:text-[#111113] border border-black/[0.08] shadow-xs text-xs transition-colors"
+              onClick={() => updateSetting('showExtractedEdges', settings.showExtractedEdges === false ? true : false)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
+                settings.showExtractedEdges !== false
+                  ? 'bg-blue-500/10 dark:bg-blue-500/20 text-[#384cff] dark:text-blue-400 font-medium border border-blue-500/20 dark:border-blue-500/35'
+                  : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 opacity-60'
+              }`}
+              title="Toggle Deterministic Code & Wikilink Edges (100% confidence)"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="w-3.5 h-0.5 bg-[#384cff] dark:bg-blue-400 rounded-full inline-block" />
+              <span className="text-[11px]">Extracted</span>
+              <span className="text-[9px] font-mono opacity-80">({extractedEdgesCount})</span>
             </button>
-          )}
 
-          {/* Reheat Simulation Forces Button */}
-          <button
-            onClick={handleReheatSimulation}
-            title="Reheat Simulation Forces"
-            className="graph-control-btn p-1.5 rounded-xl bg-white hover:bg-[#f4f4f6] text-[#585860] hover:text-[#111113] border border-black/[0.08] shadow-xs text-xs transition-colors"
-          >
-            <RotateCw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+            {/* Inferred Edge Pill Toggle */}
+            <button
+              onClick={() => updateSetting('showInferredEdges', !settings.showInferredEdges)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
+                settings.showInferredEdges
+                  ? 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium border border-purple-500/20 dark:border-purple-500/35'
+                  : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 opacity-60'
+              }`}
+              title="Toggle Semantic AI Inferred Edges"
+            >
+              <span className="w-3.5 h-0.5 border-t border-dashed border-purple-500 dark:border-purple-400 inline-block" />
+              <span className="text-[11px]">Inferred (AI)</span>
+              <span className="text-[9px] font-mono opacity-80">({inferredEdgesCount})</span>
+            </button>
 
-      {/* Top Left Floating Edge Filter & Community Legend Strip */}
-      {!isMini && (
-        <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 bg-white/95 border border-black/[0.08] rounded-xl p-1 shadow-xs text-xs select-none">
-          {/* Extracted Edge Pill Toggle */}
-          <button
-            onClick={() => updateSetting('showExtractedEdges', settings.showExtractedEdges === false ? true : false)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-              settings.showExtractedEdges !== false
-                ? 'bg-blue-500/10 text-[#384cff] font-medium border border-blue-500/20'
-                : 'text-zinc-400 hover:text-zinc-600 opacity-60'
-            }`}
-            title="Toggle Deterministic Code & Wikilink Edges (100% confidence)"
-          >
-            <span className="w-3.5 h-0.5 bg-[#384cff] rounded-full inline-block" />
-            <span className="text-[11px]">Extracted</span>
-            <span className="text-[9px] font-mono opacity-80">({extractedEdgesCount})</span>
-          </button>
-
-          {/* Inferred Edge Pill Toggle */}
-          <button
-            onClick={() => updateSetting('showInferredEdges', !settings.showInferredEdges)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-              settings.showInferredEdges
-                ? 'bg-purple-500/10 text-purple-600 font-medium border border-purple-500/20'
-                : 'text-zinc-400 hover:text-zinc-600 opacity-60'
-            }`}
-            title="Toggle Semantic AI Inferred Edges"
-          >
-            <span className="w-3.5 h-0.5 border-t border-dashed border-purple-500 inline-block" />
-            <span className="text-[11px]">Inferred (AI)</span>
-            <span className="text-[9px] font-mono opacity-80">({inferredEdgesCount})</span>
-          </button>
-
-          {/* Subsystems Drawer Toggle */}
-          <div className="h-4 w-px bg-black/[0.08] mx-0.5" />
-          <button
-            onClick={() => setShowCommunitiesDrawer(prev => !prev)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-              showCommunitiesDrawer || activeCommunityId !== null
-                ? 'bg-[#18181b] text-white font-medium shadow-xs'
-                : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
-            }`}
-            title="Explore Subsystem Communities (Leiden Partitioning)"
-          >
-            <Boxes className="w-3.5 h-3.5 text-[#384cff]" />
-            <span className="text-[11px]">Subsystems</span>
-            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-black/10">
-              {communities.length}
-            </span>
-          </button>
+            {/* Subsystems Drawer Toggle */}
+            <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.08] mx-0.5" />
+            <button
+              onClick={() => setShowCommunitiesDrawer(prev => !prev)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
+                showCommunitiesDrawer || activeCommunityId !== null
+                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] font-medium shadow-xs'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
+              }`}
+              title="Explore Subsystem Communities (Leiden Partitioning)"
+            >
+              <Boxes className="w-3.5 h-3.5 text-[#384cff] dark:text-blue-400" />
+              <span className="text-[11px]">Subsystems</span>
+              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/15">
+                {communities.length}
+              </span>
+            </button>
+          </div>
         </div>
       )}
 
       {/* Subsystem Communities Drawer */}
       {showCommunitiesDrawer && !isMini && (
-        <div className="absolute top-14 left-3 z-30 w-72 max-h-[75vh] overflow-y-auto bg-white border border-black/[0.08] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] p-3 text-xs text-[#111113] space-y-2.5 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06]">
+        <div className="absolute top-[88px] left-3 z-30 w-72 max-h-[70vh] overflow-y-auto bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.25)] p-3 text-xs text-[#111113] dark:text-[#f4f4f6] space-y-2.5 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.08]">
             <div>
               <div className="font-semibold text-xs flex items-center gap-1.5">
-                <Boxes className="w-3.5 h-3.5 text-[#384cff]" />
+                <Boxes className="w-3.5 h-3.5 text-[#384cff] dark:text-blue-400" />
                 <span>Leiden Subsystems</span>
               </div>
-              <p className="text-[10px] text-[#8e8e93]">
+              <p className="text-[10px] text-[#8e8e93] dark:text-zinc-400">
                 {communities.length} modular organic clusters detected
               </p>
             </div>
@@ -1283,14 +1306,14 @@ export const GraphView: React.FC<GraphViewProps> = ({
               {activeCommunityId !== null && (
                 <button
                   onClick={() => setActiveCommunityId(null)}
-                  className="text-[10px] text-[#384cff] hover:underline font-medium"
+                  className="text-[10px] text-[#384cff] dark:text-blue-400 hover:underline font-medium"
                 >
                   Clear
                 </button>
               )}
               <button
                 onClick={() => setShowCommunitiesDrawer(false)}
-                className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113]"
+                className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -1306,8 +1329,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
                   onClick={() => handleFocusCommunity(comm)}
                   className={`p-2 rounded-xl cursor-pointer border transition-all ${
                     isSelected
-                      ? 'bg-blue-500/10 border-[#384cff]/40 shadow-xs'
-                      : 'border-black/[0.04] hover:bg-black/[0.03]'
+                      ? 'bg-blue-500/10 dark:bg-blue-500/20 border-[#384cff]/40 dark:border-blue-400/40 shadow-xs'
+                      : 'border-black/[0.04] dark:border-white/[0.05] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -1320,11 +1343,11 @@ export const GraphView: React.FC<GraphViewProps> = ({
                         {comm.name}
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-[#8e8e93] shrink-0">
+                    <span className="text-[10px] font-mono text-[#8e8e93] dark:text-zinc-400 shrink-0">
                       {comm.nodes.length} notes
                     </span>
                   </div>
-                  <div className="text-[10px] text-[#8e8e93] font-mono truncate mt-1 pl-5">
+                  <div className="text-[10px] text-[#8e8e93] dark:text-zinc-400 font-mono truncate mt-1 pl-5">
                     {comm.nodes.slice(0, 3).map(n => n.label.replace(/\.md$/, '')).join(', ')}
                     {comm.nodes.length > 3 ? '...' : ''}
                   </div>
@@ -1342,7 +1365,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={() => onSplitRight()}
               title="Open Note to the Right (Split)"
-              className="graph-control-btn p-2 rounded-xl bg-white text-[#585860] border border-black/[0.08] hover:text-[#111113] hover:bg-[#f4f4f6] shadow-xs transition-all"
+              className="p-2 rounded-xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md text-[#585860] dark:text-zinc-400 border border-black/[0.08] dark:border-white/[0.1] hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] shadow-xs transition-all"
             >
               <Columns className="w-4 h-4" />
             </button>
@@ -1351,10 +1374,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <button
             onClick={() => setShowControls(prev => !prev)}
             title="Graph Settings"
-            className={`graph-control-btn p-2 rounded-xl border transition-all ${
+            className={`p-2 rounded-xl border backdrop-blur-md transition-all ${
               showControls
-                ? 'bg-[#18181b] text-white border-transparent shadow-sm'
-                : 'bg-white text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] border-black/[0.08] shadow-xs'
+                ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] border-transparent shadow-sm'
+                : 'bg-white/95 dark:bg-[#18181b]/95 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] border-black/[0.08] dark:border-white/[0.1] shadow-xs'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -1364,7 +1387,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
             <button
               onClick={onClose}
               title="Close Graph (Esc)"
-              className="graph-control-btn p-2 rounded-xl bg-white text-[#585860] border border-black/[0.08] hover:text-[#111113] hover:bg-[#f4f4f6] shadow-xs transition-all"
+              className="p-2 rounded-xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md text-[#585860] dark:text-zinc-400 border border-black/[0.08] dark:border-white/[0.1] hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] shadow-xs transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1373,12 +1396,11 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Real Obsidian .graph-controls Floating Drawer */}
-      {/* Real Obsidian .graph-controls Floating Drawer */}
       {showControls && !isMini && (
-        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-3.5 text-xs text-[#111113] space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] font-semibold text-[#111113]">
+        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-3.5 text-xs text-[#111113] dark:text-[#f4f4f6] space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.08] font-semibold text-[#111113] dark:text-[#f4f4f6]">
             <span>Graph Settings</span>
-            <span className="text-[10px] text-[#8e8e93] font-normal">
+            <span className="text-[10px] text-[#8e8e93] dark:text-zinc-400 font-normal">
               {filteredData.nodes.length} nodes · {filteredData.edges.length} links
             </span>
           </div>
@@ -1387,68 +1409,68 @@ export const GraphView: React.FC<GraphViewProps> = ({
           <div className="space-y-2">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, filters: !s.filters }))}
-              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
+              className="flex items-center justify-between font-semibold text-[#111113] dark:text-[#f4f4f6] cursor-pointer hover:text-black dark:hover:text-white"
             >
-              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Filters</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93] dark:text-zinc-400">Filters</span>
               {collapsedSections.filters ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.filters && (
               <div className="space-y-2 pt-1 pl-1">
-                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span>Tags</span>
                   <input
                     type="checkbox"
                     checked={settings.showTags}
                     onChange={e => updateSetting('showTags', e.target.checked)}
-                    className="accent-zinc-900 w-3.5 h-3.5"
+                    className="accent-zinc-900 dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span>Attachments</span>
                   <input
                     type="checkbox"
                     checked={settings.showAttachments}
                     onChange={e => updateSetting('showAttachments', e.target.checked)}
-                    className="accent-zinc-900 w-3.5 h-3.5"
+                    className="accent-zinc-900 dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span>Existing files only</span>
                   <input
                     type="checkbox"
                     checked={settings.hideUnresolved}
                     onChange={e => updateSetting('hideUnresolved', e.target.checked)}
-                    className="accent-zinc-900 w-3.5 h-3.5"
+                    className="accent-zinc-900 dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span>Orphans</span>
                   <input
                     type="checkbox"
                     checked={settings.showOrphans}
                     onChange={e => updateSetting('showOrphans', e.target.checked)}
-                    className="accent-zinc-900 w-3.5 h-3.5"
+                    className="accent-zinc-900 dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span className="flex items-center gap-1.5">
                     <span>Extracted code edges</span>
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-[#384cff] font-mono font-medium">AST</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-[#384cff] dark:text-blue-400 font-mono font-medium">AST</span>
                   </span>
                   <input
                     type="checkbox"
                     checked={settings.showExtractedEdges !== false}
                     onChange={e => updateSetting('showExtractedEdges', e.target.checked)}
-                    className="accent-[#384cff] w-3.5 h-3.5"
+                    className="accent-[#384cff] dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
-                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span className="flex items-center gap-1.5">
                     <span>Inferred AI edges</span>
                     <span className="text-[9px] px-1 py-0.2 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400 font-mono font-medium">AI</span>
@@ -1457,7 +1479,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     type="checkbox"
                     checked={settings.showInferredEdges}
                     onChange={e => updateSetting('showInferredEdges', e.target.checked)}
-                    className="accent-[#384cff] w-3.5 h-3.5"
+                    className="accent-[#384cff] dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
               </div>
@@ -1465,39 +1487,39 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 2: Groups */}
-          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, groups: !s.groups }))}
-              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
+              className="flex items-center justify-between font-semibold text-[#111113] dark:text-[#f4f4f6] cursor-pointer hover:text-black dark:hover:text-white"
             >
-              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Groups</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93] dark:text-zinc-400">Groups</span>
               {collapsedSections.groups ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.groups && (
               <div className="space-y-2 pt-1 pl-1">
-                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113] pb-1 border-b border-black/[0.04]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] hover:text-[#111113] dark:text-zinc-300 dark:hover:text-[#f4f4f6] pb-1 border-b border-black/[0.04] dark:border-white/[0.05]">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#384cff]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#384cff] dark:text-blue-400" />
                     <span className="font-medium text-[11px]">Communities (Leiden)</span>
                   </span>
                   <input
                     type="checkbox"
                     checked={settings.colorByCommunity}
                     onChange={e => updateSetting('colorByCommunity', e.target.checked)}
-                    className="accent-[#384cff] w-3.5 h-3.5"
+                    className="accent-[#384cff] dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
                 {settings.colorGroups.map((group, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-[#f8f8fa] border border-black/[0.06]">
+                  <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-[#f8f8fa] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08]">
                     <div className="flex items-center gap-2 truncate">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
-                      <span className="truncate text-[11px] font-mono text-[#111113]">{group.query}</span>
+                      <span className="truncate text-[11px] font-mono text-[#111113] dark:text-[#f4f4f6]">{group.query}</span>
                     </div>
                     <button
                       onClick={() => handleRemoveGroup(idx)}
-                      className="text-[#8e8e93] hover:text-rose-600 p-0.5"
+                      className="text-[#8e8e93] dark:text-zinc-400 hover:text-rose-600 p-0.5"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -1512,7 +1534,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                       onChange={e => setNewGroupQuery(e.target.value)}
                       placeholder="path:Guides or tag:daily"
                       autoFocus
-                      className="w-full bg-[#f4f4f6] border border-black/[0.1] rounded-lg px-2 py-1 text-xs text-[#111113] font-mono focus:outline-none focus:border-zinc-400"
+                      className="w-full bg-[#f4f4f6] dark:bg-zinc-800 border border-black/[0.1] dark:border-white/[0.1] rounded-lg px-2 py-1 text-xs text-[#111113] dark:text-[#f4f4f6] font-mono focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                     />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
@@ -1521,21 +1543,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
                             key={c}
                             type="button"
                             onClick={() => setNewGroupColor(c)}
-                            className={`w-4 h-4 rounded-full border ${newGroupColor === c ? 'border-[#18181b] scale-110' : 'border-transparent'}`}
+                            className={`w-4 h-4 rounded-full border ${newGroupColor === c ? 'border-[#18181b] dark:border-white scale-110' : 'border-transparent'}`}
                             style={{ backgroundColor: c }}
                           />
                         ))}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button type="submit" className="px-2.5 py-0.5 rounded-lg skeuo-btn-dark text-white text-[11px]">Add</button>
-                        <button type="button" onClick={() => setIsAddingGroup(false)} className="text-[#8e8e93] text-[11px]">✕</button>
+                        <button type="submit" className="px-2.5 py-0.5 rounded-lg bg-[#18181b] dark:bg-white text-white dark:text-[#18181b] text-[11px] font-medium shadow-xs">Add</button>
+                        <button type="button" onClick={() => setIsAddingGroup(false)} className="text-[#8e8e93] dark:text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-[11px]">✕</button>
                       </div>
                     </div>
                   </form>
                 ) : (
                   <button
                     onClick={() => setIsAddingGroup(true)}
-                    className="w-full py-1.5 rounded-lg skeuo-btn text-[#111113] flex items-center justify-center gap-1 text-[11px] border border-black/[0.08]"
+                    className="w-full py-1.5 rounded-lg bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#111113] dark:text-[#f4f4f6] flex items-center justify-center gap-1 text-[11px] border border-black/[0.08] dark:border-white/[0.1] transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     <span>New group</span>
@@ -1546,29 +1568,29 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 3: Display */}
-          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, display: !s.display }))}
-              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
+              className="flex items-center justify-between font-semibold text-[#111113] dark:text-[#f4f4f6] cursor-pointer hover:text-black dark:hover:text-white"
             >
-              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Display</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93] dark:text-zinc-400">Display</span>
               {collapsedSections.display ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.display && (
               <div className="space-y-3 pt-1 pl-1">
-                <label className="flex items-center justify-between cursor-pointer text-[#585860]">
+                <label className="flex items-center justify-between cursor-pointer text-[#585860] dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f6]">
                   <span>Arrows</span>
                   <input
                     type="checkbox"
                     checked={settings.showArrow}
                     onChange={e => updateSetting('showArrow', e.target.checked)}
-                    className="accent-zinc-900 w-3.5 h-3.5"
+                    className="accent-zinc-900 dark:accent-blue-500 w-3.5 h-3.5"
                   />
                 </label>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Text fade threshold</span>
                     <span>{settings.textFadeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1579,12 +1601,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.textFadeMultiplier}
                     onChange={e => updateSetting('textFadeMultiplier', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Node size</span>
                     <span>{settings.nodeSizeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1595,12 +1617,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.nodeSizeMultiplier}
                     onChange={e => updateSetting('nodeSizeMultiplier', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Link thickness</span>
                     <span>{settings.lineSizeMultiplier.toFixed(1)}x</span>
                   </div>
@@ -1611,7 +1633,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.lineSizeMultiplier}
                     onChange={e => updateSetting('lineSizeMultiplier', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
               </div>
@@ -1619,19 +1641,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </div>
 
           {/* Section 4: Forces */}
-          <div className="space-y-2 border-t border-black/[0.06] pt-2.5">
+          <div className="space-y-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-2.5">
             <div
               onClick={() => setCollapsedSections(s => ({ ...s, forces: !s.forces }))}
-              className="flex items-center justify-between font-semibold text-[#111113] cursor-pointer hover:text-black"
+              className="flex items-center justify-between font-semibold text-[#111113] dark:text-[#f4f4f6] cursor-pointer hover:text-black dark:hover:text-white"
             >
-              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93]">Forces</span>
+              <span className="uppercase tracking-wider text-[10px] text-[#8e8e93] dark:text-zinc-400">Forces</span>
               {collapsedSections.forces ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
 
             {!collapsedSections.forces && (
               <div className="space-y-3 pt-1 pl-1">
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Center force</span>
                     <span>{(settings.centerStrength * 100).toFixed(1)}%</span>
                   </div>
@@ -1642,12 +1664,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.005"
                     value={settings.centerStrength}
                     onChange={e => updateSetting('centerStrength', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Repel force</span>
                     <span>{settings.repelStrength}</span>
                   </div>
@@ -1658,12 +1680,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="50"
                     value={settings.repelStrength}
                     onChange={e => updateSetting('repelStrength', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Link force</span>
                     <span>{settings.linkStrength.toFixed(1)}</span>
                   </div>
@@ -1674,12 +1696,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="0.1"
                     value={settings.linkStrength}
                     onChange={e => updateSetting('linkStrength', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[#8e8e93] text-[11px]">
+                  <div className="flex justify-between text-[#8e8e93] dark:text-zinc-400 text-[11px]">
                     <span>Link distance</span>
                     <span>{settings.linkDistance}px</span>
                   </div>
@@ -1690,13 +1712,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
                     step="10"
                     value={settings.linkDistance}
                     onChange={e => updateSetting('linkDistance', Number(e.target.value))}
-                    className="w-full accent-zinc-900"
+                    className="w-full accent-zinc-900 dark:accent-blue-500"
                   />
                 </div>
 
                 <button
                   onClick={() => setSettings(DEFAULT_GRAPH_SETTINGS)}
-                  className="w-full py-1 text-center rounded-lg skeuo-btn text-[#585860] hover:text-[#111113] text-[10px] mt-1 border border-black/[0.08]"
+                  className="w-full py-1 text-center rounded-lg bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#585860] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200 text-[10px] mt-1 border border-black/[0.08] dark:border-white/[0.1] transition-colors"
                 >
                   Restore default forces
                 </button>
@@ -1709,36 +1731,36 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Sleek Obsidian Hover Tooltip Card */}
       {hoverInfo && !isMini && (
         <div
-          className="fixed z-40 pointer-events-none bg-white border border-black/[0.08] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] p-3 text-xs text-[#111113] animate-in fade-in duration-75 space-y-1"
+          className="fixed z-40 pointer-events-none bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.18)] p-3 text-xs text-[#111113] dark:text-[#f4f4f6] animate-in fade-in duration-75 space-y-1"
           style={{
             left: `${Math.min(window.innerWidth - 240, hoverInfo.clientX + 14)}px`,
             top: `${Math.min(window.innerHeight - 150, hoverInfo.clientY + 14)}px`
           }}
         >
-          <div className="flex items-center gap-1.5 font-semibold text-[#111113]">
+          <div className="flex items-center gap-1.5 font-semibold text-[#111113] dark:text-[#f4f4f6]">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: hoverInfo.node.color }} />
             <span className="truncate max-w-[180px]">{hoverInfo.node.label.replace(/\.md$/, '')}</span>
           </div>
           {hoverInfo.node.path && (
-            <div className="text-[10px] text-[#8e8e93] font-mono truncate">
+            <div className="text-[10px] text-[#8e8e93] dark:text-zinc-400 font-mono truncate">
               {hoverInfo.node.path}
             </div>
           )}
-          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06] text-[11px]">
-            <span className="text-[#111113] font-medium">{hoverInfo.outCount} outgoing</span>
-            <span className="text-[#8e8e93]">·</span>
-            <span className="text-[#585860] font-medium">{hoverInfo.inCount} incoming</span>
+          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06] dark:border-white/[0.08] text-[11px]">
+            <span className="text-[#111113] dark:text-[#f4f4f6] font-medium">{hoverInfo.outCount} outgoing</span>
+            <span className="text-[#8e8e93] dark:text-zinc-500">·</span>
+            <span className="text-[#585860] dark:text-zinc-300 font-medium">{hoverInfo.inCount} incoming</span>
           </div>
           {hoverInfo.node.tags && hoverInfo.node.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-0.5">
               {hoverInfo.node.tags.map(t => (
-                <span key={t} className="text-[9px] bg-[#ebebef] text-[#1c1c1e] border border-black/[0.06] px-1.5 py-0.5 rounded-full font-medium">
+                <span key={t} className="text-[9px] bg-[#ebebef] dark:bg-zinc-800 text-[#1c1c1e] dark:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] px-1.5 py-0.5 rounded-full font-medium">
                   #{t}
                 </span>
               ))}
             </div>
           )}
-          <div className="text-[9px] text-[#8e8e93] italic pt-0.5">
+          <div className="text-[9px] text-[#8e8e93] dark:text-zinc-400 italic pt-0.5">
             Click to open · Ctrl+Click to split
           </div>
         </div>
@@ -1747,41 +1769,41 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Floating Edge Tooltip: Dual-Edge Model (Extracted vs Inferred) */}
       {hoveredEdgeInfo && !hoverInfo && !isMini && (
         <div
-          className="fixed z-40 pointer-events-none p-2.5 rounded-2xl bg-white border border-black/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-xs text-[#111113] flex flex-col gap-1.5 animate-in fade-in duration-75"
+          className="fixed z-40 pointer-events-none p-2.5 rounded-2xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] shadow-[0_8px_30px_rgba(0,0,0,0.18)] text-xs text-[#111113] dark:text-[#f4f4f6] flex flex-col gap-1.5 animate-in fade-in duration-75"
           style={{
             left: `${Math.min(window.innerWidth - 260, hoveredEdgeInfo.clientX + 14)}px`,
             top: `${Math.min(window.innerHeight - 150, hoveredEdgeInfo.clientY + 14)}px`
           }}
         >
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#111113]">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#111113] dark:text-[#f4f4f6]">
             <span className="truncate max-w-[100px]">
               {hoveredEdgeInfo.sourceNode.label.replace(/\.md$/, '')}
             </span>
-            <span className="text-[#8e8e93] font-mono">→</span>
+            <span className="text-[#8e8e93] dark:text-zinc-400 font-mono">→</span>
             <span className="truncate max-w-[100px]">
               {hoveredEdgeInfo.targetNode.label.replace(/\.md$/, '')}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06]">
+          <div className="flex items-center gap-2 pt-1 border-t border-black/[0.06] dark:border-white/[0.08]">
             {hoveredEdgeInfo.edge.kind === 'inferred' ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-purple-500/15 text-purple-600 border border-purple-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20 dark:border-purple-500/30 flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5" />
                 <span>INFERRED ({Math.round((hoveredEdgeInfo.edge.confidence ?? 0.75) * 100)}%)</span>
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-blue-500/15 text-[#384cff] border border-blue-500/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-blue-500/15 text-[#384cff] dark:text-blue-400 border border-blue-500/20 dark:border-blue-500/30 flex items-center gap-1">
                 <Check className="w-2.5 h-2.5" />
                 <span>EXTRACTED (100%)</span>
               </span>
             )}
-            <span className="text-[10px] text-[#585860] font-mono">
+            <span className="text-[10px] text-[#585860] dark:text-zinc-400 font-mono">
               {hoveredEdgeInfo.edge.sourceType || (hoveredEdgeInfo.edge.kind === 'inferred' ? 'semantic' : 'wikilink')}
             </span>
           </div>
 
           {hoveredEdgeInfo.edge.label && (
-            <div className="text-[10px] text-[#8e8e93] italic">
+            <div className="text-[10px] text-[#8e8e93] dark:text-zinc-400 italic">
               {hoveredEdgeInfo.edge.label}
             </div>
           )}
@@ -1790,7 +1812,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
       {/* Local Graph Depth / Jumps Slider in Mini Mode */}
       {isMini && (
-        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-xl px-2 py-0.5 text-[10px] text-[#585860] shadow-xs">
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-2 py-0.5 text-[10px] text-[#585860] dark:text-zinc-400 shadow-xs">
           <span>Depth:</span>
           {[1, 2, 3].map(j => (
             <button
@@ -1798,8 +1820,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
               onClick={() => updateSetting('localJumps', j)}
               className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
                 (settings.localJumps || 1) === j
-                  ? 'bg-[#18181b] text-white shadow-xs'
-                  : 'hover:text-[#111113]'
+                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] shadow-xs'
+                  : 'hover:text-[#111113] dark:hover:text-[#f4f4f6]'
               }`}
             >
               {j}
@@ -1809,24 +1831,24 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Floating Zoom & Camera Controls */}
-      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white border border-black/[0.08] rounded-xl p-1 shadow-sm">
+      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-xl p-1 shadow-sm">
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
-          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setTransform(t => ({ ...t, k: Math.max(0.15, t.k * 0.8) }))}
-          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={handleResetView}
-          className="graph-control-btn p-1.5 text-[#585860] hover:text-[#111113] hover:bg-[#f4f4f6] rounded-lg transition-colors"
+          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
           title="Reset Camera"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -1834,7 +1856,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
       </div>
 
       {/* Bottom Left Node Count */}
-      <div className="absolute bottom-3 left-3 text-[11px] text-[#8e8e93] font-medium select-none pointer-events-none">
+      <div className="absolute bottom-3 left-3 text-[11px] text-[#8e8e93] dark:text-zinc-400 font-medium select-none pointer-events-none">
         {isTimelapseRunning || (animProgress < filteredData.nodes.length && animProgress > 0)
           ? `${animProgress} of ${filteredData.nodes.length} nodes`
           : `${filteredData.nodes.length} nodes`} · {simEdgesRef.current.length} links
