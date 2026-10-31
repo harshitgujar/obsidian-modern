@@ -14,7 +14,10 @@
     "desktop": "concurrently -k \"vite\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5175 electron electron/main.cjs\"",
     "package:appimage": "npm run build:all && electron-builder --linux AppImage --x64",
     "package:appimage:arm64": "npm run build:all && electron-builder --linux AppImage --arm64",
-    "package:appimage:all": "npm run build:all && electron-builder --linux AppImage --x64 --arm64"
+    "package:appimage:all": "npm run build:all && electron-builder --linux AppImage --x64 --arm64",
+    "package:win": "npm run build:all && electron-builder --win --x64",
+    "package:win:portable": "npm run build:all && electron-builder --win portable --x64",
+    "package:win:nsis": "npm run build:all && electron-builder --win nsis --x64"
   },
   "description": "Runagon - Personal Knowledge Base & AI Memory",
   "author": "Runagon Team",
@@ -46,6 +49,24 @@
       "category": "Office",
       "executableName": "runagon",
       "icon": "build/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "executableName": "runagon",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Runagon"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-windows-portable.exe"
     }
   },
   "dependencies": {
