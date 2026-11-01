@@ -980,14 +980,89 @@ export class ObsidianVaultServer {
     return execConfig.command;
   }
 
-  public getExternalMCPStatus(configFilePath: string): {
+  public isApplicationInstalled(appName: 'claude' | 'cursor' | 'windsurf' | 'vscode'): boolean {
+    const home = os.homedir();
+    const platform = process.platform;
+
+    if (appName === 'claude') {
+      if (platform === 'darwin') {
+        return fs.existsSync('/Applications/Claude.app') || 
+               fs.existsSync(path.join(home, 'Applications', 'Claude.app'));
+      }
+      if (platform === 'win32') {
+        const local = process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local');
+        return fs.existsSync(path.join(local, 'Programs', 'Claude', 'Claude.exe'));
+      }
+      try {
+        execSync('which claude-desktop', { stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    if (appName === 'cursor') {
+      if (platform === 'darwin') {
+        return fs.existsSync('/Applications/Cursor.app') || 
+               fs.existsSync(path.join(home, 'Applications', 'Cursor.app'));
+      }
+      if (platform === 'win32') {
+        const local = process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local');
+        return fs.existsSync(path.join(local, 'Programs', 'cursor', 'Cursor.exe'));
+      }
+      try {
+        execSync('which cursor', { stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    if (appName === 'windsurf') {
+      if (platform === 'darwin') {
+        return fs.existsSync('/Applications/Windsurf.app') || 
+               fs.existsSync(path.join(home, 'Applications', 'Windsurf.app'));
+      }
+      if (platform === 'win32') {
+        const local = process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local');
+        return fs.existsSync(path.join(local, 'Programs', 'Windsurf', 'Windsurf.exe'));
+      }
+      try {
+        execSync('which windsurf', { stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    if (appName === 'vscode') {
+      if (platform === 'darwin') {
+        return fs.existsSync('/Applications/Visual Studio Code.app') || 
+               fs.existsSync(path.join(home, 'Applications', 'Visual Studio Code.app'));
+      }
+      if (platform === 'win32') {
+        const local = process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local');
+        return fs.existsSync(path.join(local, 'Programs', 'Microsoft VS Code', 'Code.exe'));
+      }
+      try {
+        execSync('which code', { stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  public getExternalMCPStatus(configFilePath: string, appName: 'claude' | 'cursor' | 'windsurf' | 'vscode'): {
     configPath: string;
+    isAppInstalled: boolean;
     isDetected: boolean;
     isConnected: boolean;
     connectedVaultPath?: string;
   } {
-    const configDir = path.dirname(configFilePath);
-    const isDetected = fs.existsSync(configDir) || fs.existsSync(configFilePath);
+    const isAppInstalled = this.isApplicationInstalled(appName);
     let isConnected = false;
     let connectedVaultPath: string | undefined;
 
@@ -998,7 +1073,8 @@ export class ObsidianVaultServer {
         const parsed = JSON.parse(clean);
         const entry = parsed.mcpServers?.['runagon-vault-memory'] || parsed.mcpServers?.['obsidian-vault-memory'];
         if (entry) {
-          isConnected = true;
+          // Strictly live: ONLY report connected if the application is actually installed!
+          isConnected = isAppInstalled;
           connectedVaultPath = entry?.args?.[1];
         }
       } catch {}
@@ -1006,7 +1082,8 @@ export class ObsidianVaultServer {
 
     return {
       configPath: configFilePath,
-      isDetected,
+      isAppInstalled,
+      isDetected: isAppInstalled,
       isConnected,
       connectedVaultPath
     };
@@ -1014,8 +1091,18 @@ export class ObsidianVaultServer {
 
   public updateExternalMCPConfig(
     configFilePath: string,
-    action: 'install' | 'uninstall'
+    action: 'install' | 'uninstall',
+    appName?: 'claude' | 'cursor' | 'windsurf' | 'vscode'
   ): { ok: boolean; message: string; isConnected: boolean; configPath: string } {
+    if (appName && action === 'install' && !this.isApplicationInstalled(appName)) {
+      return {
+        ok: false,
+        message: `${appName.toUpperCase()} is not installed on this machine. Please install it first.`,
+        isConnected: false,
+        configPath: configFilePath
+      };
+    }
+
     const configDir = path.dirname(configFilePath);
     fs.mkdirSync(configDir, { recursive: true });
 
@@ -1598,15 +1685,17 @@ export class ObsidianVaultServer {
           return;
         }
 
-        // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Windsurf, Agents)
+        // Model Context Protocol (MCP) endpoint for External AIs (Claude, Cursor, Windsurf, VS Code, Agents)
         if (pathname === '/api/vault/ai/mcp/status' && req.method === 'GET') {
           const claudePath = this.getClaudeConfigPath();
           const cursorPath = this.getCursorConfigPath();
           const windsurfPath = this.getWindsurfConfigPath();
+          const vscodePath = path.join(os.homedir(), '.vscode', 'mcp.json');
 
-          const claudeStatus = this.getExternalMCPStatus(claudePath);
-          const cursorStatus = this.getExternalMCPStatus(cursorPath);
-          const windsurfStatus = this.getExternalMCPStatus(windsurfPath);
+          const claudeStatus = this.getExternalMCPStatus(claudePath, 'claude');
+          const cursorStatus = this.getExternalMCPStatus(cursorPath, 'cursor');
+          const windsurfStatus = this.getExternalMCPStatus(windsurfPath, 'windsurf');
+          const vscodeStatus = this.getExternalMCPStatus(vscodePath, 'vscode');
 
           const execConfig = this.getExecutionConfig();
           const mcpServerDef: any = {
@@ -1635,6 +1724,14 @@ export class ObsidianVaultServer {
             }
           };
 
+          const vscodeSnippet = {
+            mcp: {
+              servers: {
+                'runagon-vault-memory': mcpServerDef
+              }
+            }
+          };
+
           const httpUrl = `http://localhost:${this.currentServerPort}/api/vault/ai/mcp`;
           const claudeCliCommand = `claude mcp add runagon-vault-memory ${execConfig.command} "${execConfig.args[0]}" "${execConfig.args[1]}" "${execConfig.args[2]}"`;
 
@@ -1646,6 +1743,7 @@ export class ObsidianVaultServer {
             claudeDesktopSnippet,
             cursorSnippet,
             windsurfSnippet,
+            vscodeSnippet,
             cursorConfig: mcpServerDef,
             claudeCliCommand,
             nodeBinary: execConfig.command,
@@ -1655,6 +1753,7 @@ export class ObsidianVaultServer {
             claude: claudeStatus,
             cursor: cursorStatus,
             windsurf: windsurfStatus,
+            vscode: vscodeStatus,
             // Backward compatibility fields
             claudeConfigPath: claudeStatus.configPath,
             isConfigPresent: claudeStatus.isDetected,
@@ -1665,7 +1764,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/install-claude' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'install');
+          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'install', 'claude');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
@@ -1675,7 +1774,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/uninstall-claude' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'uninstall');
+          const result = this.updateExternalMCPConfig(this.getClaudeConfigPath(), 'uninstall', 'claude');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
@@ -1685,7 +1784,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/install-cursor' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'install');
+          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'install', 'cursor');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
@@ -1695,7 +1794,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/uninstall-cursor' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'uninstall');
+          const result = this.updateExternalMCPConfig(this.getCursorConfigPath(), 'uninstall', 'cursor');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
@@ -1705,7 +1804,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/install-windsurf' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'install');
+          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'install', 'windsurf');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
@@ -1715,7 +1814,7 @@ export class ObsidianVaultServer {
         }
 
         if (pathname === '/api/vault/ai/mcp/uninstall-windsurf' && req.method === 'POST') {
-          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'uninstall');
+          const result = this.updateExternalMCPConfig(this.getWindsurfConfigPath(), 'uninstall', 'windsurf');
           return sendJson(200, {
             ok: result.ok,
             message: result.message,
