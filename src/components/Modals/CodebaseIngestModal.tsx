@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Cpu, 
   X, 
@@ -49,6 +49,14 @@ export const CodebaseIngestModal: React.FC<CodebaseIngestModalProps> = ({
   const [result, setResult] = useState<CodebaseIngestResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!isOpen) return null;
 
   const handlePickFolder = async () => {
@@ -96,8 +104,13 @@ export const CodebaseIngestModal: React.FC<CodebaseIngestModalProps> = ({
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150"
+    >
       <div 
         className="w-full max-w-2xl bg-white dark:bg-[#18181b] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden text-zinc-900 dark:text-zinc-100 max-h-[90vh]"
         onClick={e => e.stopPropagation()}

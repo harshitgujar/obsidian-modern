@@ -11,6 +11,7 @@ import {
   Folder, 
   Globe, 
   RefreshCw, 
+  Trash2,
   ExternalLink,
   Bot,
   ChevronDown,
@@ -417,231 +418,189 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f8fa] select-none text-xs text-[#111113] overflow-hidden">
-      {/* 1. Header Toolbar */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-black/[0.06] bg-white shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center gap-1.5 font-semibold text-[#111113]">
-            <Sparkles className="w-3.5 h-3.5 text-[#384cff]" />
-            <span>Vault Copilot</span>
-          </div>
+    <div className="flex flex-col h-full bg-[#FFFFFF] dark:bg-[#272727] select-none text-xs text-[#18181B] dark:text-white overflow-hidden transition-colors">
+      {/* 1. Header Toolbar matching Frame 339.png */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-black/[0.06] dark:border-white/[0.04] bg-[#FFFFFF] dark:bg-[#272727] shrink-0">
+        <span className="font-semibold text-[#18181B] dark:text-white text-sm tracking-tight">Vault Copilot</span>
 
-          {/* Model Status Pill */}
-          {aiStatus && (
-            <div
-              onClick={onOpenSettings}
-              title={`Provider: ${aiStatus.provider} • Engine: GraphRAG (BM25 + Semantic + 1-Hop) • Model: ${aiStatus.embeddingModel || 'default'} (Click to configure)`}
-              className="flex items-center gap-1.5 bg-[#f4f4f6] hover:bg-[#ebebef] cursor-pointer px-2 py-0.5 rounded-full text-[10px] text-[#111113] border border-black/[0.08] shadow-xs transition-colors"
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  aiStatus.isIndexing
-                    ? 'bg-zinc-700 animate-pulse'
-                    : aiStatus.isProviderAvailable
-                    ? 'bg-emerald-500'
-                    : 'bg-zinc-400'
-                }`}
-              />
-              <span className="truncate max-w-[105px] font-medium">
-                {aiStatus.isIndexing
-                  ? `Indexing (${aiStatus.queueLength || 0})...`
-                  : aiStatus.isProviderAvailable
-                  ? 'Ollama (Local)'
-                  : 'GraphRAG (Local)'}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={handleReindex}
-            disabled={isReindexing}
-            title={isReindexing ? 'Rebuilding vault vector index...' : 'Re-index vault now'}
-            className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-zinc-700' : ''}`} />
-          </button>
-          <button
-            onClick={handleClearChat}
-            title="Clear chat history"
-            className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-          {onOpenSettings && (
-            <button
-              onClick={onOpenSettings}
-              title="Open AI & Memory Settings"
-              className="p-1.5 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
-            >
-              <Settings className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Scope Filter Strip */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#f4f4f6] border-b border-black/[0.06] text-[11px] text-[#585860] shrink-0">
-        <div className="flex items-center gap-1.5">
-          <Globe className="w-3 h-3 text-zinc-500" />
-          <span>Scope:</span>
-        </div>
-        <div className="flex items-center p-0.5 rounded-xl bg-[#ebebef] border border-black/[0.06]">
+        {/* Scope Filter Segmented Pill */}
+        <div className="flex items-center bg-[#F0F0F4] dark:bg-[#3B3B3B] rounded-full p-0.5">
           <button
             onClick={() => setSearchScope('vault')}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
               searchScope === 'vault'
-                ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                : 'text-[#585860] hover:text-[#111113]'
+                ? 'bg-[#384CFF] text-white shadow-xs'
+                : 'text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white'
             }`}
           >
             Entire Vault
           </button>
-          {activeFile && (
-            <button
-              onClick={() => setSearchScope('activeNote')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                searchScope === 'activeNote'
-                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113]'
-              }`}
-            >
-              Active Note
-            </button>
-          )}
+          <button
+            onClick={() => setSearchScope('activeNote')}
+            className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
+              searchScope === 'activeNote'
+                ? 'bg-[#384CFF] text-white shadow-xs'
+                : 'text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white'
+            }`}
+          >
+            Active Note
+          </button>
         </div>
       </div>
 
-      {/* 3. Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
-        {messages.map(msg => {
-          const isUser = msg.role === 'user';
-          return (
-            <div
-              key={msg.id}
-              className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} group`}
-            >
-              {/* Message Bubble */}
-              <div
-                className={`max-w-[94%] rounded-2xl px-4 py-3 leading-relaxed text-xs ${
-                  isUser
-                    ? 'bg-[#18181b] text-white shadow-xs rounded-tr-sm'
-                    : 'bg-white text-[#111113] border border-black/[0.08] shadow-xs rounded-tl-sm w-full'
-                }`}
+      {/* 2. Messages Stream / Welcome Screen matching Frame 339.png */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 1 && messages[0].id === 'welcome' ? (
+          <div className="space-y-4 pt-2">
+            <h2 className="text-base font-bold text-[#18181B] dark:text-white tracking-tight">
+              Welcome to your Vault Copilot!
+            </h2>
+            <p className="text-[#71717A] dark:text-zinc-300 text-xs leading-relaxed">
+              I have full, private access to your notes. Ask me anything, or try
+            </p>
+            <ul className="space-y-2 pt-1">
+              <li
+                onClick={() => setInputQuery("What are the core features of Runagon")}
+                className="text-[#71717A] hover:text-[#18181B] dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-colors text-xs"
               >
-                {/* Text Content */}
-                <div className="select-text markdown-body">
-                  {msg.content ? (
-                    renderFormattedMarkdown(msg.content)
-                  ) : (
-                    <span className="flex items-center gap-2 text-[#8e8e93] italic">
-                      <Sparkles className="w-3.5 h-3.5 text-zinc-600 animate-spin" />
-                      <span>Thinking with vault context...</span>
-                    </span>
-                  )}
-                </div>
+                • What are the core features of Runagon
+              </li>
+              <li
+                onClick={() => setInputQuery("How do plugins enhance note-taking")}
+                className="text-[#71717A] hover:text-[#18181B] dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-colors text-xs"
+              >
+                • How do plugins enhance note-taking
+              </li>
+              <li
+                onClick={() => setInputQuery("Summarize my recent thoughts across all notes")}
+                className="text-[#71717A] hover:text-[#18181B] dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-colors text-xs"
+              >
+                • Summarize my recent thoughts across all notes
+              </li>
+            </ul>
+          </div>
+        ) : (
+          messages.map(msg => {
+            const isUser = msg.role === 'user';
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} group`}
+              >
+                {/* Message Bubble */}
+                <div
+                  className={`rounded-2xl px-4 py-3 leading-relaxed text-xs ${
+                    isUser
+                      ? 'bg-[#384CFF] text-white shadow-xs max-w-[90%]'
+                      : 'bg-[#F5F5F7] text-[#18181B] border border-black/[0.06] dark:bg-[#1c1d22] dark:text-zinc-200 dark:border-white/[0.04] shadow-xs w-full'
+                  }`}
+                >
+                  <div className="select-text markdown-body">
+                    {msg.content ? (
+                      renderFormattedMarkdown(msg.content)
+                    ) : (
+                      <span className="flex items-center gap-2 text-zinc-500 italic">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+                        <span>Thinking with vault context...</span>
+                      </span>
+                    )}
+                  </div>
 
-                {/* Grounded Citations (Source Pills) */}
-                {!isUser && msg.sources && msg.sources.length > 0 && (
-                  <div className="mt-3.5 pt-3 border-t border-black/[0.06]">
-                    <div className="text-[10px] font-semibold text-[#8e8e93] uppercase tracking-wider mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <FileText className="w-3 h-3 text-zinc-700" />
-                        <span>Grounded Sources ({msg.sources.length}):</span>
+                  {/* Grounded Sources */}
+                  {!isUser && msg.sources && msg.sources.length > 0 && (
+                    <div className="mt-3 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.04]">
+                      <div className="text-[10px] font-semibold text-[#71717A] dark:text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="w-3 h-3 text-[#71717A] dark:text-zinc-400" />
+                          <span>Grounded Sources ({msg.sources.length})</span>
+                        </div>
                       </div>
-                      <span className="text-[9px] font-mono text-[#8e8e93]">BM25 + Dense + Graph</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {msg.sources.map((src, sIdx) => {
-                        const isGraph = src.matchType === 'graph';
-                        const tooltip = [
-                          src.breadcrumbs && src.breadcrumbs.length > 1 ? `Context: ${src.breadcrumbs.join(' > ')}` : null,
-                          src.graphSource ? `Graph link: ${src.graphSource}` : null,
-                          `${src.snippet} (${src.score}% match)`
-                        ].filter(Boolean).join('\n\n');
-
-                        return (
+                      <div className="flex flex-wrap gap-1.5">
+                        {msg.sources.map((src, sIdx) => (
                           <button
                             key={sIdx}
                             onClick={() => onNavigateFile(src.filePath)}
-                            title={tooltip}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[11px] font-medium border border-black/[0.06] shadow-xs transition-all select-none"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EAEAEE] hover:bg-[#E0E0E6] text-[#18181B] dark:bg-[#252832] dark:hover:bg-[#2e313d] dark:text-zinc-300 text-[11px] font-medium border border-black/[0.04] dark:border-white/[0.04] transition-all cursor-pointer"
                           >
-                            {isGraph ? (
-                              <Share2 className="w-2.5 h-2.5 shrink-0 text-[#384cff]" />
-                            ) : (
-                              <ExternalLink className="w-2.5 h-2.5 shrink-0 text-zinc-600" />
-                            )}
-                            <span className="truncate max-w-[130px]">{src.noteTitle}</span>
-                            {isGraph && (
-                              <span className="text-[9px] px-1 py-0.2 rounded font-mono bg-blue-500/15 text-[#384cff] font-semibold">
-                                Topology
-                              </span>
-                            )}
-                            <span className="text-[9px] text-[#585860] font-mono font-semibold">
+                            <ExternalLink className="w-2.5 h-2.5 text-[#71717A] dark:text-zinc-400" />
+                            <span className="truncate max-w-[120px]">{src.noteTitle}</span>
+                            <span className="text-[9px] text-blue-500 dark:text-blue-400 font-mono font-semibold">
                               {src.score}%
                             </span>
                           </button>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Message Actions */}
+                {!isUser && msg.content && (
+                  <div className="flex items-center gap-1 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.content)}
+                      className="p-1 rounded text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                      title="Copy response"
+                    >
+                      {copiedMessageId === msg.id ? (
+                        <Check className="w-3 h-3 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                    {onInsertTextAtCursor && (
+                      <button
+                        onClick={() => onInsertTextAtCursor(msg.content)}
+                        className="p-1 rounded text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                        title="Insert into note"
+                      >
+                        <ArrowDownToLine className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
-
-              {/* Message Action Strip */}
-              {!isUser && msg.content && (
-                <div className="flex items-center gap-1 mt-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleCopy(msg.id, msg.content)}
-                    className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
-                    title="Copy response"
-                  >
-                    {copiedMessageId === msg.id ? (
-                      <Check className="w-3 h-3 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </button>
-
-                  {onInsertTextAtCursor && (
-                    <button
-                      onClick={() => onInsertTextAtCursor(msg.content)}
-                      className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
-                      title="Insert response into active note"
-                    >
-                      <ArrowDownToLine className="w-3 h-3" />
-                    </button>
-                  )}
-
-                  {onCreateNoteFromResponse && (
-                    <button
-                      onClick={() =>
-                        onCreateNoteFromResponse(
-                          `AI Summary - ${new Date().toISOString().slice(0, 10)}`,
-                          msg.content
-                        )
-                      }
-                      className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] hover:bg-black/[0.04] transition-all"
-                      title="Create new note from response"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 4. Chat Input Bar */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-black/[0.06] bg-white shrink-0">
-        <div className="relative flex items-center bg-[#f4f4f6] border border-black/[0.08] rounded-2xl shadow-xs focus-within:border-zinc-400 focus-within:bg-white transition-colors">
-          <textarea
-            ref={inputRef}
+      {/* 3. Bottom Controls & Chat Input matching Frame 339.png */}
+      <div className="p-3 border-t border-black/[0.06] dark:border-white/[0.04] bg-[#FFFFFF] dark:bg-[#272727] shrink-0 space-y-2 transition-colors">
+        {/* Utilities Row: Refresh, Clear, and Provider Badge */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReindex}
+              disabled={isReindexing}
+              title={isReindexing ? "Re-indexing..." : "Re-index vault"}
+              className="w-7 h-7 rounded-full bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isReindexing ? 'animate-spin text-[#384CFF]' : ''}`} />
+            </button>
+            <button
+              onClick={handleClearChat}
+              title="Clear chat history"
+              className="w-7 h-7 rounded-full bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#71717A] hover:text-rose-500 dark:text-[#6D6D6D] dark:hover:text-rose-400 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div
+            onClick={onOpenSettings}
+            title="Configure AI & Ollama models"
+            className="px-2.5 py-0.5 rounded-full bg-[#F0F0F4] dark:bg-[#3B3B3B] text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white text-[11px] font-mono cursor-pointer transition-colors"
+          >
+            {aiStatus?.provider ? `${aiStatus.provider} (local)` : 'ollama (local)'}
+          </div>
+        </div>
+
+        {/* Input Pill */}
+        <form onSubmit={handleSendMessage} className="relative flex items-center">
+          <input
+            type="text"
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
             onKeyDown={e => {
@@ -650,24 +609,19 @@ export const AIChatPane: React.FC<AIChatPaneProps> = ({
                 handleSendMessage();
               }
             }}
-            placeholder={
-              searchScope === 'activeNote' && activeFile
-                ? `Ask about "${activeFile.name}"...`
-                : 'Ask your vault anything...'
-            }
-            rows={1}
+            placeholder="Ask your vault anything...."
             disabled={isStreaming}
-            className="w-full bg-transparent px-3.5 py-3 pr-12 text-xs text-[#111113] placeholder-[#8e8e93] focus:outline-none resize-none max-h-32"
+            className="w-full bg-[#F0F0F4] dark:bg-[#3B3B3B] rounded-full pl-4 pr-10 py-2.5 text-xs text-[#18181B] dark:text-white placeholder:text-[#8E8E93] dark:placeholder:text-[#6D6D6D] focus:outline-none focus:ring-1 focus:ring-[#384CFF] shadow-xl transition-all"
           />
           <button
             type="submit"
             disabled={!inputQuery.trim() || isStreaming}
-            className="absolute right-2 p-2 rounded-xl skeuo-btn-dark disabled:opacity-30 border-none shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-2 p-1.5 rounded-full bg-[#384CFF] text-white hover:bg-[#4863ff] disabled:opacity-30 transition-all cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

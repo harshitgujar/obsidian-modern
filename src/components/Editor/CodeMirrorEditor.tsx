@@ -17,28 +17,28 @@ import { autocompletion, closeBrackets, closeBracketsKeymap, CompletionContext }
 import { VaultFile } from '../../types';
 import { createLivePreviewPlugin } from './CodeMirrorLivePreview';
 
-// Obsidian Dark Syntax Theme
+// Obsidian Dark Syntax Theme - Crisp White & Neutral Hierarchy matching Figma
 const obsidianHighlightStyle = HighlightStyle.define([
-  { tag: t.heading1, fontSize: '1.75em', fontWeight: 'bold', color: 'var(--cm-heading, #f4f4f5)' },
+  { tag: t.heading1, fontSize: '1.75em', fontWeight: 'bold', color: 'var(--cm-heading, #ffffff)' },
   { tag: t.heading2, fontSize: '1.4em', fontWeight: '600', color: 'var(--cm-heading, #f4f4f5)' },
   { tag: t.heading3, fontSize: '1.2em', fontWeight: '600', color: 'var(--cm-heading, #e4e4e7)' },
   { tag: t.heading4, fontSize: '1.05em', fontWeight: '600', color: 'var(--cm-heading, #e4e4e7)' },
   { tag: t.strong, fontWeight: 'bold', color: 'var(--cm-strong, #ffffff)' },
   { tag: t.emphasis, fontStyle: 'italic', color: 'var(--cm-emphasis, #e4e4e7)' },
   { tag: t.strikethrough, textDecoration: 'line-through', color: 'var(--cm-strikethrough, #71717a)' },
-  { tag: t.link, color: 'var(--cm-link, #c084fc)', textDecoration: 'underline' },
-  { tag: t.url, color: 'var(--cm-url, #a855f7)' },
+  { tag: t.link, color: '#ffffff', textDecoration: 'underline' },
+  { tag: t.url, color: 'rgba(255, 255, 255, 0.7)' },
   { tag: t.monospace, color: 'var(--cm-code, #e2e8f0)', backgroundColor: 'var(--cm-code-bg, rgba(255, 255, 255, 0.06))', borderRadius: '3px' },
   { tag: t.comment, color: 'var(--cm-comment, #71717a)', fontStyle: 'italic' },
   { tag: t.meta, color: 'var(--cm-meta, #94a3b8)' },
-  { tag: t.processingInstruction, color: 'var(--cm-link, #a855f7)' },
-  { tag: t.keyword, color: 'var(--cm-keyword, #c084fc)' },
+  { tag: t.processingInstruction, color: '#ffffff' },
+  { tag: t.keyword, color: '#ffffff' },
   { tag: t.atom, color: 'var(--cm-atom, #f59e0b)' },
   { tag: t.number, color: 'var(--cm-number, #10b981)' },
-  { tag: t.definition(t.variableName), color: 'var(--cm-variable, #38bdf8)' },
+  { tag: t.definition(t.variableName), color: '#ffffff' },
   { tag: t.variableName, color: 'var(--cm-variable, #e4e4e7)' },
   { tag: t.quote, color: 'var(--cm-quote, #a1a1aa)', fontStyle: 'italic' },
-  { tag: t.list, color: 'var(--accent, #a855f7)' }
+  { tag: t.list, color: 'var(--text-primary, #f4f4f5)' }
 ]);
 
 const obsidianEditorTheme = EditorView.theme({
@@ -46,11 +46,11 @@ const obsidianEditorTheme = EditorView.theme({
     color: 'var(--text-primary, #e4e4e7)',
     backgroundColor: 'transparent',
     fontSize: 'inherit',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
     height: '100%',
   },
   '.cm-scroller': {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
     lineHeight: '1.75',
     overflow: 'auto',
   },
@@ -112,7 +112,7 @@ const obsidianEditorTheme = EditorView.theme({
     borderRadius: '6px !important',
     color: 'var(--text-primary, #d4d4d8) !important',
     fontSize: '13px !important',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important',
+    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif !important',
   },
   '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     backgroundColor: 'var(--accent-subtle, rgba(168, 85, 247, 0.25)) !important',

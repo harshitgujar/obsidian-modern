@@ -3,11 +3,7 @@ import { VaultFile, SidebarTab, BookmarkItem, VaultInfo } from '../../types';
 import { vault } from '../../services/vault';
 import { FileContextMenu } from '../Common/FileContextMenu';
 import { 
-  Files, 
   Search, 
-  Share2, 
-  Tag as TagIcon, 
-  Calendar, 
   FolderPlus, 
   FilePlus, 
   Folder, 
@@ -16,38 +12,16 @@ import {
   ChevronRight, 
   ChevronDown, 
   Trash2, 
-  Edit3, 
-  Download, 
-  HardDrive, 
-  Sun, 
-  Moon, 
-  X, 
   Bookmark, 
   LayoutGrid, 
-  Shuffle, 
-  Clock, 
-  Settings, 
-  Mic, 
-  Square, 
-  Copy, 
-  Columns, 
-  Link as LinkIcon, 
-  History,
-  HelpCircle,
-  Printer,
-  ExternalLink,
-  ArrowUpDown,
-  Filter,
-  Check,
-  ChevronsDownUp,
-  ChevronsUpDown,
-  Image as ImageIcon,
-  Music,
-  FileCode,
-  Sparkles,
-  Plus,
-  Cpu,
-  Zap
+  Filter, 
+  Check, 
+  ChevronsDownUp, 
+  ChevronsUpDown, 
+  FileCode, 
+  Calendar,
+  Layers,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -100,15 +74,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   bookmarks,
   activeFilePath,
   activeSidebarTab,
-  isDarkTheme,
-  vaultName,
-  knownVaults = [],
-  onSwitchVault,
-  isRecordingAudio = false,
-  isGraphViewActive = false,
-  activeRibbonTab,
-  onOpenCanvasView,
-  onOpenFilesView,
   onSelectTab,
   onSelectFile,
   onSplitFile,
@@ -118,226 +83,114 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRenameFile,
   onDuplicateFile,
   onToggleBookmark,
-  onOpenDailyNote,
-  onOpenRandomNote,
-  onCreateZkNote,
-  onToggleAudioRecording,
-  onOpenVaultManager,
-  onOpenSettings,
-  onOpenFileRecovery,
   onToggleGraphView,
-  onExportZip,
-  onToggleTheme,
   searchFilter,
   onSearchChange,
   corePluginsConfig = {},
   onExportPdf,
-  onToggleAIChat,
-  isAIChatActive = false,
   onOpenCodeIngest,
-  onOpenExternalAIConnect
+  onOpenVaultManager
 }) => {
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
   const [editingFilePath, setEditingFilePath] = useState<string | null>(null);
   const [editTitleValue, setEditTitleValue] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-
-  // Right-click Context Menu state
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    file: VaultFile;
-  } | null>(null);
-
-  // Close context menu on window click or escape
-  useEffect(() => {
-    const handleCloseMenu = () => setContextMenu(null);
-    window.addEventListener('click', handleCloseMenu);
-    window.addEventListener('contextmenu', handleCloseMenu);
-    return () => {
-      window.removeEventListener('click', handleCloseMenu);
-      window.removeEventListener('contextmenu', handleCloseMenu);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (activeSidebarTab === 'tags') {
-      onSelectTab('files');
-    }
-  }, [activeSidebarTab, onSelectTab]);
-
-  const toggleFolder = (folderName: string) => {
-    setCollapsedFolders(prev => ({
-      ...prev,
-      [folderName]: !prev[folderName]
-    }));
-  };
-
-  // Sort & Filter state
   const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'mtime-desc' | 'ctime-desc'>('name-asc');
   const [activeFilter, setActiveFilter] = useState<'all' | 'journal' | 'canvas'>('all');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; file: VaultFile } | null>(null);
 
-  // Initialize sort order, filter, and collapsed folders from backend config (workspace.json)
+  // Close popup menus on outside click
   useEffect(() => {
-    const ws = vault.getConfig('workspace') || {};
-    if (ws.fileExplorer) {
-      if (ws.fileExplorer.sortOrder) setSortOrder(ws.fileExplorer.sortOrder);
-      if (ws.fileExplorer.collapsedFolders) setCollapsedFolders(ws.fileExplorer.collapsedFolders);
-      if (ws.fileExplorer.activeFilter) setActiveFilter(ws.fileExplorer.activeFilter);
-    }
-  }, []);
-
-  const isExplorerInit = useRef(true);
-  useEffect(() => {
-    if (isExplorerInit.current) {
-      isExplorerInit.current = false;
-      return;
-    }
-    const ws = vault.getConfig('workspace') || {};
-    vault.saveConfig('workspace', {
-      ...ws,
-      fileExplorer: {
-        sortOrder,
-        collapsedFolders,
-        activeFilter
-      }
-    });
-  }, [sortOrder, collapsedFolders, activeFilter]);
-
-  useEffect(() => {
-    const handleOutside = () => {
+    const handleOutsideClick = () => {
       setShowSortMenu(false);
       setShowFilterMenu(false);
     };
     if (showSortMenu || showFilterMenu) {
-      window.addEventListener('click', handleOutside);
-      return () => window.removeEventListener('click', handleOutside);
+      window.addEventListener('click', handleOutsideClick);
+      return () => window.removeEventListener('click', handleOutsideClick);
     }
   }, [showSortMenu, showFilterMenu]);
 
-  // Filtered files
-  const filteredFiles = useMemo(() => {
-    return files.filter(f => {
-      if (activeFilter === 'all') return true;
-      if (activeFilter === 'journal') {
-        const isDailyFolder = f.folder === 'Daily' || f.path.startsWith('Daily/');
-        const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(f.name);
-        const hasJournalTag = f.content?.includes('#journal') || f.content?.includes('#daily');
-        return isDailyFolder || isDatePattern || hasJournalTag;
-      }
-      if (activeFilter === 'canvas') return f.extension === 'canvas';
-      return true;
-    });
-  }, [files, activeFilter]);
-
-  // Group files and folders into tree with sorting
-  const folderTree = useMemo(() => {
-    const map: Record<string, VaultFile[]> = { '': [] };
-    folders.forEach(f => {
-      if (!map[f]) map[f] = [];
-    });
-    filteredFiles.forEach(file => {
-      const f = file.folder || '';
-      if (!map[f]) map[f] = [];
-      map[f].push(file);
-    });
-
-    // Sort files inside each folder
-    Object.keys(map).forEach(key => {
-      map[key].sort((a, b) => {
-        if (sortOrder === 'name-asc') return a.name.localeCompare(b.name);
-        if (sortOrder === 'name-desc') return b.name.localeCompare(a.name);
-        if (sortOrder === 'mtime-desc') return (b.updatedAt || 0) - (a.updatedAt || 0);
-        if (sortOrder === 'ctime-desc') return (b.createdAt || 0) - (a.createdAt || 0);
-        return 0;
-      });
-    });
-
-    return map;
-  }, [filteredFiles, folders, sortOrder]);
-
-  const allFoldersList = useMemo(() => {
-    return Object.keys(folderTree).filter(f => f !== '');
-  }, [folderTree]);
+  const toggleFolder = (folderPath: string) => {
+    setCollapsedFolders(prev => ({
+      ...prev,
+      [folderPath]: !prev[folderPath]
+    }));
+  };
 
   const areAllFoldersCollapsed = useMemo(() => {
-    if (allFoldersList.length === 0) return false;
-    return allFoldersList.every(f => collapsedFolders[f]);
-  }, [allFoldersList, collapsedFolders]);
+    if (folders.length === 0) return false;
+    return folders.every(f => collapsedFolders[f]);
+  }, [folders, collapsedFolders]);
 
   const handleToggleCollapseAll = () => {
-    if (areAllFoldersCollapsed) {
-      // Expand all folders
-      setCollapsedFolders({});
-    } else {
-      // Collapse all folders
-      const nextCollapsed: Record<string, boolean> = {};
-      allFoldersList.forEach(f => {
-        nextCollapsed[f] = true;
-      });
-      setCollapsedFolders(nextCollapsed);
-    }
+    const nextState = !areAllFoldersCollapsed;
+    const updated: Record<string, boolean> = {};
+    folders.forEach(f => {
+      updated[f] = nextState;
+    });
+    setCollapsedFolders(updated);
   };
 
-  const renderFileTypeIcon = (ext: string) => {
-    const lower = ext.toLowerCase();
-    if (lower === 'canvas') {
-      return <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-amber-400/90" />;
-    }
-    if (lower === 'pdf') {
-      return <FileText className="w-3.5 h-3.5 shrink-0 text-rose-400/90" />;
-    }
-    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
-      return <ImageIcon className="w-3.5 h-3.5 shrink-0 text-sky-400/90" />;
-    }
-    if (['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lower)) {
-      return <Music className="w-3.5 h-3.5 shrink-0 text-emerald-400/90" />;
-    }
-    if (lower === 'base') {
-      return <FileCode className="w-3.5 h-3.5 shrink-0 text-purple-400/90" />;
-    }
-    return <FileText className="w-3.5 h-3.5 shrink-0 opacity-60" />;
-  };
+  // Group files into folders and root files
+  const { folderTree, rootFiles } = useMemo(() => {
+    let filteredFiles = files.filter(f => !f.isBinary);
 
-  const renderFileTypeBadge = (ext: string) => {
-    const lower = ext.toLowerCase();
-    if (lower === 'md') return null;
-
-    let label = lower.toUpperCase();
-    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(lower)) {
-      label = 'PNG';
-    } else if (['webm', 'mp3', 'wav', 'ogg', 'm4a'].includes(lower)) {
-      label = 'AUDIO';
+    if (activeFilter === 'journal') {
+      filteredFiles = filteredFiles.filter(f => /^\d{4}-\d{2}-\d{2}/.test(f.name) || f.path.startsWith('Daily/'));
+    } else if (activeFilter === 'canvas') {
+      filteredFiles = filteredFiles.filter(f => f.extension === 'canvas');
     }
 
-    return (
-      <span className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-wider shrink-0 select-none ml-auto pl-1.5">
-        {label}
-      </span>
-    );
-  };
+    const tree: Record<string, VaultFile[]> = {};
+    const root: VaultFile[] = [];
 
-  // Extract all tags across vault with frequencies
-  const tagsList = useMemo(() => {
-    const counts: Record<string, number> = {};
-    files.forEach(f => {
-      if (f.extension !== 'md') return;
-      const tagRegex = /(?:^|\s)#([a-zA-Z0-9_\-\/]+)/g;
-      let m;
-      while ((m = tagRegex.exec(f.content)) !== null) {
-        const tag = m[1];
-        if (!/^\d+$/.test(tag)) {
-          counts[tag] = (counts[tag] || 0) + 1;
-        }
+    folders.forEach(f => {
+      tree[f] = [];
+    });
+
+    filteredFiles.forEach(file => {
+      if (file.folder) {
+        if (!tree[file.folder]) tree[file.folder] = [];
+        tree[file.folder].push(file);
+      } else {
+        root.push(file);
       }
     });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [files]);
 
-  // Search Results & Backend Search Integration
+    // Sort files in each folder
+    const sortFn = (a: VaultFile, b: VaultFile) => {
+      if (sortOrder === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortOrder === 'name-desc') return b.name.localeCompare(a.name);
+      if (sortOrder === 'mtime-desc') return (b.updatedAt || 0) - (a.updatedAt || 0);
+      if (sortOrder === 'ctime-desc') return (b.createdAt || 0) - (a.createdAt || 0);
+      return 0;
+    };
+
+    Object.keys(tree).forEach(k => {
+      tree[k].sort(sortFn);
+    });
+    root.sort(sortFn);
+
+    return { folderTree: tree, rootFiles: root };
+  }, [files, folders, sortOrder, activeFilter]);
+
+  const renderFileTypeIcon = (ext: string) => {
+    if (ext === 'canvas') {
+      return <LayoutGrid className="w-3.5 h-3.5 shrink-0 text-blue-400" />;
+    }
+    if (ext === 'json' || ext === 'ts' || ext === 'js' || ext === 'py') {
+      return <FileCode className="w-3.5 h-3.5 shrink-0 text-purple-400" />;
+    }
+    return <FileText className="w-3.5 h-3.5 shrink-0 text-zinc-400" />;
+  };
+
+  // Search Results Backend
   const [backendSearchResults, setBackendSearchResults] = useState<any[]>([]);
   const [totalBackendMatches, setTotalBackendMatches] = useState(0);
   const [isSearchingBackend, setIsSearchingBackend] = useState(false);
@@ -368,35 +221,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [searchFilter]);
 
-  const searchResults = useMemo(() => {
-    const q = searchFilter.trim();
-    if (!q) return files.filter(f => !f.isBinary);
-
-    const lower = q.toLowerCase();
-    return files.filter(f => {
-      if (f.isBinary) return false;
-      if (lower.startsWith('path:')) {
-        const p = lower.slice(5).trim();
-        return f.path.toLowerCase().includes(p);
-      }
-      if (lower.startsWith('file:')) {
-        const fn = lower.slice(5).trim();
-        return f.name.toLowerCase().includes(fn);
-      }
-      if (lower.startsWith('tag:')) {
-        const tg = lower.slice(4).trim().replace(/^#/, '');
-        return f.content.toLowerCase().includes(`#${tg}`) || f.content.toLowerCase().includes(tg);
-      }
-      return f.name.toLowerCase().includes(lower) || f.content.toLowerCase().includes(lower);
-    });
-  }, [files, searchFilter]);
-
-  const handleStartRename = (file: VaultFile, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingFilePath(file.path);
-    setEditTitleValue(file.name.replace(/\.[^/.]+$/, ''));
-  };
-
   const handleFinishRename = (filePath: string) => {
     if (editTitleValue.trim()) {
       onRenameFile(filePath, editTitleValue.trim());
@@ -425,721 +249,237 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   };
 
-  const currentRibbonPill: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas' =
-    activeRibbonTab ||
-    (isGraphViewActive
-      ? 'graph'
-      : activeSidebarTab === 'search'
-      ? 'search'
-      : activeSidebarTab === 'bookmarks'
-      ? 'bookmarks'
-      : activeFilePath?.endsWith('.canvas')
-      ? 'canvas'
-      : 'files');
-
   return (
-    <div className="flex h-full glass-sidebar select-none shrink-0 relative">
-      {/* 1. Left Vertical Ribbon */}
-      <div className="w-12 bg-[#ececf0] border-r border-black/[0.08] flex flex-col items-center pt-7 pb-3 justify-between shrink-0">
-        <div className="flex flex-col items-center gap-1.5">
-          {/* Top Left Icon: Runagon Brand & Primary Vault Switcher */}
-          <button
-            onClick={onOpenVaultManager}
-            title={`Switch Vault (${vaultName})`}
-            className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/70 hover:bg-white border border-black/[0.06] hover:border-[rgba(56,76,255,0.3)] shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_6px_rgba(56,76,255,0.15)] active:scale-95 transition-all mb-1 group relative cursor-pointer"
-          >
-            <img 
-              src="/logo-symbol.png" 
-              alt="Runagon Vault Switcher" 
-              className="w-5 h-5 object-contain transition-transform group-hover:scale-110 drop-shadow-xs" 
-            />
-          </button>
-
-          <div className="w-6 h-[1px] bg-black/[0.08] mb-1" />
-
-          <button
-            onClick={() => {
-              if (onOpenFilesView) {
-                onOpenFilesView();
-              } else {
-                if (isGraphViewActive) onToggleGraphView();
+    <aside 
+      aria-label="Files and Bookmarks Sidebar"
+      className="w-60 h-full rounded-[24px] bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.06] dark:border-white/[0.04] flex flex-col overflow-hidden shrink-0 select-none z-10 transition-colors"
+    >
+      {/* Top Header: Expandable Search pill + Action buttons */}
+      <div className="p-2 flex items-center gap-1.5 border-b border-black/[0.06] dark:border-white/[0.04] min-h-[44px]">
+        {/* Search Pill: expands horizontally to 100% width when focused or active */}
+        <div
+          className={`relative transition-all duration-200 ease-in-out ${
+            isSearchExpanded || searchFilter ? 'flex-1 w-full' : 'w-24 sm:w-28 shrink-0'
+          }`}
+        >
+          <Search className="w-3 h-3 text-[#71717A] dark:text-[#6D6D6D] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchFilter}
+            onFocus={() => setIsSearchExpanded(true)}
+            onBlur={() => {
+              if (!searchFilter.trim()) {
+                setIsSearchExpanded(false);
+              }
+            }}
+            onChange={e => {
+              onSearchChange(e.target.value);
+              if (e.target.value && activeSidebarTab !== 'search') {
+                onSelectTab('search');
+              } else if (!e.target.value && activeSidebarTab === 'search') {
                 onSelectTab('files');
               }
             }}
-            title="File Explorer (Ctrl+Shift+E)"
-            className={`p-2 rounded-xl transition-all duration-200 border ${
-              currentRibbonPill === 'files'
-                ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
-            }`}
-          >
-            <Files className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => {
-              if (isGraphViewActive) {
-                onToggleGraphView();
+            onKeyDown={e => {
+              if (e.key === 'Escape') {
+                onSearchChange('');
+                setIsSearchExpanded(false);
+                if (activeSidebarTab === 'search') onSelectTab('files');
+                searchInputRef.current?.blur();
               }
-              onSelectTab('search');
             }}
-            title="Search Vault (Ctrl+Shift+F)"
-            className={`p-2 rounded-xl transition-all duration-200 border ${
-              currentRibbonPill === 'search'
-                ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
+            placeholder="Search file"
+            className={`w-full bg-[#F0F0F4] dark:bg-[#3B3B3B] rounded-full pl-7 text-xs text-[#18181B] dark:text-white placeholder:text-[#8E8E93] dark:placeholder:text-[#6D6D6D] focus:outline-none focus:ring-1 focus:ring-[#384CFF]/50 border-0 transition-all ${
+              isSearchExpanded || searchFilter ? 'pr-7 py-1.5' : 'pr-2 py-1'
             }`}
-          >
-            <Search className="w-4 h-4" />
-          </button>
-
-          {corePluginsConfig['bookmarks'] !== false && (
+          />
+          {/* Close/Clear Button when search is expanded */}
+          {(isSearchExpanded || searchFilter) && (
             <button
-              onClick={() => {
-                if (isGraphViewActive) {
-                  onToggleGraphView();
-                }
-                onSelectTab('bookmarks');
+              type="button"
+              onMouseDown={e => {
+                e.preventDefault();
+                onSearchChange('');
+                setIsSearchExpanded(false);
+                if (activeSidebarTab === 'search') onSelectTab('files');
               }}
-              title="Bookmarks (.obsidian/bookmarks.json)"
-              className={`p-2 rounded-xl transition-all duration-200 border ${
-                currentRibbonPill === 'bookmarks'
-                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
-              }`}
-            >
-              <Bookmark className="w-4 h-4" />
-            </button>
-          )}
-
-          <div className="w-6 h-[1px] bg-black/[0.08] my-1" />
-
-          {/* Core Plugin Ribbon Actions */}
-          {corePluginsConfig['graph'] !== false && (
-            <button
-              onClick={onToggleGraphView}
-              title={isGraphViewActive ? "Close Graph View (Ctrl+G)" : "Open Interactive Graph View (Ctrl+G)"}
-              className={`p-2 rounded-xl transition-all duration-200 border ${
-                currentRibbonPill === 'graph'
-                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
-              }`}
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-          )}
-
-          {corePluginsConfig['canvas'] !== false && (
-            <button
-              onClick={() => {
-                if (onOpenCanvasView) {
-                  onOpenCanvasView();
-                } else {
-                  if (isGraphViewActive) onToggleGraphView();
-                  onCreateFile('', 'canvas');
-                }
-              }}
-              title="Canvas Board (.canvas)"
-              className={`p-2 rounded-xl transition-all duration-200 border ${
-                currentRibbonPill === 'canvas'
-                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          )}
-
-          {onToggleAIChat && (
-            <button
-              onClick={onToggleAIChat}
-              title="AI Vault Assistant (RAG Memory)"
-              className={`p-2 rounded-xl transition-all duration-200 border ${
-                isAIChatActive
-                  ? 'bg-white text-[#384cff] shadow-xs border border-black/[0.08]'
-                  : 'border-transparent text-[#585860] hover:text-[#111113] hover:bg-black/[0.05]'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-          )}
-
-          {onOpenExternalAIConnect && (
-            <button
-              onClick={onOpenExternalAIConnect}
-              title="Connect External AI (Claude Desktop, Cursor, Windsurf)"
-              className="p-2 rounded-xl transition-all duration-200 border border-transparent text-[#585860] hover:text-[#384cff] hover:bg-black/[0.05] dark:text-zinc-400 dark:hover:text-[#8896ff] dark:hover:bg-zinc-800/60"
-            >
-              <Zap className="w-4 h-4 text-amber-500" />
-            </button>
-          )}
-        </div>
-
-        {/* Bottom Ribbon Utilities */}
-        <div className="flex flex-col items-center gap-1.5">
-          <button
-            onClick={onOpenFileRecovery}
-            title="Help & File Recovery"
-            className="p-2 rounded-xl text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] transition-all"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={onToggleTheme}
-            title="Toggle Light / Dark Theme"
-            className="p-2 rounded-xl text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] transition-all"
-          >
-            {isDarkTheme ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={onOpenSettings}
-            title="Settings (Ctrl+,)"
-            className="p-2 rounded-xl text-[#585860] hover:text-[#111113] hover:bg-black/[0.05] transition-all"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Main Sidebar Drawer Content */}
-      <div className="w-64 flex flex-col h-full bg-[#f8f8fa] border-r border-black/[0.07]">
-        {/* Tab Header */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-black/[0.06] bg-[#f8f8fa] relative">
-          <span className="text-[11px] font-semibold text-[#111113] uppercase tracking-wider truncate">
-            {activeSidebarTab === 'files' && 'Files'}
-            {activeSidebarTab === 'search' && 'Search Vault'}
-            {activeSidebarTab === 'bookmarks' && 'Bookmarks'}
-            {activeSidebarTab === 'tags' && 'Tags'}
-          </span>
-
-          {activeSidebarTab === 'files' && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onCreateFile('', 'md')}
-                title="New Note"
-                className="p-1 rounded text-[#585860] hover:text-[#111113] hover:bg-[#ebebef] transition-colors"
-              >
-                <FilePlus className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => onCreateFile('', 'canvas')}
-                title="New Canvas"
-                className="p-1 rounded text-[#585860] hover:text-[#111113] hover:bg-[#ebebef] transition-colors"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setIsCreatingFolder(prev => !prev)}
-                title="New Folder"
-                className="p-1 rounded text-[#585860] hover:text-[#111113] hover:bg-[#ebebef] transition-colors"
-              >
-                <FolderPlus className="w-3.5 h-3.5" />
-              </button>
-              {onOpenCodeIngest && (
-                <button
-                  onClick={onOpenCodeIngest}
-                  title="Ingest & Map Codebase (AST GraphRAG)"
-                  className="p-1 rounded text-[#585860] hover:text-[#384cff] hover:bg-[#ebebef] transition-colors"
-                >
-                  <Cpu className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              {/* Sort Menu */}
-              <div className="relative">
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setShowSortMenu(prev => !prev);
-                    setShowFilterMenu(false);
-                  }}
-                  title="Change sort order"
-                  className={`p-1 rounded transition-colors ${
-                    showSortMenu ? 'text-[#111113] bg-[#ebebef]' : 'text-[#585860] hover:text-[#111113] hover:bg-[#ebebef]'
-                  }`}
-                >
-                  <ArrowUpDown className="w-3.5 h-3.5" />
-                </button>
-                {showSortMenu && (
-                  <div
-                    onClick={e => e.stopPropagation()}
-                    className="absolute right-0 top-full mt-1.5 w-48 skeuo-card p-1 z-50 text-xs text-[#111113] flex flex-col gap-0.5 shadow-[0_12px_36px_rgba(0,0,0,0.12)]"
-                  >
-                    <button
-                      onClick={() => {
-                        setSortOrder('name-asc');
-                        setShowSortMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-asc' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span>File name (A to Z)</span>
-                      {sortOrder === 'name-asc' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortOrder('name-desc');
-                        setShowSortMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'name-desc' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span>File name (Z to A)</span>
-                      {sortOrder === 'name-desc' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortOrder('mtime-desc');
-                        setShowSortMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'mtime-desc' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span>Modified time (new first)</span>
-                      {sortOrder === 'mtime-desc' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSortOrder('ctime-desc');
-                        setShowSortMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${sortOrder === 'ctime-desc' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span>Created time (new first)</span>
-                      {sortOrder === 'ctime-desc' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Collapse / Expand All Folders Toggle */}
-              <button
-                onClick={handleToggleCollapseAll}
-                title={areAllFoldersCollapsed ? 'Expand all folders' : 'Collapse all folders'}
-                className="p-1 rounded text-[#585860] hover:text-[#111113] hover:bg-[#ebebef] transition-colors"
-              >
-                {areAllFoldersCollapsed ? <ChevronsUpDown className="w-3.5 h-3.5" /> : <ChevronsDownUp className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Filter Menu */}
-              <div className="relative">
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setShowFilterMenu(prev => !prev);
-                    setShowSortMenu(false);
-                  }}
-                  title="Filter notes by type or tag"
-                  className={`p-1 rounded transition-colors ${
-                    activeFilter !== 'all' ? 'text-white bg-[#18181b]' : showFilterMenu ? 'text-[#111113] bg-[#ebebef]' : 'text-[#585860] hover:text-[#111113] hover:bg-[#ebebef]'
-                  }`}
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                </button>
-                {showFilterMenu && (
-                  <div
-                    onClick={e => e.stopPropagation()}
-                    className="absolute right-0 top-full mt-1.5 w-48 skeuo-card p-1 z-50 text-xs text-[#111113] flex flex-col gap-0.5 shadow-[0_12px_36px_rgba(0,0,0,0.12)]"
-                  >
-                    <button
-                      onClick={() => {
-                        setActiveFilter('all');
-                        setShowFilterMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'all' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span>All Notes</span>
-                      {activeFilter === 'all' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveFilter('journal');
-                        setShowFilterMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'journal' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>Daily Journals</span>
-                      </span>
-                      {activeFilter === 'journal' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setActiveFilter('canvas');
-                        setShowFilterMenu(false);
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left ${activeFilter === 'canvas' ? 'bg-[#18181b] text-white' : 'hover:bg-[#ebebef]'}`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <LayoutGrid className="w-3.5 h-3.5 text-[#18181b]" />
-                        <span>Canvases (.canvas)</span>
-                      </span>
-                      {activeFilter === 'canvas' && <Check className="w-3 h-3 text-white" />}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Active Filter Indicator */}
-        {activeFilter !== 'all' && activeSidebarTab === 'files' && (
-          <div className="px-3 py-1.5 bg-[#ebebef] border-b border-black/[0.06] text-[11px] text-[#111113] flex items-center justify-between">
-            <span className="flex items-center gap-1.5 capitalize font-medium">
-              <Filter className="w-3 h-3 text-[#18181b]" />
-              <span>Filter: {activeFilter === 'journal' ? 'Daily Journals' : activeFilter}</span>
-            </span>
-            <button
-              onClick={() => setActiveFilter('all')}
-              className="text-[#585860] hover:text-[#111113] p-0.5 rounded hover:bg-black/[0.06]"
-              title="Clear filter"
+              title="Close search (Esc)"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-[#71717A] dark:text-[#6D6D6D] hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* New Folder Input */}
-        {isCreatingFolder && activeSidebarTab === 'files' && (
-          <form onSubmit={handleCreateFolderSubmit} className="p-2 border-b border-zinc-800 bg-zinc-900/60">
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={e => setNewFolderName(e.target.value)}
-              placeholder="New folder name..."
-              autoFocus
-              onBlur={() => setIsCreatingFolder(false)}
-              className="w-full bg-zinc-950 border border-purple-500 rounded px-2 py-1 text-xs text-zinc-100 focus:outline-none"
-            />
-          </form>
-        )}
+        {/* Action Buttons: Hidden when search expands horizontally matching Image 8 */}
+        {!isSearchExpanded && !searchFilter && (
+          <div className="flex items-center gap-0.5 ml-auto animate-in fade-in duration-150 shrink-0">
+            {/* Action 1: New Note */}
+            <button
+              onClick={() => onCreateFile('', 'md')}
+              title="New Note"
+              className="p-1 text-[#71717A] dark:text-[#6D6D6D] hover:text-[#18181B] dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
+            >
+              <FilePlus className="w-3.5 h-3.5" />
+            </button>
 
-        {/* Tab 1: File Explorer */}
-        {activeSidebarTab === 'files' && (
-          <div
-            onDragOver={e => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'copy';
-            }}
-            onDrop={async e => {
-              e.preventDefault();
-              const obsData = e.dataTransfer.getData('application/obsidian-file');
-              if (obsData) {
-                try {
-                  const { path: sourcePath, name } = JSON.parse(obsData);
-                  const targetPath = name; // root folder
-                  if (sourcePath !== targetPath) {
-                    await onRenameFile(sourcePath, targetPath);
-                  }
-                } catch {}
-                return;
-              }
-              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                for (let i = 0; i < e.dataTransfer.files.length; i++) {
-                  const droppedFile = e.dataTransfer.files[i];
-                  const reader = new FileReader();
-                  reader.onloadend = async () => {
-                    const base64 = (reader.result as string).split(',')[1];
-                    const relPath = droppedFile.name.endsWith('.md') || droppedFile.name.endsWith('.canvas')
-                      ? droppedFile.name
-                      : `Attachments/${droppedFile.name}`;
-                    await vault.saveBinaryFile(relPath, base64);
-                  };
-                  reader.readAsDataURL(droppedFile);
-                }
-              }
-            }}
-            className="flex-1 overflow-y-auto p-1.5 space-y-0.5 text-xs"
-          >
-            {Object.entries(folderTree)
-              .sort(([a], [b]) => {
-                if (a === '') return 1;
-                if (b === '') return -1;
-                return a.localeCompare(b);
-              })
-              .map(([folderName, folderFiles]) => {
-                const renderFileRow = (file: VaultFile) => {
-                  const isCanvas = file.extension === 'canvas';
-                  const isActive = file.path === activeFilePath;
+            {/* Action 2: New Folder */}
+            <button
+              onClick={() => setIsCreatingFolder(prev => !prev)}
+              title="New Folder"
+              className="p-1 text-[#71717A] dark:text-[#6D6D6D] hover:text-[#18181B] dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
+            >
+              <FolderPlus className="w-3.5 h-3.5" />
+            </button>
 
-                  return (
-                    <div
-                      key={file.path}
-                      draggable={true}
-                      onDragStart={e => {
-                        e.dataTransfer.setData('application/obsidian-file', JSON.stringify({
-                          path: file.path,
-                          name: file.name,
-                          extension: file.extension
-                        }));
-                        e.dataTransfer.setData('text/plain', file.extension === 'md' ? `[[${file.name.replace(/\.md$/, '')}]]` : `![[${file.name}]]`);
-                      }}
-                      onClick={() => onSelectFile(file.path)}
-                      onContextMenu={e => handleContextMenuOpen(e, file)}
-                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl cursor-pointer transition-all duration-150 border ${
-                        isActive
-                          ? (isDarkTheme ? 'bg-[#2a2a2e] text-[#5c6cff] font-medium border-white/10 shadow-xs' : 'bg-white text-[#384cff] font-medium shadow-xs border border-black/[0.08]')
-                          : (isDarkTheme ? 'border-transparent text-zinc-300 hover:bg-white/[0.06] hover:text-white' : 'border-transparent text-[#585860] hover:bg-[#ebebef] hover:text-[#111113]')
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate flex-1 min-w-0">
-                        {renderFileTypeIcon(file.extension)}
+            {/* Action 3: Collapse / Expand All */}
+            <button
+              onClick={handleToggleCollapseAll}
+              title={areAllFoldersCollapsed ? 'Expand all folders' : 'Collapse all folders'}
+              className="p-1 text-[#71717A] dark:text-[#6D6D6D] hover:text-[#18181B] dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
+            >
+              {areAllFoldersCollapsed ? <ChevronsUpDown className="w-3.5 h-3.5" /> : <ChevronsDownUp className="w-3.5 h-3.5" />}
+            </button>
 
-                        {editingFilePath === file.path ? (
-                          <input
-                            type="text"
-                            value={editTitleValue}
-                            onChange={e => setEditTitleValue(e.target.value)}
-                            onBlur={() => handleFinishRename(file.path)}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') handleFinishRename(file.path);
-                              if (e.key === 'Escape') setEditingFilePath(null);
-                            }}
-                            autoFocus
-                            className={`px-1 py-0.5 rounded border focus:outline-none w-32 shadow-sm ${
-                              isDarkTheme ? 'bg-[#2a2a2e] text-zinc-100 border-white/20' : 'bg-white text-[#111113] border-black/20'
-                            }`}
-                          />
-                        ) : (
-                          <span className="truncate">{file.name.replace(/\.(md|canvas|png|jpg|jpeg|webp|gif|svg|base|pdf|webm|mp3|wav|ogg|m4a)$/, '')}</span>
-                        )}
-                      </div>
-
-                      {renderFileTypeBadge(file.extension)}
-                    </div>
-                  );
-                };
-
-                if (folderName === '') {
-                  return folderFiles.map(renderFileRow);
-                }
-
-                const isCollapsed = collapsedFolders[folderName];
-
-                return (
-                  <div key={folderName} className="space-y-0.5">
-                    <div
-                      onClick={() => toggleFolder(folderName)}
-                      onDragOver={e => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'copy';
-                      }}
-                      onDrop={async e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const obsData = e.dataTransfer.getData('application/obsidian-file');
-                        if (obsData) {
-                          try {
-                            const { path: sourcePath, name } = JSON.parse(obsData);
-                            const targetPath = `${folderName}/${name}`;
-                            if (sourcePath !== targetPath) {
-                              await onRenameFile(sourcePath, targetPath);
-                            }
-                          } catch {}
-                          return;
-                        }
-                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                          for (let i = 0; i < e.dataTransfer.files.length; i++) {
-                            const droppedFile = e.dataTransfer.files[i];
-                            const reader = new FileReader();
-                            reader.onloadend = async () => {
-                              const base64 = (reader.result as string).split(',')[1];
-                              const relPath = `${folderName}/${droppedFile.name}`;
-                              await vault.saveBinaryFile(relPath, base64);
-                            };
-                            reader.readAsDataURL(droppedFile);
-                          }
-                        }
-                      }}
-                      className={`group flex items-center justify-between px-2.5 py-1.5 rounded-xl cursor-pointer font-medium transition-all ${
-                        isDarkTheme
-                          ? 'text-zinc-200 hover:bg-white/[0.06]'
-                          : 'text-[#1c1c1e] hover:bg-[#ebebef]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        {isCollapsed ? (
-                          <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#8e8e93]'}`} />
-                        ) : (
-                          <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#8e8e93]'}`} />
-                        )}
-                        {isCollapsed ? (
-                          <Folder className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#585860]'}`} />
-                        ) : (
-                          <FolderOpen className={`w-3.5 h-3.5 shrink-0 ${isDarkTheme ? 'text-zinc-400' : 'text-[#585860]'}`} />
-                        )}
-                        <span className="truncate">{folderName}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono border ${
-                          isDarkTheme
-                            ? 'text-zinc-400 bg-white/[0.05] border-white/10'
-                            : 'text-[#585860] bg-black/[0.05] border-black/[0.05]'
-                        }`}>{folderFiles.length}</span>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onCreateFile(folderName, 'md');
-                          }}
-                          title={`New note in ${folderName}`}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-blue-500 transition-opacity"
-                        >
-                          <FilePlus className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onCreateFile(folderName, 'canvas');
-                          }}
-                          title={`New canvas in ${folderName}`}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-orange-400 transition-opacity"
-                        >
-                          <LayoutGrid className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            if (window.confirm(`Move folder "${folderName}" and all its notes to .trash?`)) {
-                              onDeleteFile(folderName);
-                            }
-                          }}
-                          title={`Delete folder "${folderName}" to .trash`}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-400 hover:text-rose-400 transition-opacity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {!isCollapsed && (
-                      <div className={`pl-3.5 space-y-0.5 border-l ml-2 ${isDarkTheme ? 'border-zinc-700/60' : 'border-zinc-300/80'}`}>
-                        {folderFiles.map(renderFileRow)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-        )}
-
-        {/* Tab 2: Global Search */}
-        {activeSidebarTab === 'search' && (
-          <div className="flex flex-col h-full p-2 space-y-2">
+            {/* Action 4: Sort / Filter Options */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8e8e93]" />
-              <input
-                type="text"
-                value={searchFilter}
-                onChange={e => onSearchChange(e.target.value)}
-                placeholder="Search notes..."
-                autoFocus
-                className="w-full pl-8 pr-7 py-1.5 bg-white border border-black/10 rounded-full text-xs text-[#111113] placeholder-[#8e8e93] focus:border-black/30 focus:outline-none shadow-sm"
-              />
-              {searchFilter && (
-                <button
-                  onClick={() => onSearchChange('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8e8e93] hover:text-[#111113]"
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  setShowSortMenu(prev => !prev);
+                  setShowFilterMenu(false);
+                }}
+                title="Sort & Vault Options"
+                className="p-1 text-[#71717A] dark:text-[#6D6D6D] hover:text-[#18181B] dark:hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.05]"
+              >
+                <Filter className="w-3.5 h-3.5" />
+              </button>
+
+              {showSortMenu && (
+                <div
+                  onClick={e => e.stopPropagation()}
+                  className="absolute right-0 top-full mt-1.5 w-52 bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.08] dark:border-white/[0.08] rounded-xl p-1.5 z-50 text-xs text-[#18181B] dark:text-white/80 flex flex-col gap-0.5 shadow-2xl"
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1 text-[10px] text-[#8e8e93] px-1">
-              <button onClick={() => onSearchChange('path:Formatting')} className="hover:text-[#111113]">path:</button>
-              <span>·</span>
-              <button onClick={() => onSearchChange('tag:')} className="hover:text-[#111113]">tag:</button>
-              <span>·</span>
-              <button onClick={() => onSearchChange('file:')} className="hover:text-[#111113]">file:</button>
-            </div>
-
-            {searchFilter.trim() && (
-              <div className="flex items-center justify-between px-1 text-[10px] text-[#585860] font-mono">
-                {isSearchingBackend ? (
-                  <span className="text-[#111113] animate-pulse">Searching vault files...</span>
-                ) : (
-                  <span>
-                    {totalBackendMatches} match{totalBackendMatches === 1 ? '' : 'es'} across {backendSearchResults.length} file{backendSearchResults.length === 1 ? '' : 's'}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <div className="flex-1 overflow-y-auto space-y-1.5 text-xs">
-              {searchFilter.trim() ? (
-                backendSearchResults.length === 0 && !isSearchingBackend ? (
-                  <div className="p-4 text-center text-[#8e8e93] italic text-[11px]">
-                    No notes match &quot;{searchFilter}&quot;.
+                  <div className="text-[10px] uppercase font-semibold text-[#71717A] dark:text-[#6D6D6D] px-2 py-1 tracking-wider">
+                    Sort Files
                   </div>
-                ) : (
-                  backendSearchResults.map(res => (
-                    <div
-                      key={res.path}
-                      onClick={() => onSelectFile(res.path)}
-                      className="p-2.5 rounded-xl bg-white hover:bg-[#f4f4f6] cursor-pointer border border-black/[0.06] shadow-sm transition-all group space-y-1"
-                    >
-                      <div className="flex items-center justify-between text-[#111113] font-medium">
-                        <span className="truncate group-hover:text-black font-semibold">{res.name.replace(/\.md$/, '')}</span>
-                        {res.totalMatches > 0 && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#ebebef] text-[#111113] border border-black/[0.06] font-mono">
-                            {res.totalMatches}
-                          </span>
-                        )}
-                      </div>
-                      {res.folder && (
-                        <div className="text-[10px] text-[#8e8e93] font-mono">{res.folder}</div>
-                      )}
-                      {res.matches && res.matches.length > 0 && (
-                        <div className="space-y-1 mt-1">
-                          {res.matches.slice(0, 3).map((m: any, mIdx: number) => (
-                            <div key={mIdx} className="text-[10.5px] text-[#585860] pl-2 border-l-2 border-black/20 italic truncate font-sans">
-                              <span className="font-mono text-[#8e8e93] mr-1.5 not-italic">L{m.line}:</span>
-                              <span>{m.text}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )
-              ) : (
-                searchResults.map(file => (
-                  <div
-                    key={file.path}
-                    onClick={() => onSelectFile(file.path)}
-                    className="p-2 rounded-xl bg-white hover:bg-[#f4f4f6] cursor-pointer border border-black/[0.06] shadow-sm transition-all group"
+                  <button
+                    onClick={() => {
+                      setSortOrder('name-asc');
+                      setShowSortMenu(false);
+                    }}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left cursor-pointer ${sortOrder === 'name-asc' ? 'bg-[#384CFF] text-white' : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'}`}
                   >
-                    <div className="flex items-center justify-between text-[#111113] font-medium">
-                      <span className="truncate group-hover:text-black font-semibold">{file.name.replace(/\.md$/, '')}</span>
-                    </div>
-                    {file.folder && (
-                      <div className="text-[10px] text-[#8e8e93] mt-0.5 font-mono">{file.folder}</div>
-                    )}
+                    <span>A to Z</span>
+                    {sortOrder === 'name-asc' && <Check className="w-3 h-3" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortOrder('name-desc');
+                      setShowSortMenu(false);
+                    }}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left cursor-pointer ${sortOrder === 'name-desc' ? 'bg-[#384CFF] text-white' : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'}`}
+                  >
+                    <span>Z to A</span>
+                    {sortOrder === 'name-desc' && <Check className="w-3 h-3" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortOrder('mtime-desc');
+                      setShowSortMenu(false);
+                    }}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left cursor-pointer ${sortOrder === 'mtime-desc' ? 'bg-[#384CFF] text-white' : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.05]'}`}
+                  >
+                    <span>Newest modified</span>
+                    {sortOrder === 'mtime-desc' && <Check className="w-3 h-3" />}
+                  </button>
+
+                  <div className="my-1 border-t border-black/[0.08] dark:border-white/[0.08]" />
+
+                  {/* Container Folder & Import Functionality */}
+                  <div className="text-[10px] uppercase font-semibold text-[#71717A] dark:text-[#6D6D6D] px-2 py-1 tracking-wider">
+                    Folder & Vault Options
                   </div>
-                ))
+                  <button
+                    onClick={() => {
+                      setIsCreatingFolder(true);
+                      setShowSortMenu(false);
+                    }}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left hover:bg-black/[0.05] dark:hover:bg-white/[0.05] cursor-pointer text-[#18181B] dark:text-white/90"
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                    <span>New Folder</span>
+                  </button>
+
+                  {onOpenVaultManager && (
+                    <button
+                      onClick={() => {
+                        onOpenVaultManager();
+                        setShowSortMenu(false);
+                      }}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left hover:bg-black/[0.05] dark:hover:bg-white/[0.05] cursor-pointer text-[#18181B] dark:text-white/90"
+                    >
+                      <Folder className="w-3.5 h-3.5 text-amber-500 dark:text-yellow-400" />
+                      <span>Import / Switch Vault...</span>
+                    </button>
+                  )}
+
+                  {onOpenCodeIngest && (
+                    <button
+                      onClick={() => {
+                        onOpenCodeIngest();
+                        setShowSortMenu(false);
+                      }}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left hover:bg-black/[0.05] dark:hover:bg-white/[0.05] cursor-pointer text-[#18181B] dark:text-white/90"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+                      <span>Ingest Codebase Architecture...</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
         )}
+      </div>
 
-        {/* Tab 3: Bookmarks */}
+      {/* New Folder Inline Form */}
+      {isCreatingFolder && (
+        <form onSubmit={handleCreateFolderSubmit} className="p-2 border-b border-black/[0.06] dark:border-white/[0.04] bg-[#F0F0F4] dark:bg-[#3B3B3B]/50">
+          <input
+            type="text"
+            value={newFolderName}
+            onChange={e => setNewFolderName(e.target.value)}
+            placeholder="Folder name..."
+            autoFocus
+            onBlur={() => setIsCreatingFolder(false)}
+            className="w-full bg-[#FFFFFF] dark:bg-[#272727] border border-[#384CFF] rounded-lg px-2.5 py-1 text-xs text-[#18181B] dark:text-white focus:outline-none"
+          />
+        </form>
+      )}
+
+      {/* Sidebar Content Body */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-3 text-xs">
+        {/* Bookmarks Mode (Screen 2) */}
         {activeSidebarTab === 'bookmarks' && (
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 text-xs">
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-semibold text-[#71717A] dark:text-[#6D6D6D] px-2 uppercase tracking-wider mb-2">
+              Bookmarks ({bookmarks.length})
+            </div>
             {bookmarks.length === 0 ? (
-              <div className="text-[#8e8e93] text-center py-8 text-[11px] italic">
-                No bookmarked files yet.<br />Click the bookmark icon on any file to save it to <code className="text-[#585860]">.obsidian/bookmarks.json</code>.
+              <div className="text-[#71717A] dark:text-[#6D6D6D] text-center py-8 text-xs italic px-3">
+                No bookmarks yet.<br />Click the bookmark icon on any note to save it here.
               </div>
             ) : (
               bookmarks.map((bm, idx) => (
                 <div
                   key={idx}
                   onClick={() => onSelectFile(bm.path)}
-                  className="group flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-[#ebebef] cursor-pointer text-[#111113]"
+                  className="group flex items-center justify-between px-3 py-2 rounded-xl bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] border border-black/[0.04] dark:border-white/[0.04] cursor-pointer text-[#18181B] dark:text-white/90 transition-all shadow-xs"
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <Bookmark className="w-3.5 h-3.5 text-[#18181b] shrink-0" />
+                    <Bookmark className="w-3.5 h-3.5 text-[#384CFF] shrink-0" />
                     <span className="truncate">{bm.title || bm.path}</span>
                   </div>
                   <button
@@ -1147,7 +487,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       e.stopPropagation();
                       onToggleBookmark(bm.path, bm.title);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 text-[#8e8e93] hover:text-[#111113]"
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white"
                     title="Remove Bookmark"
                   >
                     <X className="w-3 h-3" />
@@ -1158,35 +498,155 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Tab 4: Tags Explorer */}
-        {activeSidebarTab === 'tags' && (
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 text-xs">
-            {tagsList.length === 0 ? (
-              <div className="text-[#8e8e93] text-center py-6 text-[11px]">
-                No #tags found yet.<br />Add #tag to any note!
-              </div>
-            ) : (
-              tagsList.map(([tag, count]) => (
-                <div
-                  key={tag}
-                  onClick={() => {
-                    onSearchChange(`tag:${tag}`);
-                    onSelectTab('search');
-                  }}
-                  className="flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-[#ebebef] cursor-pointer text-[#111113]"
-                >
-                  <span className="text-[#18181b] font-mono font-medium">#{tag}</span>
-                  <span className="text-[10px] text-[#585860] bg-[#ebebef] px-2 py-0.5 rounded-full font-mono">
-                    {count}
-                  </span>
+        {/* Search Results Mode */}
+        {activeSidebarTab === 'search' && (
+          <div className="space-y-2">
+            <div className="text-[10px] font-semibold text-[#71717A] dark:text-[#6D6D6D] px-1 uppercase tracking-wider">
+              {isSearchingBackend ? 'Searching...' : `${totalBackendMatches} results`}
+            </div>
+            {backendSearchResults.map(res => (
+              <div
+                key={res.path}
+                onClick={() => onSelectFile(res.path)}
+                className="p-2.5 rounded-xl bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] border border-black/[0.04] dark:border-white/[0.04] cursor-pointer transition-all space-y-1"
+              >
+                <div className="flex items-center justify-between text-[#18181B] dark:text-white font-medium">
+                  <span className="truncate">{res.name.replace(/\.md$/, '')}</span>
+                  {res.totalMatches > 0 && (
+                    <span className="text-[10px] px-1.5 rounded-full bg-[#384CFF]/20 text-[#384CFF] font-mono">
+                      {res.totalMatches}
+                    </span>
+                  )}
                 </div>
-              ))
+                {res.folder && (
+                  <div className="text-[10px] text-[#71717A] dark:text-[#6D6D6D] font-mono">{res.folder}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Files Mode (Screen 1 & 5) */}
+        {activeSidebarTab === 'files' && (
+          <div className="space-y-3">
+            {/* Folder Hierarchy (e.g. Adventure folder) */}
+            <div className="space-y-1">
+              {Object.entries(folderTree)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([folderName, folderFiles]) => {
+                  if (!folderName) return null;
+                  const isCollapsed = collapsedFolders[folderName];
+
+                  return (
+                    <div key={folderName} className="space-y-0.5">
+                      {/* Folder Title Row */}
+                      <div
+                        onClick={() => toggleFolder(folderName)}
+                        className="group flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/[0.04] cursor-pointer text-[#18181B]/80 dark:text-white/80 font-medium transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          {isCollapsed ? (
+                            <ChevronRight className="w-3 h-3 text-[#71717A] dark:text-[#6D6D6D] shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-[#71717A] dark:text-[#6D6D6D] shrink-0" />
+                          )}
+                          {isCollapsed ? (
+                            <Folder className="w-3.5 h-3.5 text-amber-500/80 dark:text-[#6D6D6D] shrink-0" />
+                          ) : (
+                            <FolderOpen className="w-3.5 h-3.5 text-amber-500/80 dark:text-[#6D6D6D] shrink-0" />
+                          )}
+                          <span className="truncate text-xs">{folderName}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              onCreateFile(folderName, 'md');
+                            }}
+                            title={`New note in ${folderName}`}
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white"
+                          >
+                            <FilePlus className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (window.confirm(`Delete folder "${folderName}"?`)) {
+                                onDeleteFile(folderName);
+                              }
+                            }}
+                            title="Delete folder"
+                            className="opacity-0 group-hover:opacity-100 p-0.5 text-[#71717A] dark:text-[#6D6D6D] hover:text-rose-500"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Files under folder */}
+                      {!isCollapsed && (
+                        <div className="pl-4 space-y-0.5">
+                          {folderFiles.map(file => {
+                            const isActive = file.path === activeFilePath;
+                            return (
+                              <div
+                                key={file.path}
+                                onClick={() => onSelectFile(file.path)}
+                                onContextMenu={e => handleContextMenuOpen(e, file)}
+                                className={`px-2 py-1.5 rounded-lg cursor-pointer transition-colors text-xs truncate ${
+                                  isActive
+                                    ? 'bg-[#EAEAEE] dark:bg-[#3B3B3B] text-[#18181B] dark:text-white font-medium'
+                                    : 'text-[#71717A] hover:text-[#18181B] hover:bg-black/[0.04] dark:text-white/60 dark:hover:text-white dark:hover:bg-white/[0.04]'
+                                }`}
+                              >
+                                {file.name.replace(/\.(md|canvas)$/, '')}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Root / Unorganized Notes as Rounded Pill Cards matching Screen 1 & 5 */}
+            {rootFiles.length > 0 && (
+              <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.04] space-y-1.5">
+                {rootFiles.map(file => {
+                  const isActive = file.path === activeFilePath;
+                  const isCanvas = file.extension === 'canvas';
+
+                  return (
+                    <div
+                      key={file.path}
+                      onClick={() => onSelectFile(file.path)}
+                      onContextMenu={e => handleContextMenuOpen(e, file)}
+                      className={`flex items-center gap-2.5 px-4 py-2 rounded-full cursor-pointer transition-all shadow-xs border ${
+                        isActive
+                          ? 'bg-[#EAEAEE] dark:bg-[#3B3B3B] text-[#18181B] dark:text-white font-medium border-black/[0.06] dark:border-white/10'
+                          : 'bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#272727] dark:hover:bg-[#3B3B3B]/60 text-[#18181B]/80 dark:text-white/80 border-black/[0.04] dark:border-white/[0.04]'
+                      }`}
+                    >
+                      {isCanvas ? (
+                        <LayoutGrid className="w-3.5 h-3.5 text-[#384CFF] shrink-0" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5 text-[#71717A] dark:text-[#6D6D6D] shrink-0" />
+                      )}
+                      <span className="truncate text-xs">
+                        {file.name.replace(/\.(md|canvas)$/, '')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Obsidian File Context Menu */}
+      {/* Context Menu */}
       {contextMenu && (
         <FileContextMenu
           x={contextMenu.x}
@@ -1218,10 +678,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onDuplicateFile(path);
             setContextMenu(null);
           }}
-          onRevealInNavigation={path => {
+          onRevealInNavigation={() => {
             setContextMenu(null);
           }}
-          onOpenLocalGraph={path => {
+          onOpenLocalGraph={() => {
             onToggleGraphView();
             setContextMenu(null);
           }}
@@ -1233,6 +693,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           folders={folders}
         />
       )}
-    </div>
+    </aside>
   );
 };

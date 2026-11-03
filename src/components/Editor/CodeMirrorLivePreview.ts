@@ -129,7 +129,7 @@ class StrikethroughWidget extends WidgetType {
   }
 }
 
-// 2. Interactive Task Checkbox Widget
+// 2. Interactive Task Checkbox Widget (No leading dashes, pure Obsidian/Notion checkbox)
 class TaskCheckboxWidget extends WidgetType {
   constructor(readonly checked: boolean, readonly pos: number) {
     super();
@@ -141,13 +141,13 @@ class TaskCheckboxWidget extends WidgetType {
 
   toDOM(view: EditorView) {
     const span = document.createElement('span');
-    span.className = 'cm-task-widget inline-flex items-center mx-1 select-none align-middle';
+    span.className = 'cm-task-widget inline-flex items-center mr-2 select-none align-middle';
 
     const input = document.createElement('input');
     input.type = 'checkbox';
     input.checked = this.checked;
     input.className =
-      'w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600';
+      'w-4 h-4 rounded border-zinc-400 dark:border-zinc-600 bg-white dark:bg-[#272727] text-[#384CFF] focus:ring-[#384CFF] cursor-pointer accent-[#384CFF] transition-all hover:scale-105';
 
     input.addEventListener('mousedown', e => e.stopPropagation());
     input.addEventListener('change', e => {
@@ -390,7 +390,7 @@ class BoldWidget extends WidgetType {
   }
   toDOM(view: EditorView) {
     const strong = document.createElement('strong');
-    strong.className = 'cm-bold-mark font-bold text-white cursor-text select-text';
+    strong.className = 'cm-bold-mark font-bold text-zinc-900 dark:text-white cursor-text select-text';
     strong.textContent = this.text;
     strong.addEventListener('mousedown', e => {
       e.stopPropagation();
@@ -414,7 +414,7 @@ class ItalicWidget extends WidgetType {
   }
   toDOM(view: EditorView) {
     const em = document.createElement('em');
-    em.className = 'cm-italic-mark italic text-zinc-200 cursor-text select-text';
+    em.className = 'cm-italic-mark italic text-zinc-800 dark:text-zinc-200 cursor-text select-text';
     em.textContent = this.text;
     em.addEventListener('mousedown', e => {
       e.stopPropagation();
@@ -438,7 +438,7 @@ class InlineCodeWidget extends WidgetType {
   }
   toDOM(view: EditorView) {
     const code = document.createElement('code');
-    code.className = 'cm-inline-code font-mono text-[13px] bg-black/40 text-purple-300 px-1.5 py-0.5 rounded border border-white/[0.08] cursor-text select-text';
+    code.className = 'cm-inline-code font-mono text-[13px] bg-black/5 dark:bg-black/40 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded border border-black/[0.08] dark:border-white/[0.08] cursor-text select-text';
     code.textContent = this.text;
     code.addEventListener('mousedown', e => {
       e.stopPropagation();
@@ -668,20 +668,16 @@ export function createLivePreviewPlugin(options: LivePreviewOptions = {}): Exten
     { decorations: v => v.decorations }
   );
 
-  // Checkbox Match Decorator: - [ ] or - [x]
+  // Checkbox Match Decorator: hides the leading "- [ ] " / "- [x] " completely and renders a pure interactive checkbox
   const checkboxDecorator = new MatchDecorator({
-    regexp: /(?<=^\s*[-*+]\s+)\[([ xX])\](?=\s+)/gm,
+    regexp: /(?<=^\s*)([-*+]\s+\[([ xX])\](?:\s+|$))/gm,
     decoration: (match, view, pos) => {
       if (isPosInsideCodeBlock(view.state.doc, pos)) return null;
-      const { from, to } = view.state.selection.main;
-      const matchFrom = pos;
-      const matchTo = pos + match[0].length;
-      if (from >= matchFrom && to <= matchTo) {
-        return null;
-      }
-      const isChecked = match[1].toLowerCase() === 'x';
+      const matchStr = match[0];
+      const charPos = pos + matchStr.indexOf('[') + 1;
+      const isChecked = match[2]?.toLowerCase() === 'x';
       return Decoration.replace({
-        widget: new TaskCheckboxWidget(isChecked, pos + 1)
+        widget: new TaskCheckboxWidget(isChecked, charPos)
       });
     }
   });

@@ -31,8 +31,74 @@ import {
   List,
   ListOrdered,
   Info,
-  Table as TableIcon
+  Bookmark,
+  Table as TableIcon,
+  Tag,
+  Calendar,
+  SlidersHorizontal
 } from 'lucide-react';
+
+interface NoteFrontmatter {
+  title?: string;
+  created?: string;
+  modified?: string;
+  tags: string[];
+  [key: string]: any;
+}
+
+function parseNoteContent(rawContent: string): { meta: NoteFrontmatter; body: string } {
+  const match = rawContent.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n)*/);
+  if (!match) {
+    return {
+      meta: { tags: [] },
+      body: rawContent
+    };
+  }
+  const rawYaml = match[1];
+  const body = rawContent.slice(match[0].length);
+  const meta: NoteFrontmatter = { tags: [] };
+
+  rawYaml.split(/\r?\n/).forEach(line => {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx !== -1) {
+      const key = line.slice(0, colonIdx).trim();
+      let val = line.slice(colonIdx + 1).trim();
+      if (val.startsWith('[') && val.endsWith(']')) {
+        const arr = val.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
+        if (key === 'tags' || key === 'tag') {
+          meta.tags.push(...arr);
+        } else {
+          meta[key] = arr;
+        }
+      } else {
+        if (key === 'tags' || key === 'tag') {
+          if (val && val !== '[]') meta.tags.push(val);
+        } else {
+          meta[key] = val;
+        }
+      }
+    }
+  });
+  meta.tags = Array.from(new Set(meta.tags));
+  return { meta, body };
+}
+
+function serializeNoteContent(meta: NoteFrontmatter, body: string): string {
+  const lines: string[] = [];
+  if (meta.title) lines.push(`title: ${meta.title}`);
+  if (meta.created) lines.push(`created: ${meta.created}`);
+  if (meta.modified) lines.push(`modified: ${meta.modified}`);
+  if (meta.tags && meta.tags.length > 0) {
+    lines.push(`tags: [${meta.tags.map(t => `"${t}"`).join(', ')}]`);
+  }
+  Object.keys(meta).forEach(k => {
+    if (!['title', 'created', 'modified', 'tags'].includes(k)) {
+      lines.push(`${k}: ${meta[k]}`);
+    }
+  });
+  if (lines.length === 0) return body;
+  return `---\n${lines.join('\n')}\n---\n\n${body.replace(/^\n+/, '')}`;
+}
 
 interface EditorProps {
   file: VaultFile;
@@ -118,8 +184,52 @@ export const Editor: React.FC<EditorProps> = ({
 
   // Notion-Style Editable Title & Block Inserter
   const [inlineTitle, setInlineTitle] = useState((file.name || '').replace(/\.md$/, ''));
+  const [showNoteInfo, setShowNoteInfo] = useState(false);
+
+  // Formatted date string matching Figma (e.g. "24 JAN, 2026 . 13:04")
+  const formattedNoteDate = useMemo(() => {
+    const d = file.updatedAt ? new Date(file.updatedAt) : new Date();
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day} ${month}, ${year} . ${hours}:${minutes}`;
+  }, [file.updatedAt]);
   const [showBlockMenu, setShowBlockMenu] = useState(false);
   const [showTablePickerInBlockMenu, setShowTablePickerInBlockMenu] = useState(false);
+
+  // Notion / Obsidian Properties & Tag Management State
+  const [isPropertiesOpen, setIsPropertiesOpen] = useState(true);
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagInput, setNewTagInput] = useState('');
+
+  const parsedContent = useMemo(() => parseNoteContent(file.content || ''), [file.content]);
+
+  const handleAddTag = useCallback((tagName: string) => {
+    const cleanTag = tagName.replace(/^#/, '').trim();
+    if (!cleanTag) return;
+    const currentTags = parsedContent.meta.tags || [];
+    if (currentTags.includes(cleanTag)) return;
+    const newTags = [...currentTags, cleanTag];
+    const newMeta = { ...parsedContent.meta, tags: newTags };
+    const newContent = serializeNoteContent(newMeta, parsedContent.body);
+    onContentChange(newContent);
+  }, [parsedContent, onContentChange]);
+
+  const handleRemoveTag = useCallback((tagToRemove: string) => {
+    const currentTags = parsedContent.meta.tags || [];
+    const newTags = currentTags.filter(t => t !== tagToRemove);
+    const newMeta = { ...parsedContent.meta, tags: newTags };
+    const newContent = serializeNoteContent(newMeta, parsedContent.body);
+    onContentChange(newContent);
+  }, [parsedContent, onContentChange]);
+
+  const handleBodyChange = useCallback((newBody: string) => {
+    const fullContent = serializeNoteContent(parsedContent.meta, newBody);
+    onContentChange(fullContent);
+  }, [parsedContent.meta, onContentChange]);
 
   useEffect(() => {
     setInlineTitle((file.name || '').replace(/\.md$/, ''));
@@ -199,8 +309,9 @@ export const Editor: React.FC<EditorProps> = ({
     const text = file.content || '';
     const clean = text.replace(/^---[\s\S]*?---/, '').replace(/`[^`]*`/g, '').trim();
     const words = clean ? clean.split(/\s+/).filter(Boolean).length : 0;
+    const chars = clean.length;
     const readingTime = Math.max(1, Math.ceil(words / 200));
-    return { words, readingTime };
+    return { words, chars, readingTime };
   }, [file.content]);
 
   const handleNextMatch = () => {
@@ -488,7 +599,7 @@ export const Editor: React.FC<EditorProps> = ({
 
         onContentChange((file.content || '') + linkSyntax);
       }}
-      className="flex-1 flex flex-col h-full bg-[#ffffff] overflow-hidden relative select-text"
+      className="flex-1 flex flex-col h-full bg-[#1f1f1f] overflow-hidden relative select-text"
     >
       {/* Floating Contextual Formatting Toolbar on Selection */}
       <FloatingFormatToolbar
@@ -521,7 +632,7 @@ export const Editor: React.FC<EditorProps> = ({
       )}
 
       {/* Editor Body */}
-      <div className="flex-1 overflow-y-auto relative bg-[#ffffff]">
+      <div className="flex-1 overflow-y-auto relative bg-[#1f1f1f]">
         {/* Floating Find & Replace Panel (Obsidian-style) */}
         {showFindReplace && (
           <div className="absolute top-3 right-5 z-40 skeuo-card p-3 flex flex-col gap-2 min-w-[340px] text-xs text-[#111113] shadow-[0_12px_36px_rgba(0,0,0,0.12)]">
@@ -687,7 +798,7 @@ export const Editor: React.FC<EditorProps> = ({
           if (viewMode === 'reading') {
             return (
               <div 
-                className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
+                className="w-full h-full flex flex-col overflow-y-auto bg-[#FFFFFF] dark:bg-[#1f1f1f] transition-colors"
                 onDoubleClick={() => onViewModeChange('live')}
               >
                 <div className={`flex-1 p-6 md:p-8 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
@@ -725,7 +836,7 @@ export const Editor: React.FC<EditorProps> = ({
           // Unified High-Fidelity Reading & Interactive Editing View (Notion / Obsidian Level)
           return (
             <div 
-              className="w-full h-full flex flex-col overflow-y-auto bg-transparent"
+              className="w-full h-full flex flex-col overflow-y-auto bg-[#FFFFFF] dark:bg-[#1f1f1f] transition-colors"
               onClick={e => {
                 if (e.target === e.currentTarget) {
                   editorRef.current?.focus();
@@ -733,8 +844,8 @@ export const Editor: React.FC<EditorProps> = ({
               }}
             >
               <div className={`flex-1 flex flex-col p-6 md:p-10 w-full ${readableLineLength ? 'max-w-4xl mx-auto' : 'max-w-none'}`}>
-                {/* Notion-Style Editable Title */}
-                <div className="group relative flex items-center mb-6 pb-2 border-b border-black/[0.08] dark:border-white/10">
+                {/* Header: Title with info and bookmark button matching Image 5 & Image 6 */}
+                <div className="flex items-center gap-3 mb-2">
                   <input
                     type="text"
                     value={inlineTitle}
@@ -753,19 +864,160 @@ export const Editor: React.FC<EditorProps> = ({
                       }
                     }}
                     placeholder="Untitled Note"
-                    className="inline-title font-bold text-3xl md:text-4xl text-[#111113] dark:text-[#f4f4f6] tracking-tight bg-transparent w-full focus:outline-none border-b border-transparent focus:border-[#384cff]"
+                    className="font-bold text-3xl md:text-4xl text-[#18181B] dark:text-white tracking-tight bg-transparent focus:outline-none border-b border-transparent focus:border-blue-500 max-w-full"
                   />
-                  <span className="opacity-0 group-hover:opacity-100 text-[10px] text-[#8e8e93] font-mono ml-2 shrink-0">
-                    Click to rename
-                  </span>
+
+                  {/* Info Icon (i) Button matching Image 5 & Image 6 */}
+                  <button
+                    onClick={() => setShowNoteInfo(prev => !prev)}
+                    title={showNoteInfo ? "Hide Note Properties" : "Note Information & Properties"}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 transition-colors cursor-pointer ${
+                      showNoteInfo
+                        ? 'bg-[#384CFF] text-white shadow-xs'
+                        : 'bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white/80 border border-black/[0.06] dark:border-white/[0.04]'
+                    }`}
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Bookmark Button */}
+                  {onToggleBookmark && (
+                    <button
+                      onClick={onToggleBookmark}
+                      title={isBookmarked ? "Remove Bookmark (Cmd+D)" : "Bookmark Note (Cmd+D)"}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 transition-colors cursor-pointer ${
+                        isBookmarked 
+                          ? 'bg-[#384CFF] text-white shadow-xs' 
+                          : 'bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white/80 border border-black/[0.06] dark:border-white/[0.04]'
+                      }`}
+                    >
+                      <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-white' : ''}`} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Clean Note Metadata Header matching Image 5 */}
+                <div className="mb-6 flex flex-col gap-2 select-none">
+                  {/* Row 1: Links, Backlinks with (+), Tags */}
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <button
+                      onClick={() => onNavigateLink?.('')}
+                      className="px-3 py-1 rounded-full bg-[#EAEAEE] hover:bg-[#E0E0E6] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white text-xs font-medium cursor-pointer transition-colors shadow-xs"
+                    >
+                      Links {metadata?.outlinks?.length ? `(${metadata.outlinks.length})` : ''}
+                    </button>
+
+                    <button
+                      onClick={() => {}}
+                      className="px-3 py-1 rounded-full bg-[#EAEAEE] hover:bg-[#E0E0E6] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white text-xs font-medium cursor-pointer transition-colors shadow-xs flex items-center gap-1"
+                    >
+                      <span>Backlinks {backlinks?.length ? `(${backlinks.length})` : ''}</span>
+                      <span className="text-[10px] text-[#71717A] dark:text-white/60">+</span>
+                    </button>
+
+                    {/* Tag Badges */}
+                    {parsedContent.meta.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="px-2.5 py-1 rounded-full bg-[#EAEAEE] dark:bg-[#3B3B3B] text-[#18181B] dark:text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-all"
+                      >
+                        <span>#{tag}</span>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleRemoveTag(tag);
+                          }}
+                          title={`Remove #${tag}`}
+                          className="opacity-60 hover:opacity-100 hover:text-rose-500 cursor-pointer transition-opacity"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ))}
+
+                    {/* Inline Tag Adder */}
+                    {isAddingTag ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={newTagInput}
+                        onChange={e => setNewTagInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && newTagInput.trim()) {
+                            handleAddTag(newTagInput.trim());
+                            setNewTagInput('');
+                            setIsAddingTag(false);
+                          } else if (e.key === 'Escape') {
+                            setIsAddingTag(false);
+                            setNewTagInput('');
+                          }
+                        }}
+                        onBlur={() => {
+                          if (newTagInput.trim()) {
+                            handleAddTag(newTagInput.trim());
+                          }
+                          setIsAddingTag(false);
+                          setNewTagInput('');
+                        }}
+                        placeholder="tag name..."
+                        className="w-24 bg-[#FFFFFF] dark:bg-[#1f1f1f] text-[#18181B] dark:text-white px-2.5 py-0.5 rounded-full text-xs border border-black/20 dark:border-white/20 focus:border-[#384CFF] focus:outline-none"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setIsAddingTag(true)}
+                        title="Add tag"
+                        className="w-6 h-6 rounded-full bg-[#EAEAEE] hover:bg-[#E0E0E6] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Row 2: Date stamp matching Image 5 (e.g. "24 JAN, 2026 . 13:04") */}
+                  <div className="text-[#71717A] dark:text-white/60 text-[11px] font-mono px-0.5">
+                    {formattedNoteDate}
+                  </div>
+
+                  {/* Optional Extended Note Info Card shown when (i) is clicked */}
+                  {showNoteInfo && (
+                    <div className="mt-2 p-3 rounded-2xl bg-[#F5F5F7] dark:bg-[#2a2a2a] border border-black/[0.06] dark:border-white/[0.04] text-xs text-[#18181B] dark:text-white space-y-2 animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between font-semibold pb-1.5 border-b border-black/[0.06] dark:border-white/[0.06]">
+                        <span className="flex items-center gap-1.5">
+                          <Info className="w-3.5 h-3.5 text-[#384CFF]" />
+                          <span>Note Properties & Information</span>
+                        </span>
+                        <span className="text-[10px] text-[#71717A] dark:text-white/50 font-mono">
+                          {file.path}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                        <div className="p-2 rounded-xl bg-white dark:bg-[#1f1f1f] border border-black/[0.04] dark:border-white/[0.04]">
+                          <span className="text-[#71717A] dark:text-white/50 block">Words</span>
+                          <span className="font-semibold text-xs">{readingStats.words}</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-[#1f1f1f] border border-black/[0.04] dark:border-white/[0.04]">
+                          <span className="text-[#71717A] dark:text-white/50 block">Characters</span>
+                          <span className="font-semibold text-xs">{readingStats.chars}</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-[#1f1f1f] border border-black/[0.04] dark:border-white/[0.04]">
+                          <span className="text-[#71717A] dark:text-white/50 block">Reading Time</span>
+                          <span className="font-semibold text-xs">~{readingStats.readingTime} min</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white dark:bg-[#1f1f1f] border border-black/[0.04] dark:border-white/[0.04]">
+                          <span className="text-[#71717A] dark:text-white/50 block">Size</span>
+                          <span className="font-semibold text-xs">{file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Small'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notion-Style High-Fidelity CodeMirror Live Preview Editor */}
                 <div className="flex-1 min-h-[450px]">
                   <CodeMirrorEditor
                     ref={editorRef}
-                    value={file.content || ''}
-                    onChange={onContentChange}
+                    value={viewMode === 'source' ? (file.content || '') : parsedContent.body}
+                    onChange={viewMode === 'source' ? onContentChange : handleBodyChange}
                     livePreview={viewMode !== 'source'}
                     showLineNumbers={viewMode === 'source' && showLineNumbers}
                     readableLineLength={false}

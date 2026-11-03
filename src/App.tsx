@@ -13,6 +13,7 @@ import {
 } from './types';
 import { vault } from './services/vault';
 import { graphIndexer } from './services/graphIndexer';
+import { Ribbon, RibbonMode } from './components/Ribbon/Ribbon';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { Editor } from './components/Editor/Editor';
 import { CanvasView } from './components/Canvas/CanvasView';
@@ -26,7 +27,6 @@ import { VaultSwitcherModal } from './components/Modals/VaultSwitcherModal';
 import { FileRecoveryModal } from './components/Modals/FileRecoveryModal';
 import { TemplatePickerModal } from './components/Modals/TemplatePickerModal';
 import { ExportPdfModal } from './components/Modals/ExportPdfModal';
-import { CodebaseIngestModal } from './components/Modals/CodebaseIngestModal';
 import { ExternalAIConnectModal } from './components/Modals/ExternalAIConnectModal';
 import { SlideDeck } from './components/Presentation/SlideDeck';
 import { StatusBar } from './components/StatusBar/StatusBar';
@@ -89,8 +89,8 @@ export const App: React.FC = () => {
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('files');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
-  const [inspectorActiveTab, setInspectorActiveTab] = useState<InspectorTab>('backlinks');
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [inspectorActiveTab, setInspectorActiveTab] = useState<InspectorTab>('localGraph');
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
   const [searchFilter, setSearchFilter] = useState('');
   const [isPresentationOpen, setIsPresentationOpen] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
@@ -127,6 +127,7 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<'editor' | 'files' | 'appearance' | 'plugins' | 'hotkeys' | 'daily-notes' | 'templates' | 'file-recovery' | 'ai' | 'about'>('editor');
   const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
+  const [vaultModalInitialTab, setVaultModalInitialTab] = useState<'vaults' | 'ingest'>('vaults');
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
@@ -244,7 +245,13 @@ export const App: React.FC = () => {
         if (typeof ws.leftSidebarOpen === 'boolean') setIsSidebarOpen(ws.leftSidebarOpen);
         if (typeof ws.rightSidebarOpen === 'boolean') setIsInspectorOpen(ws.rightSidebarOpen);
         if (ws.activeLeftTab) setActiveSidebarTab(ws.activeLeftTab);
-        if (ws.activeRightTab) setInspectorActiveTab(ws.activeRightTab);
+        if (ws.activeRightTab) {
+          setInspectorActiveTab(
+            ws.activeRightTab === 'backlinks' || ws.activeRightTab === 'outgoing' || ws.activeRightTab === 'topology'
+              ? 'localGraph'
+              : ws.activeRightTab
+          );
+        }
         if (ws.history && Array.isArray(ws.history.stack) && ws.history.stack.length > 0) {
           setHistoryStack(ws.history.stack);
           setHistoryIndex(typeof ws.history.index === 'number' ? ws.history.index : ws.history.stack.length - 1);
@@ -397,6 +404,13 @@ export const App: React.FC = () => {
   }, [activeFile]);
 
   // Primary active ribbon screen (strictly one active pill at any time)
+  const activeRibbonMode: RibbonMode = useMemo(() => {
+    if (isGraphViewActive) return 'graph';
+    if (activeSidebarTab === 'bookmarks') return 'bookmarks';
+    if (activeFile?.extension === 'canvas') return 'canvas';
+    return 'notes';
+  }, [isGraphViewActive, activeSidebarTab, activeFile]);
+
   const activeRibbonTab: 'files' | 'search' | 'bookmarks' | 'graph' | 'canvas' = useMemo(() => {
     if (isGraphViewActive) return 'graph';
     if (activeSidebarTab === 'search') return 'search';
@@ -404,6 +418,8 @@ export const App: React.FC = () => {
     if (activeFile?.extension === 'canvas') return 'canvas';
     return 'files';
   }, [isGraphViewActive, activeSidebarTab, activeFile]);
+
+
 
   // Reactive Graph Index with 500ms debounce (prevents typing stutter & CPU lockup)
   const [graphData, setGraphData] = useState<GraphData>(() =>
@@ -616,6 +632,12 @@ export const App: React.FC = () => {
       setInspectorActiveTab('aiChat');
     }
   }, [isInspectorOpen, inspectorActiveTab]);
+
+  const handleToggleTheme = useCallback(() => {
+    const nextTheme = isDarkTheme ? 'moonstone' : 'obsidian';
+    setIsDarkTheme(!isDarkTheme);
+    vault.saveConfig('appearance', { ...appearanceConfig, theme: nextTheme });
+  }, [isDarkTheme, appearanceConfig]);
 
   // Wikilink navigation: opens note or creates it on disk if not found
   const handleNavigateLink = useCallback(async (targetTitle: string) => {
@@ -887,7 +909,33 @@ export const App: React.FC = () => {
     };
     setPanes(prev => [...prev, newPane]);
     setActivePaneId(newPane.id);
-  }, [activeFilePath, files]);
+  }, [activeFilePath, files, appConfig.defaultViewMode]);
+
+  const handleToggleDualMode = useCallback(() => {
+    if (panes.length > 1) {
+      // Exit dual mode: keep only the active or first pane
+      const keepPane = panes.find(p => p.id === activePaneId) || panes[0];
+      setPanes([keepPane]);
+      setActivePaneId(keepPane.id);
+    } else {
+      // Enter dual mode: duplicate/split current or next note
+      const currentTab = activePane?.tabs.find(t => t.id === activePane.activeTabId);
+      const targetFile = currentTab?.filePath || (files.length > 1 ? files[1].path : files[0]?.path);
+      if (!targetFile) return;
+      const newTab: TabItem = {
+        id: `tab-${Date.now()}`,
+        filePath: targetFile,
+        viewMode: appConfig.defaultViewMode || 'live'
+      };
+      const newPane: PaneItem = {
+        id: `pane-${Date.now()}`,
+        tabs: [newTab],
+        activeTabId: newTab.id
+      };
+      setPanes(prev => [...prev, newPane]);
+      setActivePaneId(newPane.id);
+    }
+  }, [panes, activePaneId, activePane, files, appConfig.defaultViewMode]);
 
   const handleClosePane = useCallback((paneId: string) => {
     if (panes.length <= 1) return;
@@ -1042,6 +1090,27 @@ export const App: React.FC = () => {
       }
     }
   }, [activeFile, isGraphViewActive, activePane, files, handleSelectFile]);
+
+  const handleSelectRibbonMode = useCallback((mode: RibbonMode) => {
+    if (mode === 'notes') {
+      if (isGraphViewActive) handleToggleGraphView();
+      setActiveSidebarTab('files');
+      setIsSidebarOpen(true);
+    } else if (mode === 'bookmarks') {
+      if (isGraphViewActive) handleToggleGraphView();
+      setActiveSidebarTab('bookmarks');
+      setIsSidebarOpen(true);
+    } else if (mode === 'graph') {
+      if (!isGraphViewActive) {
+        handleToggleGraphView();
+      }
+      setIsSidebarOpen(false);
+    } else if (mode === 'canvas') {
+      if (isGraphViewActive) handleToggleGraphView();
+      handleOpenCanvasView();
+      setIsSidebarOpen(true);
+    }
+  }, [isGraphViewActive, handleToggleGraphView, handleOpenCanvasView]);
 
   const handleViewModeChangeInPane = (paneId: string, mode: EditorViewMode) => {
     setPanes(prev =>
@@ -1361,7 +1430,10 @@ export const App: React.FC = () => {
       id: 'vault:ingest-codebase',
       title: 'GraphRAG: Ingest Codebase & Generate Architecture Map (AST)',
       category: 'GraphRAG',
-      action: () => setIsCodeIngestModalOpen(true)
+      action: () => {
+        setVaultModalInitialTab('ingest');
+        setIsVaultModalOpen(true);
+      }
     }
   ], [
     handleCreateFile,
@@ -1564,100 +1636,129 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden glass-canvas text-[#111113] font-sans">
-      {/* Main Row: Sidebar + Workspace + Inspector */}
-      <div className="flex-1 flex w-full overflow-hidden min-h-0">
-        {/* 1. Left Sidebar (Ribbon + File Explorer / Search / Bookmarks / Tags) */}
-      {isSidebarOpen && (
-        <Sidebar
-          files={files}
-          folders={folders}
-          bookmarks={bookmarks}
-          activeFilePath={activeFilePath}
-          activeSidebarTab={activeSidebarTab}
-          isDarkTheme={isDarkTheme}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#EBEBEF] dark:bg-[#1B1B1B] text-[#18181B] dark:text-[#FFFFFF] font-sans p-2.5 gap-2.5 select-none transition-colors">
+      {/* Main Row: Ribbon + Sidebar + Workspace + Inspector matching Floating Island UI */}
+      <div className="flex-1 flex w-full overflow-hidden min-h-0 gap-2.5">
+        {/* 1. Left Vertical Navigation Ribbon (Always visible on far left) */}
+        <Ribbon
+          activeMode={activeRibbonMode}
+          onSelectMode={handleSelectRibbonMode}
+          onOpenVaultManager={() => {
+            setVaultModalInitialTab('vaults');
+            setIsVaultModalOpen(true);
+          }}
           vaultName={vaultName}
-          knownVaults={knownVaults}
-          onSwitchVault={handleSwitchVault}
-          isRecordingAudio={isRecordingAudio}
-          corePluginsConfig={corePluginsConfig}
-          isGraphViewActive={isGraphViewActive}
-          activeRibbonTab={activeRibbonTab}
-          onOpenCanvasView={handleOpenCanvasView}
-          onOpenFilesView={handleOpenFilesView}
-          onSelectTab={tab => {
-            setActiveSidebarTab(tab);
-          }}
-          onSelectFile={filePath => {
-            handleSelectFile(filePath);
-          }}
-          onSplitFile={filePath => {
-            handleSplitPaneRight(filePath);
-          }}
-          onCreateFile={(folder, ext) => {
-            handleCreateFile(folder, ext);
-          }}
-          onCreateFolder={handleCreateFolder}
-          onDeleteFile={handleDeleteFile}
-          onRenameFile={handleRenameFile}
-          onDuplicateFile={handleDuplicateFile}
-          onToggleBookmark={handleToggleBookmark}
-          onOpenDailyNote={() => {
-            handleOpenDailyNote();
-          }}
-          onOpenRandomNote={() => {
-            handleOpenRandomNote();
-          }}
-          onCreateZkNote={() => {
-            handleCreateZkNote();
-          }}
-          onToggleAudioRecording={handleToggleAudioRecording}
-          onOpenVaultManager={() => setIsVaultModalOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenFileRecovery={() => setIsRecoveryModalOpen(true)}
-          onToggleGraphView={handleToggleGraphView}
-          onExportZip={() => vault.exportAsZip()}
-          onExportPdf={filePath => {
-            const f = vault.getFileByPath(filePath);
-            if (f) {
-              setPdfTargetFile(f);
-              setIsPdfModalOpen(true);
-            }
-          }}
-          onToggleTheme={() => {
-            const nextTheme = isDarkTheme ? 'moonstone' : 'obsidian';
-            setIsDarkTheme(!isDarkTheme);
-            vault.saveConfig('appearance', { ...appearanceConfig, theme: nextTheme });
-          }}
-          searchFilter={searchFilter}
-          onSearchChange={setSearchFilter}
           onToggleAIChat={handleToggleAIChat}
-          isAIChatActive={isInspectorOpen && inspectorActiveTab === 'aiChat'}
-          onOpenCodeIngest={() => setIsCodeIngestModalOpen(true)}
+          onToggleTheme={handleToggleTheme}
+          isDarkTheme={isDarkTheme}
           onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onSave={() => activeFilePath && activeFile && handleContentChange(activeFilePath, activeFile.content)}
         />
-      )}
 
-      {/* 2. Main Center Workspace (Supports Split Panes) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        {/* Main Workspace Body: Split Panes & Tabs */}
-        <div className="flex-1 flex overflow-hidden relative">
-          {panes.map((pane, idx) => {
-            const currentPaneTab = pane.tabs.find(t => t.id === pane.activeTabId) || pane.tabs[0];
-            const isGraphTab = isGraphPath(currentPaneTab?.filePath);
-            const paneFile = files.find(f => f.path === currentPaneTab?.filePath);
-            const paneMeta = paneFile ? graphIndexer.getMetadata(paneFile.path) : undefined;
-            const paneBacklinks = paneFile ? graphIndexer.getBacklinks(paneFile.path) : [];
-            const isPaneActive = pane.id === activePaneId;
+        {/* 2. Left Sidebar Drawer (Files / Bookmarks / Search) */}
+        {isSidebarOpen && (
+          <Sidebar
+            files={files}
+            folders={folders}
+            bookmarks={bookmarks}
+            activeFilePath={activeFilePath}
+            activeSidebarTab={activeSidebarTab}
+            isDarkTheme={isDarkTheme}
+            vaultName={vaultName}
+            knownVaults={knownVaults}
+            onSwitchVault={handleSwitchVault}
+            isRecordingAudio={isRecordingAudio}
+            corePluginsConfig={corePluginsConfig}
+            isGraphViewActive={isGraphViewActive}
+            activeRibbonTab={activeRibbonTab}
+            onOpenCanvasView={handleOpenCanvasView}
+            onOpenFilesView={handleOpenFilesView}
+            onSelectTab={tab => {
+              setActiveSidebarTab(tab);
+            }}
+            onSelectFile={filePath => {
+              handleSelectFile(filePath);
+            }}
+            onSplitFile={filePath => {
+              handleSplitPaneRight(filePath);
+            }}
+            onCreateFile={(folder, ext) => {
+              handleCreateFile(folder, ext);
+            }}
+            onCreateFolder={handleCreateFolder}
+            onDeleteFile={handleDeleteFile}
+            onRenameFile={handleRenameFile}
+            onDuplicateFile={handleDuplicateFile}
+            onToggleBookmark={handleToggleBookmark}
+            onOpenDailyNote={() => {
+              handleOpenDailyNote();
+            }}
+            onOpenRandomNote={() => {
+              handleOpenRandomNote();
+            }}
+            onCreateZkNote={() => {
+              handleCreateZkNote();
+            }}
+            onToggleAudioRecording={handleToggleAudioRecording}
+            onOpenVaultManager={() => {
+            setVaultModalInitialTab('vaults');
+            setIsVaultModalOpen(true);
+          }}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenFileRecovery={() => setIsRecoveryModalOpen(true)}
+            onToggleGraphView={handleToggleGraphView}
+            onExportZip={() => vault.exportAsZip()}
+            onExportPdf={filePath => {
+              const f = vault.getFileByPath(filePath);
+              if (f) {
+                setPdfTargetFile(f);
+                setIsPdfModalOpen(true);
+              }
+            }}
+            onToggleTheme={() => {
+              const nextTheme = isDarkTheme ? 'moonstone' : 'obsidian';
+              setIsDarkTheme(!isDarkTheme);
+              vault.saveConfig('appearance', { ...appearanceConfig, theme: nextTheme });
+            }}
+            searchFilter={searchFilter}
+            onSearchChange={setSearchFilter}
+            onToggleAIChat={handleToggleAIChat}
+            isAIChatActive={isInspectorOpen && inspectorActiveTab === 'aiChat'}
+            onOpenCodeIngest={() => {
+              setVaultModalInitialTab('ingest');
+              setIsVaultModalOpen(true);
+            }}
+            onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
+          />
+        )}
 
-            return (
-              <div
-                key={pane.id}
-                onClick={() => setActivePaneId(pane.id)}
-                className={`flex-1 flex flex-col h-full overflow-hidden min-w-0 ${
-                  idx > 0 ? 'border-l border-black/[0.08] dark:border-white/[0.08]' : ''
-                } ${panes.length > 1 && isPaneActive ? 'ring-1 ring-inset ring-[#384cff]/30' : ''}`}
-              >
+        {/* 3. Main Center Workspace (Card with Tabs + Editor / Graph / Canvas) */}
+        <main 
+          aria-label="Main Workspace"
+          className="flex-1 flex flex-col h-full overflow-hidden min-w-0 rounded-[24px] bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.06] dark:border-white/[0.04] shadow-sm dark:shadow-none transition-colors"
+        >
+          {/* Main Workspace Body: Split Panes & Tabs */}
+          <div className="flex-1 flex overflow-hidden relative">
+            {panes.map((pane, idx) => {
+              const currentPaneTab = pane.tabs.find(t => t.id === pane.activeTabId) || pane.tabs[0];
+              const isGraphTab = isGraphPath(currentPaneTab?.filePath);
+              const paneFile = files.find(f => f.path === currentPaneTab?.filePath);
+              const paneMeta = paneFile ? graphIndexer.getMetadata(paneFile.path) : undefined;
+              const paneBacklinks = paneFile ? graphIndexer.getBacklinks(paneFile.path) : [];
+              const isPaneActive = pane.id === activePaneId;
+
+              return (
+                <div
+                  key={pane.id}
+                  onClick={() => setActivePaneId(pane.id)}
+                  className={`flex-1 flex flex-col h-full overflow-hidden min-w-0 ${
+                    idx > 0 ? 'border-l border-black/[0.06] dark:border-white/[0.06]' : ''
+                  }`}
+                >
                   <TabBar
                     tabs={pane.tabs}
                     activeTabId={pane.activeTabId}
@@ -1666,6 +1767,8 @@ export const App: React.FC = () => {
                     isSidebarOpen={isSidebarOpen}
                     isInspectorOpen={isInspectorOpen}
                     isZenMode={isZenMode}
+                    isDualMode={panes.length > 1}
+                    onToggleDualMode={handleToggleDualMode}
                     activeViewMode={currentPaneTab?.viewMode || 'live'}
                     canGoBack={canGoBack}
                     canGoForward={canGoForward}
@@ -1708,7 +1811,7 @@ export const App: React.FC = () => {
                     onOpenExternalAIConnect={() => setIsExternalAIModalOpen(true)}
                   />
 
-                  <div className="flex-1 overflow-hidden relative">
+                  <div className="flex-1 overflow-hidden relative bg-[#FFFFFF] dark:bg-[#1f1f1f] transition-colors">
                     <ErrorBoundary key={currentPaneTab?.id || pane.id} componentName="Note Editor / View">
                       {isGraphTab ? (
                         <GraphView
@@ -1736,6 +1839,7 @@ export const App: React.FC = () => {
                         <CanvasView
                           file={paneFile}
                           allFiles={files}
+                          isDark={isDarkTheme}
                           onSaveContent={content => handleContentChange(paneFile.path, content)}
                           onNavigateFile={target => handleSelectFile(target, pane.id)}
                         />
@@ -1789,7 +1893,7 @@ export const App: React.FC = () => {
               );
             })}
         </div>
-      </div>
+      </main>
 
       {/* 3. Right Inspector (Backlinks, Outgoing Links, Outline, Local Graph, AI Chat) */}
       {isInspectorOpen && !isGraphViewActive && (activeFile || inspectorActiveTab === 'aiChat') && (
@@ -1903,12 +2007,13 @@ export const App: React.FC = () => {
         file={pdfTargetFile || activeFile}
       />
 
-      {/* Vault Switcher & Manager Modal */}
+      {/* Unified Workspace & Vault Hub Modal (Switch Vault & Ingest Codebase AST) */}
       <VaultSwitcherModal
         isOpen={isVaultModalOpen}
         onClose={() => setIsVaultModalOpen(false)}
         knownVaults={knownVaults}
         activeVaultPath={vaultPath}
+        initialTab={vaultModalInitialTab}
         onOpenVault={async targetPath => {
           await handleSwitchVault(targetPath, false);
           setIsVaultModalOpen(false);
@@ -1925,6 +2030,10 @@ export const App: React.FC = () => {
         onRemoveVault={async targetPath => {
           await vault.removeVaultFromList(targetPath);
           syncFromVaultManager();
+        }}
+        onOpenPath={path => {
+          syncFromVaultManager();
+          handleSelectFile(path);
         }}
       />
 
@@ -1945,16 +2054,6 @@ export const App: React.FC = () => {
         onClose={() => setIsTemplateModalOpen(false)}
         files={files}
         onSelectTemplate={handleInsertTemplate}
-      />
-
-      {/* Codebase GraphRAG Ingest Modal */}
-      <CodebaseIngestModal
-        isOpen={isCodeIngestModalOpen}
-        onClose={() => setIsCodeIngestModalOpen(false)}
-        onOpenPath={path => {
-          syncFromVaultManager();
-          handleSelectFile(path);
-        }}
       />
 
       {/* External AI Connect (Claude Desktop, Cursor, Windsurf) Modal */}

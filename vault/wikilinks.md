@@ -1,16 +1,13 @@
 ---
 title: wikilinks
 created: 2026-10-13
-tags: []
+tags: ["unfiled", "features"]
 ---
-*
-*# wikilinks*
 
-*
+Full app access, used on your real notes and workflow. Quick in-app check-ins — no long reports. A direct line to the founding team.
 
-![[Attachments/Recording 2026-10-22T09-52-34.webm]]
+- [ ] Complete live preview Notion-style checklist
+- [ ] Connect external AI agents via live Model Context Protocol
+- [ ] Test dual tab split view and sidecar panels
 
-[[# wikilinks]]
-
-- [ ] # wikilinks
-- [ ] Task item
+[[wikilinks]]

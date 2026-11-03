@@ -1,4 +1,35 @@
 {
-  "nodes": [],
+  "nodes": [
+    {
+      "id": "node-1793554061699",
+      "type": "group",
+      "label": "New Group",
+      "x": 975,
+      "y": -525,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793543171886",
+      "type": "group",
+      "label": "New Group",
+      "x": -255,
+      "y": -221,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793554060568",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 994,
+      "y": 281,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    }
+  ],
   "edges": []
 }

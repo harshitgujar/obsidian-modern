@@ -268,10 +268,66 @@ function registerObsidianIpc() {
   });
 }
 
+function startDevControlServer() {
+  const server = http.createServer(async (req, res) => {
+    try {
+      const parsedUrl = new URL(req.url, 'http://127.0.0.1:5178');
+      const wins = BrowserWindow.getAllWindows();
+      const win = wins[0];
+
+      if (parsedUrl.pathname === '/screenshot') {
+        const outPath = parsedUrl.searchParams.get('path');
+        if (!win) {
+          res.writeHead(500);
+          return res.end('No window');
+        }
+        const img = await win.webContents.capturePage();
+        const buf = img.toPNG();
+        if (outPath) {
+          fs.writeFileSync(outPath, buf);
+        }
+        res.writeHead(200, { 'Content-Type': 'image/png' });
+        return res.end(buf);
+      }
+
+      if (parsedUrl.pathname === '/eval') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+          if (!win) {
+            res.writeHead(500);
+            return res.end('No window');
+          }
+          try {
+            const result = await win.webContents.executeJavaScript(body);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ result }));
+          } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: String(e) }));
+          }
+        });
+        return;
+      }
+
+      res.writeHead(404);
+      res.end('Not found');
+    } catch (e) {
+      res.writeHead(500);
+      res.end(String(e));
+    }
+  });
+
+  server.listen(5178, '127.0.0.1', () => {
+    console.log('[DevControl] listening on http://127.0.0.1:5178');
+  });
+}
+
 app.whenReady().then(async () => {
   app.setName('Runagon');
   setupAppMenu();
   registerObsidianIpc();
+  startDevControlServer();
 
   let targetUrl = process.env.VITE_DEV_SERVER_URL;
   if (!targetUrl) {

@@ -10,4 +10,7 @@ release
 **/.obsidian/ai-index/
 **/.obsidian/ai-config.json
 runagon.pdf
+/*.png
+/*.jpg
+/*.jpeg
 

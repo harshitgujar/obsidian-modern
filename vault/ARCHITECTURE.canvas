@@ -1,0 +1,647 @@
+{
+  "nodes": [
+    {
+      "id": "node-code-1",
+      "type": "text",
+      "text": "### App.tsx\n`src/App.tsx`\n\n• `function` **handleCreateUser**\n• `function` **handleCreateEvent**\n• `function` **App**\n\n**Imports**: 15 modules",
+      "x": -778,
+      "y": -150,
+      "width": 320,
+      "height": 220,
+      "color": "1"
+    },
+    {
+      "id": "node-code-2",
+      "type": "text",
+      "text": "### ConfirmationModal.tsx\n`src/components/common/ConfirmationModal.tsx`\n\n• `type` **ConfirmationVariant**\n• `interface` **ConfirmationModalProps**\n• `function` **handleConfirm**\n• `function` **renderIcon**\n\n**Imports**: 2 modules",
+      "x": 488,
+      "y": -486,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-3",
+      "type": "text",
+      "text": "### EventModal.tsx\n`src/components/events/EventModal.tsx`\n\n• `interface` **EventModalProps**\n• `function` **executeSave**\n• `function` **handleSubmit**\n\n**Imports**: 4 modules",
+      "x": 1387,
+      "y": -573,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-4",
+      "type": "text",
+      "text": "### Navbar.tsx\n`src/components/layout/Navbar.tsx`\n\n• `interface` **NavbarProps**\n\n**Imports**: 3 modules",
+      "x": 3850,
+      "y": -842,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-5",
+      "type": "text",
+      "text": "### Sidebar.tsx\n`src/components/layout/Sidebar.tsx`\n\n• `type` **AdminTab**\n• `interface` **SidebarProps**\n\n**Imports**: 3 modules",
+      "x": 2694,
+      "y": 553,
+      "width": 320,
+      "height": 287,
+      "color": "4"
+    },
+    {
+      "id": "node-code-6",
+      "type": "text",
+      "text": "### UserModal.tsx\n`src/components/users/UserModal.tsx`\n\n• `interface` **UserModalProps**\n• `type` **ProfileTab**\n• `interface` **ConfirmDialogState**\n• `function` **requestApprove**\n\n**Imports**: 6 modules",
+      "x": 3319,
+      "y": 929,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-7",
+      "type": "text",
+      "text": "### AdminContext.tsx\n`src/context/AdminContext.tsx`\n\n• `interface` **AdminContextType**\n• `function` **digits**\n• `function` **logActivity**\n• `function` **refreshLiveCatalog**\n\n**Imports**: 4 modules",
+      "x": -1628,
+      "y": 1176,
+      "width": 320,
+      "height": 220,
+      "color": "1"
+    },
+    {
+      "id": "node-code-8",
+      "type": "text",
+      "text": "### AuthContext.tsx\n`src/context/AuthContext.tsx`\n\n• `interface` **BackendAdminRecord**\n• `interface` **AuthContextType**\n• `function` **normalizePhoneDigits**\n• `function` **rotateServerKeys**\n\n**Imports**: 6 modules",
+      "x": 1844,
+      "y": -1223,
+      "width": 320,
+      "height": 220,
+      "color": "1"
+    },
+    {
+      "id": "node-code-9",
+      "type": "text",
+      "text": "### main.tsx\n`src/main.tsx`\n\n_11 lines_\n\n**Imports**: 4 modules",
+      "x": -343,
+      "y": 1394,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-10",
+      "type": "text",
+      "text": "### AuditLogPage.tsx\n`src/pages/AuditLogPage.tsx`\n\n• `function` **loadSecurityLogs**\n• `function` **getSecurityIcon**\n• `function` **getOperationalIcon**\n\n**Imports**: 4 modules",
+      "x": 1359,
+      "y": 2000,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-11",
+      "type": "text",
+      "text": "### DashboardPage.tsx\n`src/pages/DashboardPage.tsx`\n\n• `interface` **DashboardPageProps**\n\n**Imports**: 4 modules",
+      "x": 3766,
+      "y": 2049,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-12",
+      "type": "text",
+      "text": "### EventsPage.tsx\n`src/pages/EventsPage.tsx`\n\n• `interface` **EventsPageProps**\n• `function` **handleOpenAdd**\n• `function` **handleOpenEdit**\n• `function` **handleSaveEvent**\n\n**Imports**: 6 modules",
+      "x": 3344,
+      "y": -258,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-13",
+      "type": "text",
+      "text": "### LoginPage.tsx\n`src/pages/LoginPage.tsx`\n\n• `type` **LoginView**\n• `function` **handleCredentialsSubmit**\n• `function` **handleFirstTimeLookup**\n• `function` **handleFirstTimeSetupSubmit**\n\n**Imports**: 4 modules",
+      "x": -792,
+      "y": 1969,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-14",
+      "type": "text",
+      "text": "### SettingsPage.tsx\n`src/pages/SettingsPage.tsx`\n\n• `function` **executeSaveAll**\n• `function` **handleTestSlack**\n• `function` **copyDomain**\n\n**Imports**: 5 modules",
+      "x": 716,
+      "y": 343,
+      "width": 182,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-15",
+      "type": "text",
+      "text": "### TeamAccessPage.tsx\n`src/pages/TeamAccessPage.tsx`\n\n• `function` **handleOpenInvite**\n• `function` **handleSelectMember**\n• `function` **handleOpenTotpSetup**\n• `function` **handleVerifyTotpSetup**\n\n**Imports**: 7 modules",
+      "x": 1235,
+      "y": 1190,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-16",
+      "type": "text",
+      "text": "### UsersPage.tsx\n`src/pages/UsersPage.tsx`\n\n• `function` **handleOpenAdd**\n• `function` **handleOpenProfile**\n• `function` **handleSaveUser**\n• `function` **requestDelete**\n\n**Imports**: 8 modules",
+      "x": 4115,
+      "y": -138,
+      "width": 320,
+      "height": 220,
+      "color": "1"
+    },
+    {
+      "id": "node-code-17",
+      "type": "text",
+      "text": "### api.ts\n`src/services/api.ts`\n\n• `function` **fetchLiveCatalog**\n• `function` **fetchRemoteConfig**\n• `function` **fetchAdminSettingsFromBackend**\n• `function` **updateAdminSettingsOnBackend**\n\n**Imports**: 1 modules",
+      "x": 3020,
+      "y": -141,
+      "width": 320,
+      "height": 220,
+      "color": "0"
+    },
+    {
+      "id": "node-code-18",
+      "type": "text",
+      "text": "### authApi.ts\n`src/services/authApi.ts`\n\n• `interface` **RateLimitBucket**\n• `function` **checkRateLimit**\n• `function` **cleanEmail**\n• `function` **cleanEmail**\n\n**Imports**: 2 modules",
+      "x": 3487,
+      "y": 521,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-19",
+      "type": "text",
+      "text": "### firebase.ts\n`src/services/firebase.ts`\n\n_25 lines_\n\n**Imports**: 2 modules",
+      "x": 247,
+      "y": 2168,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-20",
+      "type": "text",
+      "text": "### rsaUtils.ts\n`src/services/rsaUtils.ts`\n\n• `interface` **RSAKeyPair**\n• `interface` **EncryptedPayload**\n• `function` **formatToPem**\n• `function` **cleanPem**\n\n**Imports**: 0 modules",
+      "x": 3109,
+      "y": 2345,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-21",
+      "type": "text",
+      "text": "### securityCore.ts\n`src/services/securityCore.ts`\n\n• `function` **getRelyingPartyId**\n• `function` **getExpectedOrigin**\n• `type` **AdminRole**\n• `type` **AdminStatus**\n\n**Imports**: 2 modules",
+      "x": -414,
+      "y": -1447,
+      "width": 320,
+      "height": 322,
+      "color": "1"
+    },
+    {
+      "id": "node-code-22",
+      "type": "text",
+      "text": "### slack.ts\n`src/services/slack.ts`\n\n• `interface` **SlackNotificationPayload**\n• `function` **sendSlackNotification**\n• `function` **notifyEventApproved**\n• `function` **notifySettingsChanged**\n\n**Imports**: 0 modules",
+      "x": 2022,
+      "y": 753,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-23",
+      "type": "text",
+      "text": "### securityAuth.test.ts\n`src/test/securityAuth.test.ts`\n\n• `function` **admin**\n• `function` **admin**\n• `function` **admin**\n\n**Imports**: 3 modules",
+      "x": 1875,
+      "y": 1482,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-24",
+      "type": "text",
+      "text": "### index.ts\n`src/types/index.ts`\n\n• `type` **UserRole**\n• `type` **UserStatus**\n• `interface` **UserProfiles**\n• `interface` **IndividualProfileData**\n\n**Imports**: 0 modules",
+      "x": 3087,
+      "y": 2231,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-25",
+      "type": "text",
+      "text": "### vite-env.d.ts\n`src/vite-env.d.ts`\n\n_2 lines_\n\n**Imports**: 0 modules",
+      "x": 804,
+      "y": 2246,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    },
+    {
+      "id": "node-code-26",
+      "type": "text",
+      "text": "### vite.config.ts\n`vite.config.ts`\n\n• `type` **FigmaSiteConfiguration**\n• `function` **figmaSiteConfiguration**\n• `function` **sanitizeHtmlValue**\n• `function` **escapeHtmlText**\n\n**Imports**: 7 modules",
+      "x": 1970,
+      "y": 2317,
+      "width": 320,
+      "height": 220,
+      "color": "4"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-ast-1",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-8",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-2",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-3",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-5",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-4",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-4",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-5",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-11",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-6",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-16",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-7",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-12",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-8",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-14",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-9",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-10",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-10",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-15",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-11",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-13",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-12",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-6",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-13",
+      "fromNode": "node-code-1",
+      "toNode": "node-code-3",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-14",
+      "fromNode": "node-code-3",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-15",
+      "fromNode": "node-code-4",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-16",
+      "fromNode": "node-code-4",
+      "toNode": "node-code-8",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-17",
+      "fromNode": "node-code-5",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-18",
+      "fromNode": "node-code-6",
+      "toNode": "node-code-17",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-19",
+      "fromNode": "node-code-6",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-20",
+      "fromNode": "node-code-6",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-21",
+      "fromNode": "node-code-7",
+      "toNode": "node-code-17",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-22",
+      "fromNode": "node-code-7",
+      "toNode": "node-code-22",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-23",
+      "fromNode": "node-code-8",
+      "toNode": "node-code-18",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-24",
+      "fromNode": "node-code-8",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-25",
+      "fromNode": "node-code-8",
+      "toNode": "node-code-20",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-26",
+      "fromNode": "node-code-9",
+      "toNode": "node-code-1",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-27",
+      "fromNode": "node-code-10",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-28",
+      "fromNode": "node-code-10",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-29",
+      "fromNode": "node-code-11",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-30",
+      "fromNode": "node-code-11",
+      "toNode": "node-code-5",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-31",
+      "fromNode": "node-code-12",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-32",
+      "fromNode": "node-code-12",
+      "toNode": "node-code-3",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-33",
+      "fromNode": "node-code-12",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-34",
+      "fromNode": "node-code-13",
+      "toNode": "node-code-8",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-35",
+      "fromNode": "node-code-13",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-36",
+      "fromNode": "node-code-14",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-37",
+      "fromNode": "node-code-14",
+      "toNode": "node-code-22",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-38",
+      "fromNode": "node-code-14",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-39",
+      "fromNode": "node-code-15",
+      "toNode": "node-code-8",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-40",
+      "fromNode": "node-code-15",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-41",
+      "fromNode": "node-code-15",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-42",
+      "fromNode": "node-code-15",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-43",
+      "fromNode": "node-code-16",
+      "toNode": "node-code-7",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-44",
+      "fromNode": "node-code-16",
+      "toNode": "node-code-8",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-45",
+      "fromNode": "node-code-16",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-46",
+      "fromNode": "node-code-16",
+      "toNode": "node-code-6",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-47",
+      "fromNode": "node-code-16",
+      "toNode": "node-code-2",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-48",
+      "fromNode": "node-code-18",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-49",
+      "fromNode": "node-code-23",
+      "toNode": "node-code-21",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-ast-50",
+      "fromNode": "node-code-23",
+      "toNode": "node-code-18",
+      "label": "imports",
+      "color": "4"
+    },
+    {
+      "id": "edge-1793621209006",
+      "fromNode": "node-code-2",
+      "fromSide": "bottom",
+      "toNode": "node-code-14",
+      "toSide": "top",
+      "label": "",
+      "color": "6",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "edge-1793622738054",
+      "fromNode": "node-code-3",
+      "fromSide": "top",
+      "toNode": "node-code-8",
+      "toSide": "bottom",
+      "label": "",
+      "color": "6",
+      "toEnd": "arrow",
+      "fromEnd": "none"
+    },
+    {
+      "id": "edge-1793627119970",
+      "fromNode": "node-code-14",
+      "fromSide": "left",
+      "toNode": "node-code-1",
+      "toSide": "right",
+      "label": "",
+      "color": "6",
+      "toEnd": "arrow"
+    }
+  ]
+}

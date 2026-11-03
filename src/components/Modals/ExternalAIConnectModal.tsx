@@ -46,7 +46,6 @@ interface McpServerStatusResponse {
   claudeDesktopSnippet: Record<string, any>;
   cursorSnippet: Record<string, any>;
   windsurfSnippet: Record<string, any>;
-  vscodeSnippet?: Record<string, any>;
   claudeCliCommand: string;
   nodeBinary: string;
   bridgePath: string;
@@ -54,7 +53,6 @@ interface McpServerStatusResponse {
   claude: McpAppStatus;
   cursor: McpAppStatus;
   windsurf: McpAppStatus;
-  vscode?: McpAppStatus;
 }
 
 export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
@@ -123,69 +121,68 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
   const anyConnected = Boolean(
     (status?.claude?.isConnected && status?.claude?.isAppInstalled) ||
     (status?.cursor?.isConnected && status?.cursor?.isAppInstalled) ||
-    (status?.windsurf?.isConnected && status?.windsurf?.isAppInstalled) ||
-    (status?.vscode?.isConnected && status?.vscode?.isAppInstalled)
+    (status?.windsurf?.isConnected && status?.windsurf?.isAppInstalled)
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-150 select-none">
       <div 
-        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-[#1a1a20] rounded-2xl shadow-2xl border border-black/[0.08] dark:border-white/[0.08] flex flex-col overflow-hidden text-[#111113] dark:text-zinc-100"
+        className="w-full max-w-2xl max-h-[90vh] bg-[#272727] rounded-2xl shadow-2xl border border-white/[0.08] flex flex-col overflow-hidden text-white"
         onClick={e => e.stopPropagation()}
       >
-        {/* Top Header */}
-        <div className="px-6 py-5 border-b border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between bg-zinc-50/70 dark:bg-zinc-900/40">
+        {/* Top Header matching Image 4 */}
+        <div className="px-6 py-4.5 border-b border-white/[0.06] flex items-center justify-between bg-[#272727]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#384cff] to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+            <div className="w-10 h-10 rounded-xl bg-[#384CFF] flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
               <Zap className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Connect External AI</h2>
+                <h2 className="text-base font-semibold text-white">Connect External AI</h2>
                 {anyConnected ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     AI Connected
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                    Ready
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#3B3B3B] text-[#6D6D6D] border border-white/[0.05]">
+                    Ready for Connection
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-xs text-white/60 mt-0.5">
                 Let Claude Desktop, Cursor, or Windsurf search and read your notes with 1 click.
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={fetchStatus}
               title="Refresh connection status"
               disabled={loading}
-              className="p-2 rounded-lg text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg text-[#6D6D6D] hover:text-white hover:bg-white/[0.06] transition-colors disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              className="p-2 rounded-lg text-[#6D6D6D] hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Info Banner */}
-        <div className="px-6 py-2.5 bg-blue-50/60 dark:bg-blue-950/20 border-b border-blue-100 dark:border-blue-900/30 flex items-center justify-between text-xs text-blue-900 dark:text-blue-300">
+        {/* Info Banner matching Image 4 */}
+        <div className="px-6 py-2.5 bg-[#3B3B3B] border-b border-white/[0.05] flex items-center justify-between text-xs text-white/80">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-            <span>Vault: <strong>{vaultName}</strong></span>
-            <span className="text-blue-300 dark:text-blue-700">•</span>
-            <span>Bundled Engine: <strong>Zero-Setup Node</strong></span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span>Vault: <strong className="text-white">{vaultName}</strong></span>
+            <span className="text-[#6D6D6D]">•</span>
+            <span>Bundled Engine: <strong className="text-white">Zero-Setup Node</strong></span>
           </div>
-          <span className="text-[11px] font-mono text-blue-700 dark:text-blue-400">
+          <span className="text-[11px] font-mono text-white/60">
             Port :{status?.serverPort || 5175}
           </span>
         </div>
@@ -194,70 +191,61 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
         {message && (
           <div className={`px-6 py-2 text-xs flex items-center gap-2 border-b ${
             message.type === 'success' 
-              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' 
-              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+              ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40' 
+              : 'bg-rose-950/40 text-rose-300 border-rose-800/40'
           }`}>
-            {message.type === 'success' ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
+            {message.type === 'success' ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
             <span>{message.text}</span>
           </div>
         )}
 
-        {/* Body Container */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        {/* Body Container matching Image 4 */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3.5">
           
           {/* Card 1: Claude Desktop */}
           {(() => {
             const isInstalled = Boolean(status?.claude?.isAppInstalled);
             const isConnected = Boolean(status?.claude?.isConnected && isInstalled);
             return (
-              <div className="p-4 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-black/15 dark:hover:border-white/15 transition-all">
+              <div className="p-4 rounded-xl border border-white/[0.05] bg-[#3B3B3B] hover:border-white/[0.12] transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-200/60 dark:border-orange-800/40 font-semibold text-sm">
+                    <div className="w-9 h-9 rounded-lg bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/20 font-semibold text-sm">
                       C
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Claude Desktop</h3>
+                        <h3 className="font-semibold text-sm text-white">Claude Desktop</h3>
                         {isConnected ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             Connected
                           </span>
                         ) : isInstalled ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#384CFF]/15 text-[#384CFF] border border-[#384CFF]/30">
                             App Detected
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#272727] text-[#6D6D6D] border border-white/[0.05]">
                             Not Installed
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      <p className="text-xs text-white/60 mt-1">
                         {!isInstalled
                           ? 'Claude Desktop app was not found in your Applications. Install it first, or use the CLI command.'
                           : isConnected
                             ? '✓ Connected to this vault. (Restart Claude Desktop once to apply).'
-                            : 'Claude Desktop detected on your machine. Ready to connect with 1 click.'}
+                            : 'Ask Claude to search your notes, find connections, and summarize research.'}
                       </p>
                     </div>
                   </div>
 
                   <div className="shrink-0 flex items-center gap-2">
-                    <button
-                      onClick={() => status?.claudeCliCommand && copyToClipboard(status.claudeCliCommand, 'claude-cli')}
-                      title="Copy Claude CLI Command"
-                      className="px-2.5 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
-                    >
-                      {copiedKey === 'claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Terminal className="w-3.5 h-3.5" />}
-                      <span>CLI</span>
-                    </button>
-
                     {isConnected ? (
                       <button
                         onClick={() => handleAction('uninstall-claude', 'claude')}
                         disabled={actionLoading === 'claude'}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors disabled:opacity-50"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium border border-white/[0.06] bg-[#272727] text-white hover:bg-rose-500/20 hover:text-rose-300 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {actionLoading === 'claude' ? 'Updating...' : 'Disconnect'}
                       </button>
@@ -265,12 +253,21 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
                       <button
                         onClick={() => handleAction('install-claude', 'claude')}
                         disabled={actionLoading === 'claude'}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384CFF] hover:bg-[#4863ff] text-white shadow-lg shadow-blue-600/30 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                       >
                         <Zap className="w-3.5 h-3.5" />
                         <span>{actionLoading === 'claude' ? 'Connecting...' : '1-Click Connect'}</span>
                       </button>
-                    ) : null}
+                    ) : (
+                      <button
+                        onClick={() => status?.claudeCliCommand && copyToClipboard(status.claudeCliCommand, 'claude-cli')}
+                        title="Copy Claude CLI Command"
+                        className="px-2.5 py-1.5 rounded-lg text-xs border border-white/[0.06] bg-[#272727] text-white hover:bg-[#34343a] transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedKey === 'claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Terminal className="w-3.5 h-3.5 text-[#6D6D6D]" />}
+                        <span>CLI</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -282,35 +279,35 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
             const isInstalled = Boolean(status?.cursor?.isAppInstalled);
             const isConnected = Boolean(status?.cursor?.isConnected && isInstalled);
             return (
-              <div className="p-4 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-black/15 dark:hover:border-white/15 transition-all">
+              <div className="p-4 rounded-xl border border-white/[0.05] bg-[#3B3B3B] hover:border-white/[0.12] transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-cyan-100 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-200/60 dark:border-cyan-800/40 font-semibold text-sm">
+                    <div className="w-9 h-9 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20 font-semibold text-sm">
                       <Code2 className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Cursor IDE</h3>
+                        <h3 className="font-semibold text-sm text-white">Cursor IDE</h3>
                         {isConnected ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             Connected
                           </span>
                         ) : isInstalled ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                             App Detected
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#272727] text-[#6D6D6D] border border-white/[0.05]">
                             Not Installed
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      <p className="text-xs text-white/60 mt-1">
                         {!isInstalled
                           ? 'Cursor IDE is not installed on this computer. Install Cursor first, or copy the configuration JSON below.'
                           : isConnected
                             ? '✓ Connected to Cursor. Runagon MCP is available in chat & composer.'
-                            : 'Cursor detected on your machine. Ready to connect with 1 click.'}
+                            : 'Allow Cursor agent to query your documentation, notes, and architecture diagrams.'}
                       </p>
                     </div>
                   </div>
@@ -319,9 +316,9 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
                     <button
                       onClick={() => status?.cursorSnippet && copyToClipboard(JSON.stringify(status.cursorSnippet, null, 2), 'cursor-config')}
                       title="Copy Cursor JSON"
-                      className="px-2.5 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
+                      className="px-2.5 py-1.5 rounded-lg text-xs border border-white/[0.06] bg-[#272727] text-white hover:bg-[#34343a] transition-colors flex items-center gap-1 cursor-pointer"
                     >
-                      {copiedKey === 'cursor-config' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedKey === 'cursor-config' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#6D6D6D]" />}
                       <span>JSON</span>
                     </button>
 
@@ -329,7 +326,7 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
                       <button
                         onClick={() => handleAction('uninstall-cursor', 'cursor')}
                         disabled={actionLoading === 'cursor'}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors disabled:opacity-50"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium border border-white/[0.06] bg-[#272727] text-white hover:bg-rose-500/20 hover:text-rose-300 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {actionLoading === 'cursor' ? 'Updating...' : 'Disconnect'}
                       </button>
@@ -337,7 +334,7 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
                       <button
                         onClick={() => handleAction('install-cursor', 'cursor')}
                         disabled={actionLoading === 'cursor'}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384CFF] hover:bg-[#4863ff] text-white shadow-lg shadow-blue-600/30 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                       >
                         <Zap className="w-3.5 h-3.5" />
                         <span>{actionLoading === 'cursor' ? 'Connecting...' : '1-Click Connect'}</span>
@@ -349,59 +346,50 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
             );
           })()}
 
-          {/* Card 3: Windsurf IDE */}
+          {/* Card 3: Windsurf IDE (Cascade) */}
           {(() => {
             const isInstalled = Boolean(status?.windsurf?.isAppInstalled);
             const isConnected = Boolean(status?.windsurf?.isConnected && isInstalled);
             return (
-              <div className="p-4 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-black/15 dark:hover:border-white/15 transition-all">
+              <div className="p-4 rounded-xl border border-white/[0.05] bg-[#3B3B3B] hover:border-white/[0.12] transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-200/60 dark:border-teal-800/40 font-semibold text-sm">
+                    <div className="w-9 h-9 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20 font-semibold text-sm">
                       <Layers className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Windsurf IDE (Cascade)</h3>
+                        <h3 className="font-semibold text-sm text-white">Windsurf IDE (Cascade)</h3>
                         {isConnected ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             Connected
                           </span>
                         ) : isInstalled ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-100 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300">
-                            App Detected
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-500/15 text-teal-400 border border-teal-500/30">
+                            Detected
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#272727] text-[#6D6D6D] border border-white/[0.05]">
                             Not Installed
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      <p className="text-xs text-white/60 mt-1">
                         {!isInstalled
                           ? 'Windsurf IDE was not found in your Applications. Install it first, or copy the JSON config below.'
                           : isConnected
                             ? '✓ Connected to Windsurf Cascade agent.'
-                            : 'Windsurf detected on your machine. Ready to connect with 1 click.'}
+                            : 'Connect Cascade AI agent directly to your personal notes and reference files.'}
                       </p>
                     </div>
                   </div>
 
                   <div className="shrink-0 flex items-center gap-2">
-                    <button
-                      onClick={() => status?.windsurfSnippet && copyToClipboard(JSON.stringify(status.windsurfSnippet, null, 2), 'windsurf-config')}
-                      title="Copy Windsurf JSON"
-                      className="px-2.5 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
-                    >
-                      {copiedKey === 'windsurf-config' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>JSON</span>
-                    </button>
-
                     {isConnected ? (
                       <button
                         onClick={() => handleAction('uninstall-windsurf', 'windsurf')}
                         disabled={actionLoading === 'windsurf'}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 transition-colors disabled:opacity-50"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium border border-white/[0.06] bg-[#272727] text-white hover:bg-rose-500/20 hover:text-rose-300 transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {actionLoading === 'windsurf' ? 'Updating...' : 'Disconnect'}
                       </button>
@@ -409,78 +397,36 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
                       <button
                         onClick={() => handleAction('install-windsurf', 'windsurf')}
                         disabled={actionLoading === 'windsurf'}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-medium bg-[#384CFF] hover:bg-[#4863ff] text-white shadow-lg shadow-blue-600/30 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                       >
                         <Zap className="w-3.5 h-3.5" />
                         <span>{actionLoading === 'windsurf' ? 'Connecting...' : '1-Click Connect'}</span>
                       </button>
-                    ) : null}
+                    ) : (
+                      <button
+                        onClick={() => status?.windsurfSnippet && copyToClipboard(JSON.stringify(status.windsurfSnippet, null, 2), 'windsurf-config')}
+                        title="Copy Windsurf JSON"
+                        className="px-2.5 py-1.5 rounded-lg text-xs border border-white/[0.06] bg-[#272727] text-white hover:bg-[#34343a] transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedKey === 'windsurf-config' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#6D6D6D]" />}
+                        <span>JSON</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             );
           })()}
 
-          {/* Card 4: Visual Studio Code */}
-          {(() => {
-            const isInstalled = Boolean(status?.vscode?.isAppInstalled);
-            const isConnected = Boolean(status?.vscode?.isConnected && isInstalled);
-            return (
-              <div className="p-4 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-black/15 dark:hover:border-white/15 transition-all">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/40 font-semibold text-sm">
-                      <Code2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Visual Studio Code</h3>
-                        {isConnected ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
-                            Connected
-                          </span>
-                        ) : isInstalled ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300">
-                            App Detected
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-200/80 dark:bg-zinc-800 text-zinc-500">
-                            Not Installed
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        {isInstalled
-                          ? 'VS Code detected on your machine. Copy the configuration JSON to use with Cline, Roo-Code, or Copilot.'
-                          : 'VS Code is not installed on this computer.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 flex items-center gap-2">
-                    <button
-                      onClick={() => status?.cursorSnippet && copyToClipboard(JSON.stringify(status.cursorSnippet, null, 2), 'vscode-config')}
-                      title="Copy VS Code MCP Settings JSON"
-                      className="px-2.5 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1"
-                    >
-                      {copiedKey === 'vscode-config' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>JSON</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Card 4: Web Agents & Custom AI (HTTP & CLI) */}
-          <div className="p-4 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-zinc-50/50 dark:bg-zinc-900/30">
+          {/* Card 4: Web Agents & Custom AI (matching Image 4) */}
+          <div className="p-4 rounded-xl border border-white/[0.05] bg-[#3B3B3B]">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-200/60 dark:border-purple-800/40 font-semibold text-sm">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 font-semibold text-sm">
                 <Globe className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Web Agents & Custom AI</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <h3 className="font-semibold text-sm text-white">Web Agents & Custom AI</h3>
+                <p className="text-xs text-white/60">
                   Use Runagon with ChatGPT Actions, LibreChat, OpenWebUI, or CLI tools.
                 </p>
               </div>
@@ -489,31 +435,31 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 onClick={() => status?.httpUrl && copyToClipboard(status.httpUrl, 'http-url')}
-                className="px-3 py-2 rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left flex items-center justify-between"
+                className="px-3 py-2 rounded-lg border border-white/[0.06] bg-[#272727] hover:bg-[#34343a] transition-colors text-left flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="text-[11px] font-medium text-zinc-800 dark:text-zinc-200">Local MCP Server URL</div>
-                  <div className="text-[10px] text-zinc-400 truncate max-w-[200px] font-mono">{status?.httpUrl || 'http://localhost:5175/api/vault/ai/mcp'}</div>
+                  <div className="text-[11px] font-medium text-white/80">Local MCP Server URL</div>
+                  <div className="text-[10px] text-white/40 truncate max-w-[200px] font-mono">{status?.httpUrl || 'http://localhost:5175/api/vault/...'}</div>
                 </div>
-                {copiedKey === 'http-url' ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-zinc-400 shrink-0" />}
+                {copiedKey === 'http-url' ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-[#6D6D6D] shrink-0" />}
               </button>
 
               <button
                 onClick={() => status?.claudeCliCommand && copyToClipboard(status.claudeCliCommand, 'claude-cli')}
-                className="px-3 py-2 rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-zinc-800/60 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left flex items-center justify-between"
+                className="px-3 py-2 rounded-lg border border-white/[0.06] bg-[#272727] hover:bg-[#34343a] transition-colors text-left flex items-center justify-between cursor-pointer"
               >
                 <div>
-                  <div className="text-[11px] font-medium text-zinc-800 dark:text-zinc-200">Claude CLI Command</div>
-                  <div className="text-[10px] text-zinc-400 truncate max-w-[200px] font-mono">claude mcp add runagon...</div>
+                  <div className="text-[11px] font-medium text-white/80">Claude CLI Command</div>
+                  <div className="text-[10px] text-white/40 truncate max-w-[200px] font-mono">claude mcp add runagon...</div>
                 </div>
-                {copiedKey === 'claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Terminal className="w-3.5 h-3.5 text-zinc-400 shrink-0" />}
+                {copiedKey === 'claude-cli' ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Terminal className="w-3.5 h-3.5 text-[#6D6D6D] shrink-0" />}
               </button>
             </div>
           </div>
 
-          {/* Non-Technical User FAQ Accordion */}
-          <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.06] space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          {/* Non-Technical User FAQ Accordion matching Image 4 */}
+          <div className="pt-2 border-t border-white/[0.06] space-y-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#6D6D6D]">
               Frequently Asked Questions
             </h4>
 
@@ -535,17 +481,17 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
               return (
                 <div 
                   key={idx}
-                  className="rounded-lg border border-black/[0.06] dark:border-white/[0.06] bg-zinc-50/40 dark:bg-zinc-900/20 overflow-hidden text-xs"
+                  className="rounded-lg border border-white/[0.05] bg-[#3B3B3B] overflow-hidden text-xs"
                 >
                   <button
                     onClick={() => setExpandedFaq(isExpanded ? null : idx)}
-                    className="w-full px-3 py-2 flex items-center justify-between font-medium text-zinc-700 dark:text-zinc-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left"
+                    className="w-full px-3.5 py-2.5 flex items-center justify-between font-medium text-white/90 hover:text-white hover:bg-white/[0.03] transition-colors text-left cursor-pointer"
                   >
                     <span>{faq.q}</span>
-                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />}
+                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-[#6D6D6D]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#6D6D6D]" />}
                   </button>
                   {isExpanded && (
-                    <div className="px-3 pb-2.5 pt-1 text-zinc-500 dark:text-zinc-400 leading-relaxed border-t border-black/[0.04] dark:border-white/[0.04] bg-white/50 dark:bg-zinc-800/20">
+                    <div className="px-3.5 pb-2.5 pt-1 text-white/60 leading-relaxed border-t border-white/[0.04] bg-[#272727]">
                       {faq.a}
                     </div>
                   )}
@@ -556,14 +502,14 @@ export const ExternalAIConnectModal: React.FC<ExternalAIConnectModalProps> = ({
 
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900/50 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs">
-          <span className="text-zinc-400">
+        {/* Footer matching Image 4 */}
+        <div className="px-6 py-3.5 bg-[#272727] border-t border-white/[0.06] flex items-center justify-between text-xs">
+          <span className="text-[#6D6D6D]">
             Powered by Model Context Protocol (MCP)
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg font-medium bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors"
+            className="px-5 py-1.5 rounded-lg font-medium bg-[#3B3B3B] hover:bg-[#484848] text-white transition-colors cursor-pointer"
           >
             Done
           </button>

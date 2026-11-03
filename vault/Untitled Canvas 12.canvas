@@ -1,4 +1,25 @@
 {
-  "nodes": [],
+  "nodes": [
+    {
+      "id": "node-1793514547416",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 648,
+      "y": 643,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793515051970",
+      "type": "file",
+      "file": "Attachments/image4.png",
+      "x": 827,
+      "y": 656,
+      "width": 504,
+      "height": 208,
+      "color": "6"
+    }
+  ],
   "edges": []
 }

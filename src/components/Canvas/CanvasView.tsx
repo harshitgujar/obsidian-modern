@@ -5,8 +5,11 @@ import {
   ZoomIn, 
   ZoomOut, 
   RotateCcw, 
+  RotateCw,
   Plus, 
   FileText, 
+  FileCode,
+  LayoutGrid,
   Type, 
   Trash2, 
   ExternalLink,
@@ -33,7 +36,8 @@ import {
   Video,
   Volume2,
   Square,
-  CheckSquare
+  CheckSquare,
+  File
 } from 'lucide-react';
 
 interface CanvasViewProps {
@@ -41,15 +45,91 @@ interface CanvasViewProps {
   allFiles: VaultFile[];
   onSaveContent: (content: string) => void;
   onNavigateFile: (filePath: string) => void;
+  isDark?: boolean;
 }
 
-const COLOR_PRESETS: Record<string, { bg: string; border: string; text: string; hex: string; groupBg: string }> = {
-  '1': { bg: 'bg-[#1e1418]', border: 'border-rose-500/80', text: 'text-rose-200', hex: '#ef4444', groupBg: 'bg-rose-950/20' }, // Red
-  '2': { bg: 'bg-[#201814]', border: 'border-orange-500/80', text: 'text-orange-200', hex: '#f97316', groupBg: 'bg-orange-950/20' }, // Orange
-  '3': { bg: 'bg-[#221c12]', border: 'border-amber-500/80', text: 'text-amber-200', hex: '#f59e0b', groupBg: 'bg-amber-950/20' }, // Yellow
-  '4': { bg: 'bg-[#121f19]', border: 'border-emerald-500/80', text: 'text-emerald-200', hex: '#10b981', groupBg: 'bg-emerald-950/20' }, // Green
-  '5': { bg: 'bg-[#121d22]', border: 'border-cyan-500/80', text: 'text-cyan-200', hex: '#06b6d4', groupBg: 'bg-cyan-950/20' }, // Cyan
-  '6': { bg: 'bg-[#1b1722]', border: 'border-purple-500/80', text: 'text-purple-200', hex: '#a855f7', groupBg: 'bg-purple-950/20' }, // Purple
+export interface CanvasColorStyle {
+  hex: string;
+  solidLight: string;
+  solidDark: string;
+  borderLight: string;
+  borderDark: string;
+  textLight: string;
+  textDark: string;
+  name: string;
+}
+
+const COLOR_PRESETS: Record<string, CanvasColorStyle> = {
+  '0': { // Grey (Default Solid)
+    hex: '#71717A',
+    solidLight: '#F4F4F6',
+    solidDark: '#222328',
+    borderLight: '#D4D4D8',
+    borderDark: '#3F3F46',
+    textLight: '#18181B',
+    textDark: '#F4F4F5',
+    name: 'Grey'
+  },
+  '1': { // Red
+    hex: '#ef4444',
+    solidLight: '#FEE2E2',
+    solidDark: '#3A181C',
+    borderLight: '#F87171',
+    borderDark: '#EF4444',
+    textLight: '#991B1B',
+    textDark: '#FECACA',
+    name: 'Red'
+  },
+  '2': { // Orange
+    hex: '#f97316',
+    solidLight: '#FFEDD5',
+    solidDark: '#3E2114',
+    borderLight: '#FB923C',
+    borderDark: '#F97316',
+    textLight: '#9A3412',
+    textDark: '#FED7AA',
+    name: 'Orange'
+  },
+  '3': { // Yellow
+    hex: '#eab308',
+    solidLight: '#FEF9C3',
+    solidDark: '#3A2E12',
+    borderLight: '#FACC15',
+    borderDark: '#EAB308',
+    textLight: '#854D0E',
+    textDark: '#FEF08A',
+    name: 'Yellow'
+  },
+  '4': { // Green
+    hex: '#10b981',
+    solidLight: '#DCFCE7',
+    solidDark: '#143525',
+    borderLight: '#4ADE80',
+    borderDark: '#10B981',
+    textLight: '#166534',
+    textDark: '#BBF7D0',
+    name: 'Green'
+  },
+  '5': { // Cyan
+    hex: '#06b6d4',
+    solidLight: '#CFFAFE',
+    solidDark: '#12333D',
+    borderLight: '#38BDF8',
+    borderDark: '#06B6D4',
+    textLight: '#155E75',
+    textDark: '#BAE6FD',
+    name: 'Cyan'
+  },
+  '6': { // Purple
+    hex: '#a855f7',
+    solidLight: '#F3E8FF',
+    solidDark: '#2E1942',
+    borderLight: '#C084FC',
+    borderDark: '#A855F7',
+    textLight: '#6B21A8',
+    textDark: '#E9D5FF',
+    name: 'Purple'
+  }
 };
 
 type Side = 'top' | 'right' | 'bottom' | 'left';
@@ -189,7 +269,7 @@ const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFil
 
           {/* Child Nodes */}
           {data.nodes.map(node => {
-            const color = COLOR_PRESETS[node.color || '6'] || COLOR_PRESETS['6'];
+            const color = COLOR_PRESETS[node.color || '0'] || COLOR_PRESETS['0'];
             const w = node.width || 200;
             const h = node.height || 120;
             return (
@@ -212,7 +292,7 @@ const SubCanvasMiniViewport: React.FC<SubCanvasMiniViewportProps> = ({ canvasFil
                     fill="#e4e4e7"
                     fontSize="20"
                     fontWeight="600"
-                    fontFamily="sans-serif"
+                    fontFamily='"Helvetica Neue", Helvetica, Arial, sans-serif'
                   >
                     {node.type === 'file'
                       ? (node.file?.replace(/\.[^/.]+$/, '').split('/').pop() || 'File')
@@ -248,17 +328,17 @@ function parseCanvasInline(text: string, onNavigateFile: (path: string) => void)
     if (!part) return null;
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
       return (
-        <code key={idx} className="px-1.5 py-0.5 rounded bg-white/[0.08] text-purple-300 font-mono text-[10px] mx-0.5 border border-white/5">
+        <code key={idx} className="px-1.5 py-0.5 rounded bg-black/[0.06] dark:bg-white/[0.08] text-purple-700 dark:text-purple-300 font-mono text-[10.5px] mx-0.5 border border-black/[0.08] dark:border-white/5 font-medium">
           {part.slice(1, -1)}
         </code>
       );
     }
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return <strong key={idx} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
+      return <strong key={idx} className="font-bold text-[#111113] dark:text-white">{part.slice(2, -2)}</strong>;
     }
     if ((part.startsWith('*') && part.endsWith('*') && part.length > 2) ||
         (part.startsWith('_') && part.endsWith('_') && part.length > 2)) {
-      return <em key={idx} className="italic text-zinc-300">{part.slice(1, -1)}</em>;
+      return <em key={idx} className="italic text-[#3F3F46] dark:text-zinc-300">{part.slice(1, -1)}</em>;
     }
     if (part.startsWith('[[') && part.endsWith(']]') && part.length > 4) {
       const linkContent = part.slice(2, -2);
@@ -270,7 +350,7 @@ function parseCanvasInline(text: string, onNavigateFile: (path: string) => void)
             e.stopPropagation();
             onNavigateFile(target.trim());
           }}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#ebebef] hover:bg-[#e4e4e9] text-[#1c1c1e] text-[10.5px] font-medium cursor-pointer border border-black/[0.06] transition-colors mx-0.5 select-none shadow-xs"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/[0.06] hover:bg-black/[0.1] dark:bg-[#ebebef] dark:hover:bg-[#e4e4e9] text-[#111113] dark:text-[#1c1c1e] text-[10.5px] font-medium cursor-pointer border border-black/[0.08] dark:border-black/[0.06] transition-colors mx-0.5 select-none shadow-xs"
         >
           {alias ? alias.trim() : target.trim()}
         </span>
@@ -278,7 +358,7 @@ function parseCanvasInline(text: string, onNavigateFile: (path: string) => void)
     }
     if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
       return (
-        <mark key={idx} className="bg-amber-500/25 text-amber-200 px-1 py-0.5 rounded text-[11px] mx-0.5">
+        <mark key={idx} className="bg-amber-400/30 dark:bg-amber-500/25 text-amber-900 dark:text-amber-200 px-1 py-0.5 rounded text-[11px] mx-0.5">
           {part.slice(2, -2)}
         </mark>
       );
@@ -295,7 +375,7 @@ function renderCanvasMarkdown(text: string, onNavigateFile: (path: string) => vo
   const lines = text.split('\n');
 
   return (
-    <div className="space-y-1 font-sans text-xs leading-relaxed select-text">
+    <div className="space-y-1 font-sans text-xs leading-relaxed select-text text-[#111113] dark:text-zinc-100">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -304,59 +384,59 @@ function renderCanvasMarkdown(text: string, onNavigateFile: (path: string) => vo
 
         if (line.startsWith('# ')) {
           return (
-            <h1 key={idx} className="text-sm font-bold text-white pt-1 pb-0.5 border-b border-white/10 tracking-tight">
+            <h1 key={idx} className="text-sm font-bold text-[#111113] dark:text-white pt-1 pb-0.5 border-b border-black/10 dark:border-white/10 tracking-tight">
               {parseCanvasInline(line.slice(2), onNavigateFile)}
             </h1>
           );
         }
         if (line.startsWith('## ')) {
           return (
-            <h2 key={idx} className="text-[13px] font-semibold text-zinc-100 pt-0.5 tracking-tight">
+            <h2 key={idx} className="text-[13px] font-semibold text-[#111113] dark:text-zinc-100 pt-0.5 tracking-tight">
               {parseCanvasInline(line.slice(3), onNavigateFile)}
             </h2>
           );
         }
         if (line.startsWith('### ')) {
           return (
-            <h3 key={idx} className="text-xs font-semibold text-zinc-200 tracking-tight">
+            <h3 key={idx} className="text-xs font-semibold text-[#111113] dark:text-zinc-200 tracking-tight">
               {parseCanvasInline(line.slice(4), onNavigateFile)}
             </h3>
           );
         }
         if (/^[-*]\s+\[ \]\s+/.test(trimmed)) {
           return (
-            <div key={idx} className="flex items-start gap-1.5 text-zinc-300">
-              <Square className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
+            <div key={idx} className="flex items-start gap-1.5 text-[#27272A] dark:text-zinc-300">
+              <Square className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 mt-0.5 shrink-0" />
               <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+\[ \]\s+/, ''), onNavigateFile)}</span>
             </div>
           );
         }
         if (/^[-*]\s+\[[xX]\]\s+/.test(trimmed)) {
           return (
-            <div key={idx} className="flex items-start gap-1.5 text-zinc-400 line-through">
-              <CheckSquare className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+            <div key={idx} className="flex items-start gap-1.5 text-zinc-500 dark:text-zinc-400 line-through">
+              <CheckSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 mt-0.5 shrink-0" />
               <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+\[[xX]\]\s+/, ''), onNavigateFile)}</span>
             </div>
           );
         }
         if (/^[-*]\s+/.test(trimmed)) {
           return (
-            <div key={idx} className="flex items-start gap-2 text-zinc-300 pl-1">
-              <span className="text-purple-400 font-bold text-xs select-none">•</span>
+            <div key={idx} className="flex items-start gap-2 text-[#111113] dark:text-zinc-200 pl-1">
+              <span className="text-[#384CFF] font-bold text-xs select-none">•</span>
               <span>{parseCanvasInline(trimmed.replace(/^[-*]\s+/, ''), onNavigateFile)}</span>
             </div>
           );
         }
         if (trimmed.startsWith('>')) {
           return (
-            <blockquote key={idx} className="border-l-2 border-black/20 pl-2 text-[#585860] italic text-[11px] my-1">
+            <blockquote key={idx} className="border-l-2 border-black/20 dark:border-white/20 pl-2 text-[#585860] dark:text-zinc-400 italic text-[11px] my-1">
               {parseCanvasInline(trimmed.replace(/^>\s*/, ''), onNavigateFile)}
             </blockquote>
           );
         }
 
         return (
-          <p key={idx} className="text-zinc-200">
+          <p key={idx} className="text-[#111113] dark:text-zinc-200">
             {parseCanvasInline(line, onNavigateFile)}
           </p>
         );
@@ -369,7 +449,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   file,
   allFiles,
   onSaveContent,
-  onNavigateFile
+  onNavigateFile,
+  isDark: propIsDark
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const labelInputRef = useRef<HTMLInputElement | null>(null);
@@ -393,6 +474,29 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [hoveredPort, setHoveredPort] = useState<{ nodeId: string; side: Side } | null>(null);
+
+  // Responsive Dark Mode tracking (via prop or DOM)
+  const [domIsDark, setDomIsDark] = useState(() => 
+    typeof document !== 'undefined' && (document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark')
+  );
+
+  useEffect(() => {
+    const updateTheme = () => {
+      setDomIsDark(
+        document.documentElement.classList.contains('dark') || 
+        document.documentElement.getAttribute('data-theme') === 'dark'
+      );
+    };
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    window.addEventListener('storage', updateTheme);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('storage', updateTheme);
+    };
+  }, []);
+
+  const isDark = propIsDark !== undefined ? propIsDark : domIsDark;
 
   // Dragging cards
   const [isPanning, setIsPanning] = useState(false);
@@ -448,6 +552,10 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   const [showFileSuggestPopover, setShowFileSuggestPopover] = useState(false);
   const [fileSearchQuery, setFileSearchQuery] = useState('');
   const [fileSortAsc, setFileSortAsc] = useState(true);
+
+  // Canvas Import Popover
+  const [showCanvasSuggestPopover, setShowCanvasSuggestPopover] = useState(false);
+  const [canvasSearchQuery, setCanvasSearchQuery] = useState('');
 
   // Media & Documents Suggestion Popover (Images, PDFs, Media from Vault or Computer)
   const [showMediaSuggestPopover, setShowMediaSuggestPopover] = useState(false);
@@ -713,7 +821,10 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     setShowFileSuggestPopover(false);
     setIsPanning(true);
     isPanningRef.current = true;
-    const pStart = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+    const rect = containerRef.current?.getBoundingClientRect();
+    const containerX = e.clientX - (rect?.left || 0);
+    const containerY = e.clientY - (rect?.top || 0);
+    const pStart = { x: containerX - transform.x, y: containerY - transform.y };
     panStartRef.current = pStart;
     setPanStart(pStart);
   };
@@ -725,15 +836,19 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     const curPanning = isPanningRef.current;
     const curConnecting = connectingStateRef.current;
 
+    const rect = containerRef.current?.getBoundingClientRect();
+    const containerX = clientX - (rect?.left || 0);
+    const containerY = clientY - (rect?.top || 0);
+
     if (curPanning) {
       setTransform(prev => ({
         ...prev,
-        x: clientX - panStartRef.current.x,
-        y: clientY - panStartRef.current.y
+        x: containerX - panStartRef.current.x,
+        y: containerY - panStartRef.current.y
       }));
     } else if (curResizing) {
-      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
-      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
+      const mouseCanvasX = (containerX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (containerY - curTransform.y) / curTransform.scale;
       const dx = mouseCanvasX - curResizing.startMouseX;
       const dy = mouseCanvasY - curResizing.startMouseY;
 
@@ -786,8 +901,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         })
       }));
     } else if (curDraggingId) {
-      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
-      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
+      const mouseCanvasX = (containerX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (containerY - curTransform.y) / curTransform.scale;
       const newX = Math.round(mouseCanvasX - dragOffsetRef.current.x);
       const newY = Math.round(mouseCanvasY - dragOffsetRef.current.y);
 
@@ -796,27 +911,66 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         nodes: prev.nodes.map(n => n.id === curDraggingId ? { ...n, x: newX, y: newY } : n)
       }));
     } else if (curConnecting) {
-      const mouseCanvasX = (clientX - curTransform.x) / curTransform.scale;
-      const mouseCanvasY = (clientY - curTransform.y) / curTransform.scale;
+      const mouseCanvasX = (containerX - curTransform.x) / curTransform.scale;
+      const mouseCanvasY = (containerY - curTransform.y) / curTransform.scale;
+
+      // Smart Proximity Snapping:
+      // Find closest node & port within snap range
+      let closestTarget: { nodeId: string; side: Side } | null = null;
+      let minDistance = 50 / curTransform.scale; // 50 screen pixels in canvas units
+
+      const nodes = canvasDataRef.current.nodes;
+      for (const n of nodes) {
+        if (n.id === curConnecting.fromNodeId) continue;
+        const nw = typeof n.width === 'number' ? n.width : 250;
+        const nh = typeof n.height === 'number' ? n.height : 140;
+
+        const sides: Side[] = ['top', 'right', 'bottom', 'left'];
+        for (const s of sides) {
+          const pPos = getPortPos(n, s);
+          const d = Math.hypot(mouseCanvasX - pPos.x, mouseCanvasY - pPos.y);
+          if (d < minDistance) {
+            minDistance = d;
+            closestTarget = { nodeId: n.id, side: s };
+          }
+        }
+
+        if (
+          !closestTarget &&
+          mouseCanvasX >= n.x &&
+          mouseCanvasX <= n.x + nw &&
+          mouseCanvasY >= n.y &&
+          mouseCanvasY <= n.y + nh
+        ) {
+          const distTop = Math.abs(mouseCanvasY - n.y);
+          const distBottom = Math.abs(mouseCanvasY - (n.y + nh));
+          const distLeft = Math.abs(mouseCanvasX - n.x);
+          const distRight = Math.abs(mouseCanvasX - (n.x + nw));
+          const minDistSide = Math.min(distTop, distBottom, distLeft, distRight);
+
+          let s: Side = 'top';
+          if (minDistSide === distBottom) s = 'bottom';
+          else if (minDistSide === distLeft) s = 'left';
+          else if (minDistSide === distRight) s = 'right';
+
+          closestTarget = { nodeId: n.id, side: s };
+        }
+      }
+
+      setHoveredPort(closestTarget);
+      hoveredPortRef.current = closestTarget;
+
       setConnectingState(prev => prev ? ({
         ...prev,
         currentX: mouseCanvasX,
         currentY: mouseCanvasY
       }) : null);
     }
-  }, []);
+  }, [getPortPos]);
 
   const handleMouseMove = useCallback((e: MouseEvent | React.MouseEvent) => {
     pendingMousePosRef.current = { clientX: e.clientX, clientY: e.clientY };
-
-    if (rafIdRef.current === null) {
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        if (pendingMousePosRef.current) {
-          processMouseMove(pendingMousePosRef.current.clientX, pendingMousePosRef.current.clientY);
-        }
-      });
-    }
+    processMouseMove(e.clientX, e.clientY);
   }, [processMouseMove]);
 
   const handleMouseUp = useCallback((e?: MouseEvent | React.MouseEvent) => {
@@ -843,9 +997,12 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
       const finalPos = e && 'clientX' in e ? { clientX: e.clientX, clientY: e.clientY } : pendingMousePosRef.current;
       if (finalPos) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        const containerX = finalPos.clientX - (rect?.left || 0);
+        const containerY = finalPos.clientY - (rect?.top || 0);
         const curTransform = transformRef.current;
-        const mouseCanvasX = (finalPos.clientX - curTransform.x) / curTransform.scale;
-        const mouseCanvasY = (finalPos.clientY - curTransform.y) / curTransform.scale;
+        const mouseCanvasX = (containerX - curTransform.x) / curTransform.scale;
+        const mouseCanvasY = (containerY - curTransform.y) / curTransform.scale;
         const newX = Math.round(mouseCanvasX - dragOffsetRef.current.x);
         const newY = Math.round(mouseCanvasY - dragOffsetRef.current.y);
 
@@ -861,7 +1018,50 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
     if (connectingStateRef.current) {
       const conn = connectingStateRef.current;
-      const hPort = hoveredPortRef.current;
+      let hPort = hoveredPortRef.current;
+
+      if (!hPort) {
+        const finalPos = e && 'clientX' in e ? { clientX: e.clientX, clientY: e.clientY } : pendingMousePosRef.current;
+        if (finalPos) {
+          const rect = containerRef.current?.getBoundingClientRect();
+          const containerX = finalPos.clientX - (rect?.left || 0);
+          const containerY = finalPos.clientY - (rect?.top || 0);
+          const curTransform = transformRef.current;
+          const mouseCanvasX = (containerX - curTransform.x) / curTransform.scale;
+          const mouseCanvasY = (containerY - curTransform.y) / curTransform.scale;
+
+          let minDistance = 60 / curTransform.scale;
+          for (const n of canvasDataRef.current.nodes) {
+            if (n.id === conn.fromNodeId) continue;
+            const nw = typeof n.width === 'number' ? n.width : 250;
+            const nh = typeof n.height === 'number' ? n.height : 140;
+
+            const sides: Side[] = ['top', 'right', 'bottom', 'left'];
+            for (const s of sides) {
+              const pPos = getPortPos(n, s);
+              const d = Math.hypot(mouseCanvasX - pPos.x, mouseCanvasY - pPos.y);
+              if (d < minDistance) {
+                minDistance = d;
+                hPort = { nodeId: n.id, side: s };
+              }
+            }
+
+            if (!hPort && mouseCanvasX >= n.x && mouseCanvasX <= n.x + nw && mouseCanvasY >= n.y && mouseCanvasY <= n.y + nh) {
+              const distTop = Math.abs(mouseCanvasY - n.y);
+              const distBottom = Math.abs(mouseCanvasY - (n.y + nh));
+              const distLeft = Math.abs(mouseCanvasX - n.x);
+              const distRight = Math.abs(mouseCanvasX - (n.x + nw));
+              const minDistSide = Math.min(distTop, distBottom, distLeft, distRight);
+              let s: Side = 'top';
+              if (minDistSide === distBottom) s = 'bottom';
+              else if (minDistSide === distLeft) s = 'left';
+              else if (minDistSide === distRight) s = 'right';
+              hPort = { nodeId: n.id, side: s };
+            }
+          }
+        }
+      }
+
       if (hPort && hPort.nodeId !== conn.fromNodeId) {
         const newEdgeId = `edge-${Date.now()}`;
         const newEdge: CanvasEdgeData = {
@@ -892,7 +1092,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       setHoveredPort(null);
       hoveredPortRef.current = null;
     }
-  }, [persistCanvas]);
+  }, [persistCanvas, getPortPos]);
 
   // Window-level listeners to prevent stuck drag states and guarantee instantaneous silky smooth movement
   useEffect(() => {
@@ -923,11 +1123,21 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    const containerX = e.clientX - (rect?.left || 0);
+    const containerY = e.clientY - (rect?.top || 0);
+
     const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-    setTransform(prev => ({
-      ...prev,
-      scale: Math.max(0.2, Math.min(2.5, prev.scale * zoomFactor))
-    }));
+    setTransform(prev => {
+      const newScale = Math.max(0.2, Math.min(2.5, prev.scale * zoomFactor));
+      const newX = containerX - ((containerX - prev.x) / prev.scale) * newScale;
+      const newY = containerY - ((containerY - prev.y) / prev.scale) * newScale;
+      return {
+        x: Math.round(newX),
+        y: Math.round(newY),
+        scale: newScale
+      };
+    });
   };
 
   // Node Drag
@@ -937,8 +1147,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     setSelectedEdgeId(null);
     setDraggingNodeId(node.id);
     draggingNodeIdRef.current = node.id;
-    const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
-    const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
+    const rect = containerRef.current?.getBoundingClientRect();
+    const containerX = e.clientX - (rect?.left || 0);
+    const containerY = e.clientY - (rect?.top || 0);
+    const mouseCanvasX = (containerX - transform.x) / transform.scale;
+    const mouseCanvasY = (containerY - transform.y) / transform.scale;
     const offset = {
       x: mouseCanvasX - node.x,
       y: mouseCanvasY - node.y
@@ -951,8 +1164,11 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
   const startResizeNode = (node: CanvasNodeData, direction: ResizeDirection, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const mouseCanvasX = (e.clientX - transform.x) / transform.scale;
-    const mouseCanvasY = (e.clientY - transform.y) / transform.scale;
+    const rect = containerRef.current?.getBoundingClientRect();
+    const containerX = e.clientX - (rect?.left || 0);
+    const containerY = e.clientY - (rect?.top || 0);
+    const mouseCanvasX = (containerX - transform.x) / transform.scale;
+    const mouseCanvasY = (containerY - transform.y) / transform.scale;
     const rState: ResizingState = {
       nodeId: node.id,
       direction,
@@ -1057,7 +1273,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       y: pos.y,
       width: 280,
       height: 180,
-      color: '6'
+      color: '0'
     };
     persistCanvas({
       ...canvasData,
@@ -1079,7 +1295,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       y: pos.y,
       width: isCanvasFile ? 340 : 300,
       height: isCanvasFile ? 260 : 220,
-      color: isCanvasFile ? '2' : '6'
+      color: '0'
     };
     persistCanvas({
       ...canvasData,
@@ -1101,7 +1317,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       y: pos.y - 40,
       width: 480,
       height: 360,
-      color: '6'
+      color: '0'
     };
     persistCanvas({
       ...canvasData,
@@ -1137,9 +1353,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     return canvasData.nodes.find(n => n.id === selectedNodeId) || null;
   }, [canvasData.nodes, selectedNodeId]);
 
-  // Filtered files for the Table suggest popover
+  // Filtered files for the Table suggest popover (Documents from Vault)
   const popoverFilesList = useMemo(() => {
-    let list = allFiles.filter(f => f.path !== file.path);
+    let list = allFiles.filter(f => f.path !== file.path && f.extension === 'md');
     if (fileSearchQuery) {
       list = list.filter(f => f.name.toLowerCase().includes(fileSearchQuery.toLowerCase()) || f.path.toLowerCase().includes(fileSearchQuery.toLowerCase()));
     }
@@ -1148,6 +1364,81 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       return fileSortAsc ? cmp : -cmp;
     });
   }, [allFiles, file.path, fileSearchQuery, fileSortAsc]);
+
+  // Filtered canvas files for Canvas Import popover
+  const canvasFilesList = useMemo(() => {
+    let list = allFiles.filter(f => f.extension === 'canvas' && f.path !== file.path);
+    if (canvasSearchQuery) {
+      list = list.filter(f => f.name.toLowerCase().includes(canvasSearchQuery.toLowerCase()) || f.path.toLowerCase().includes(canvasSearchQuery.toLowerCase()));
+    }
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }, [allFiles, file.path, canvasSearchQuery]);
+
+  // Import another created canvas into the current canvas
+  const handleImportCanvas = async (canvasFile: VaultFile) => {
+    try {
+      const raw = canvasFile.content || (await (await fetch(`/api/vault/raw?path=${encodeURIComponent(canvasFile.path)}`)).text());
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.nodes) && parsed.nodes.length > 0) {
+          const center = getCanvasCenterDropPos();
+          let minX = Infinity, minY = Infinity;
+          parsed.nodes.forEach((n: any) => {
+            if (typeof n.x === 'number') minX = Math.min(minX, n.x);
+            if (typeof n.y === 'number') minY = Math.min(minY, n.y);
+          });
+          const offsetX = isFinite(minX) ? center.x - minX : center.x;
+          const offsetY = isFinite(minY) ? center.y - minY : center.y;
+
+          const idMap = new Map<string, string>();
+          const newNodes: CanvasNodeData[] = parsed.nodes.map((n: any) => {
+            const newId = `node-imp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+            idMap.set(n.id, newId);
+            return {
+              ...n,
+              id: newId,
+              x: (n.x || 0) + offsetX,
+              y: (n.y || 0) + offsetY
+            };
+          });
+
+          const newEdges: CanvasEdgeData[] = Array.isArray(parsed.edges)
+            ? parsed.edges.map((e: any) => ({
+                ...e,
+                id: `edge-imp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                fromNode: idMap.get(e.fromNode) || e.fromNode,
+                toNode: idMap.get(e.toNode) || e.toNode
+              }))
+            : [];
+
+          persistCanvas({
+            nodes: [...canvasData.nodes, ...newNodes],
+            edges: [...canvasData.edges, ...newEdges]
+          });
+        } else {
+          // If empty, add a link card to the canvas
+          const pos = getCanvasCenterDropPos();
+          const newNode: CanvasNodeData = {
+            id: `node-${Date.now()}`,
+            type: 'file',
+            file: canvasFile.path,
+            x: pos.x,
+            y: pos.y,
+            width: 300,
+            height: 200,
+            color: '4'
+          };
+          persistCanvas({
+            ...canvasData,
+            nodes: [...canvasData.nodes, newNode]
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to import canvas file:', err);
+    }
+    setShowCanvasSuggestPopover(false);
+  };
 
   // Filtered media files for the Media suggest popover
   const filteredMediaList = useMemo(() => {
@@ -1182,7 +1473,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
       y: canvasCenterY - (isImg ? 130 : 150),
       width: isImg ? 360 : 400,
       height: isImg ? 260 : 300,
-      color: '6'
+      color: '0'
     };
     persistCanvas({
       ...canvasData,
@@ -1343,9 +1634,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         setSelectedNodeId(newNode.id);
         setSelectedEdgeId(null);
       }}
-      className="relative w-full h-full bg-[#f4f4f6] overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans"
+      className="relative w-full h-full bg-[#f4f4f6] dark:bg-[#15161a] overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans transition-colors"
       style={{
-        backgroundImage: 'radial-gradient(circle, var(--canvas-dot-color, #d1d1d6) 1.2px, transparent 1.2px)',
+        backgroundImage: 'radial-gradient(circle, var(--canvas-dot-color, rgba(255, 255, 255, 0.08)) 1.2px, transparent 1.2px)',
         backgroundSize: `${28 * transform.scale}px ${28 * transform.scale}px`,
         backgroundPosition: `${transform.x}px ${transform.y}px`
       }}
@@ -1564,10 +1855,83 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         </div>
       )}
 
+      {/* 1.6 Canvas Import Suggestion Popover */}
+      {showCanvasSuggestPopover && (
+        <div
+          className="canvas-suggest-popover absolute top-4 left-4 z-50 w-88 max-h-[500px] bg-white dark:bg-[#1f1f1f] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] flex flex-col text-xs text-[#111113] dark:text-white"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-2.5 pb-2 border-b border-black/[0.06] dark:border-white/[0.06]">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold flex items-center gap-1.5 text-[#18181B] dark:text-white">
+                <LayoutGrid className="w-4 h-4 text-[#384CFF]" />
+                <span>Import Canvas</span>
+              </span>
+              <span className="text-[11px] text-[#8e8e93] dark:text-white/60 font-mono">({canvasFilesList.length})</span>
+            </div>
+            <button
+              onClick={() => setShowCanvasSuggestPopover(false)}
+              className="p-1 hover:text-[#111113] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.08] rounded-lg transition-colors cursor-pointer"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Search bar inside canvas popover */}
+          <div className="px-2.5 pt-2 pb-1">
+            <div className="relative">
+              <Search className="w-3 h-3 text-zinc-400 absolute left-2 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={canvasSearchQuery}
+                onChange={e => setCanvasSearchQuery(e.target.value)}
+                placeholder="Search canvas boards to import..."
+                autoFocus
+                className="w-full bg-[#f4f4f6] dark:bg-[#2a2a2a] border border-black/[0.08] dark:border-white/[0.08] rounded-lg px-2.5 pl-6 py-1.5 text-xs text-[#111113] dark:text-white placeholder-[#8e8e93] focus:outline-none focus:border-[#384CFF]"
+              />
+            </div>
+          </div>
+
+          <div className="px-3 py-1.5 text-[10px] text-[#8e8e93] dark:text-white/50 border-b border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between">
+            <span>Select a canvas to merge cards or embed</span>
+            <span>.canvas</span>
+          </div>
+
+          {/* Canvas Files List */}
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+            {canvasFilesList.length === 0 ? (
+              <div className="py-8 text-center text-[#8e8e93] text-xs">
+                No other .canvas files found in vault.
+              </div>
+            ) : (
+              canvasFilesList.map(cFile => (
+                <div
+                  key={cFile.id}
+                  onClick={() => handleImportCanvas(cFile)}
+                  className="px-3 py-2 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.08] cursor-pointer flex items-center justify-between transition-colors group border border-transparent hover:border-[#384CFF]/30"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <LayoutGrid className="w-4 h-4 text-[#384CFF] shrink-0" />
+                    <span className="font-medium text-[#18181B] dark:text-white truncate">
+                      {cFile.name.replace(/\.canvas$/, '')}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#384CFF]/10 text-[#384CFF] font-semibold shrink-0 group-hover:bg-[#384CFF] group-hover:text-white transition-colors">
+                    Import +
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 2. Floating Card Menu Directly Above Selected Card (`canvas-menu`) */}
       {selectedNode && (
         <div
-          className="canvas-menu absolute pointer-events-auto z-40 flex items-center gap-1 bg-[#1e1e22]/95 backdrop-blur-xl border border-zinc-700/80 rounded-lg p-1 shadow-2xl -translate-x-1/2"
+          className="canvas-menu absolute pointer-events-auto z-40 flex items-center gap-1 bg-white dark:bg-[#1e1e22]/95 backdrop-blur-xl border border-black/[0.08] dark:border-zinc-700/80 rounded-xl p-1 shadow-2xl -translate-x-1/2 transition-colors"
           style={{
             left: `${selectedNode.x * transform.scale + transform.x + (selectedNode.width * transform.scale) / 2}px`,
             top: `${selectedNode.y * transform.scale + transform.y - 44}px`
@@ -1576,39 +1940,28 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         >
           <button
             onClick={handleDeleteSelectedNode}
-            className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/80 rounded transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-rose-500 hover:bg-black/5 dark:text-zinc-400 dark:hover:text-rose-400 dark:hover:bg-zinc-800/80 rounded-lg transition-colors cursor-pointer"
             title="Delete Card (Del/Backspace)"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
 
-          {/* Color presets dropdown / toggle */}
-          <div className="flex items-center gap-1.5 px-2 border-l border-zinc-700/60">
-            {/* Reset / Default Color */}
-            <button
-              onClick={() => {
-                if (!selectedNodeId) return;
-                persistCanvas({
-                  ...canvasData,
-                  nodes: canvasData.nodes.map(n => n.id === selectedNodeId ? { ...n, color: undefined } : n)
-                });
-              }}
-              className={`w-3.5 h-3.5 rounded-full border border-zinc-600 bg-zinc-800 transition-transform hover:scale-125 ${
-                !selectedNode.color ? 'ring-2 ring-white scale-110' : ''
-              }`}
-              title="Default Color (None)"
-            />
-            {Object.entries(COLOR_PRESETS).map(([key, style]) => (
-              <button
-                key={key}
-                onClick={() => handleChangeNodeColor(key)}
-                className={`w-3.5 h-3.5 rounded-full border border-white/20 transition-transform hover:scale-125 ${
-                  selectedNode.color === key ? 'ring-2 ring-white scale-110' : ''
-                }`}
-                style={{ backgroundColor: style.hex }}
-                title={`Color ${key}`}
-              />
-            ))}
+          {/* Color presets (Solid colors with Grey default) */}
+          <div className="flex items-center gap-1.5 px-2 border-l border-black/[0.08] dark:border-zinc-700/60">
+            {Object.entries(COLOR_PRESETS).map(([key, style]) => {
+              const isCurrent = (selectedNode.color || '0') === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleChangeNodeColor(key)}
+                  className={`w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/20 transition-transform hover:scale-125 cursor-pointer ${
+                    isCurrent ? 'ring-2 ring-[#384CFF] scale-110' : ''
+                  }`}
+                  style={{ backgroundColor: style.hex }}
+                  title={`${style.name} Solid`}
+                />
+              );
+            })}
           </div>
 
           <button
@@ -1622,7 +1975,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 scale: 1.05
               });
             }}
-            className="p-1.5 text-zinc-400 hover:text-purple-300 hover:bg-zinc-800/80 rounded transition-colors ml-0.5"
+            className="p-1.5 text-zinc-500 hover:text-[#384CFF] hover:bg-black/5 dark:text-zinc-400 dark:hover:text-purple-300 dark:hover:bg-zinc-800/80 rounded-lg transition-colors ml-0.5 cursor-pointer"
             title="Focus Card"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -1714,156 +2067,6 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
           </div>
         );
       })()}
-
-      {/* 4. Right Vertical Toolbar on Canvas (`canvas-controls` in user screenshot!) */}
-      <div className="canvas-controls absolute top-4 right-4 z-40 flex flex-col gap-1 p-1 bg-white border border-black/[0.08] rounded-2xl shadow-md text-[#585860]">
-        <button
-          onClick={() => setShowFileSuggestPopover(prev => !prev)}
-          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
-          title="Canvas Settings / Files"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-        </button>
-
-        <div className="w-4 h-[1px] bg-black/[0.06] mx-auto my-0.5" />
-
-        <button
-          onClick={() => setTransform(t => ({ ...t, scale: Math.min(2.5, t.scale * 1.15) }))}
-          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
-          title="Zoom In (+)"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={handleZoomToFit}
-          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
-          title="Zoom to Fit (1:1)"
-        >
-          <Maximize2 className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={() => setTransform(t => ({ ...t, scale: Math.max(0.2, t.scale * 0.85) }))}
-          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
-          title="Zoom Out (-)"
-        >
-          <Minus className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={() => setTransform({ x: 500, y: 350, scale: 0.85 })}
-          className="p-1.5 hover:text-[#111113] hover:bg-black/[0.04] rounded-xl transition-colors"
-          title="Reset Zoom"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-
-        <div className="w-4 h-[1px] bg-black/[0.06] mx-auto my-0.5" />
-
-        <button
-          onClick={handleUndo}
-          disabled={historyIdx <= 0}
-          className={`p-1.5 rounded-xl transition-colors ${historyIdx > 0 ? 'hover:text-[#111113] hover:bg-black/[0.04]' : 'opacity-30 cursor-not-allowed'}`}
-          title="Undo (Ctrl+Z)"
-        >
-          <Undo2 className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={handleRedo}
-          disabled={historyIdx >= history.length - 1}
-          className={`p-1.5 rounded-xl transition-colors ${historyIdx < history.length - 1 ? 'hover:text-[#111113] hover:bg-black/[0.04]' : 'opacity-30 cursor-not-allowed'}`}
-          title="Redo (Ctrl+Shift+Z)"
-        >
-          <Redo2 className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* 5. Bottom Center Floating Dock Toolbar matching Obsidian Canvas dock in media_1792147243199.png */}
-      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-white border border-black/[0.08] rounded-2xl px-2.5 py-1.5 shadow-md text-[#585860]">
-        {/* 1. Card / Text Card (Folded card outline) */}
-        <button
-          onClick={handleAddTextCard}
-          draggable
-          onDragStart={e => {
-            e.dataTransfer.setData('canvas-dock-action', 'text');
-            e.dataTransfer.effectAllowed = 'copy';
-          }}
-          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-          title="Card: Click or drag to canvas to add a text card"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        </button>
-
-        {/* 2. Note from Vault (Folded document with lines) */}
-        <button
-          onClick={() => {
-            setShowFileSuggestPopover(true);
-            setShowMediaSuggestPopover(false);
-          }}
-          draggable
-          onDragStart={e => {
-            e.dataTransfer.setData('canvas-dock-action', 'note');
-            e.dataTransfer.effectAllowed = 'copy';
-          }}
-          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-          title="Note: Click or drag to canvas to add a vault note"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <line x1="10" y1="9" x2="8" y2="9" />
-          </svg>
-        </button>
-
-        {/* 3. Media / Image / Document (Folded document with photo/circle/wedge) */}
-        <button
-          onClick={() => {
-            setShowMediaSuggestPopover(true);
-            setShowFileSuggestPopover(false);
-          }}
-          draggable
-          onDragStart={e => {
-            e.dataTransfer.setData('canvas-dock-action', 'media');
-            e.dataTransfer.effectAllowed = 'copy';
-          }}
-          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-          title="Media: Click or drag to canvas to add an image or document from vault or computer"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <circle cx="10" cy="13" r="1.5" />
-            <path d="m19 18-3.5-3.5a1.2 1.2 0 0 0-1.7 0L8 20" />
-          </svg>
-        </button>
-
-        <div className="w-[1px] h-5 bg-black/[0.08] mx-0.5" />
-
-        {/* 4. Group Card */}
-        <button
-          onClick={handleAddGroupCard}
-          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-          title="Add Group"
-        >
-          <FolderPlus className="w-5 h-5" />
-        </button>
-
-        {/* 5. Sub-Canvas Card */}
-        <button
-          onClick={handleAddCanvasCard}
-          className="canvas-card-menu-button p-2 text-[#585860] hover:text-[#111113] rounded-xl hover:bg-black/[0.04] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-          title="Add Canvas in Canvas (.canvas)"
-        >
-          <LayoutDashboard className="w-5 h-5" />
-        </button>
-      </div>
 
       {/* Infinite Canvas Layer */}
       <div
@@ -2175,12 +2378,12 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
               userSelect: 'none',
               zIndex: 10
             }}
-            className="bg-white border border-black/[0.08] rounded-2xl px-8 py-6 text-center shadow-md"
+            className="bg-[#1c1d22] border border-white/[0.08] rounded-2xl px-8 py-6 text-center shadow-2xl text-zinc-300"
           >
             <div className="space-y-1.5 text-center">
-              <div className="text-[#111113] font-semibold text-sm">Drag from below or double click</div>
-              <div className="text-xs text-[#8e8e93]">Space + Drag to pan</div>
-              <div className="text-xs text-[#8e8e93]">⌘ + Scroll to zoom</div>
+              <div className="text-white font-semibold text-sm">Add cards from bottom dock or double-click</div>
+              <div className="text-xs text-zinc-400">Space + Drag to pan</div>
+              <div className="text-xs text-zinc-400">⌘ + Scroll to zoom</div>
             </div>
           </div>
         )}
@@ -2188,13 +2391,19 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         {/* Node Cards Layer */}
         {canvasData.nodes.map(node => {
           const isSelected = selectedNodeId === node.id;
-          const nodeColorKey = node.color;
-          const customColor = nodeColorKey
-            ? (COLOR_PRESETS[nodeColorKey] || (nodeColorKey.startsWith('#') ? { bg: 'bg-[#18181c]', border: '', text: 'text-zinc-200', hex: nodeColorKey, groupBg: 'bg-white/5' } : null))
-            : null;
-          const cardHex = customColor ? customColor.hex : (isSelected ? '#a855f7' : undefined);
-
           const isGroup = node.type === 'group';
+          const nodeColorKey = node.color || '0';
+          const colorPreset = COLOR_PRESETS[nodeColorKey] || COLOR_PRESETS['0'];
+
+          // 100% Solid backgrounds and solid borders matching user specification
+          const solidBg = isDark ? colorPreset.solidDark : colorPreset.solidLight;
+          const solidBorder = isDark ? colorPreset.borderDark : colorPreset.borderLight;
+          const solidText = isDark ? colorPreset.textDark : colorPreset.textLight;
+          const cardHex = colorPreset.hex;
+
+          const groupBg = isDark ? '#1C1D21' : '#F9F9FB';
+          const groupBorder = isDark ? colorPreset.borderDark : colorPreset.borderLight;
+
           const isCanvasFile = node.type === 'file' && node.file?.endsWith('.canvas');
           const isLink = node.type === 'link';
 
@@ -2225,24 +2434,19 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                   ? 'border-dashed border-2 rounded-2xl z-0 p-3'
                   : isSelected
                   ? 'border-2 rounded-2xl z-20 p-4'
-                  : customColor
-                  ? 'border-2 rounded-2xl z-10 p-4'
-                  : 'bg-white border border-black/[0.08] hover:border-black/[0.18] rounded-2xl z-10 p-4 shadow-sm text-[#111113]'
+                  : 'border rounded-2xl z-10 p-4'
               }`}
               style={{
                 left: `${node.x}px`,
                 top: `${node.y}px`,
                 width: `${node.width}px`,
                 height: `${node.height}px`,
-                borderColor: cardHex || (isSelected ? '#18181b' : undefined),
-                backgroundColor: isGroup
-                  ? (customColor ? `${customColor.hex}18` : 'rgba(0, 0, 0, 0.03)')
-                  : (customColor ? `${customColor.hex}15` : undefined),
+                borderColor: isSelected ? '#384CFF' : (isGroup ? groupBorder : solidBorder),
+                backgroundColor: isGroup ? groupBg : solidBg,
+                color: solidText,
                 boxShadow: isSelected
-                  ? '0 0 0 2px #18181b, 0 12px 24px -6px rgba(0,0,0,0.1)'
-                  : customColor
-                  ? '0 4px 12px rgba(0,0,0,0.05)'
-                  : undefined
+                  ? '0 0 0 2px #384CFF, 0 14px 30px -8px rgba(0,0,0,0.18)'
+                  : '0 2px 10px rgba(0,0,0,0.06)'
               }}
             >
               {/* Group Node Header */}
@@ -2258,10 +2462,10 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                         nodes: canvasData.nodes.map(n => n.id === node.id ? { ...n, label: newLabel } : n)
                       });
                     }}
-                    className="bg-transparent font-bold text-sm text-zinc-200 focus:outline-none focus:text-white"
+                    className="bg-transparent font-bold text-sm text-[#18181B] dark:text-zinc-100 focus:outline-none"
                     placeholder="Group Title"
                   />
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Group</span>
+                  <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Group</span>
                 </div>
               )}
 
@@ -2289,9 +2493,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                       ) : isLink ? (
                         <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                       ) : (
-                        <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: cardHex || '#a855f7' }} />
+                        <FileText className="w-3.5 h-3.5 shrink-0" style={{ color: colorPreset.hex }} />
                       )}
-                      <span className="font-bold text-sm text-zinc-100 truncate">
+                      <span className="font-bold text-sm text-[#18181B] dark:text-zinc-100 truncate">
                         {isCanvasFile
                           ? (referencedFile ? referencedFile.name : node.file)
                           : isImage || isPdf || isAudio || isVideo
@@ -2404,7 +2608,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
                     if (referencedFile) {
                       return (
-                        <div className="prose prose-invert prose-xs leading-relaxed space-y-1.5">
+                        <div className="prose dark:prose-invert prose-xs leading-relaxed space-y-1.5">
                           {(referencedFile.content || '')
                             .slice(0, 500)
                             .replace(/^---[\s\S]*?---/, '')
@@ -2413,17 +2617,17 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                             .slice(0, 8)
                             .map((line, idx) => {
                               if (line.startsWith('#')) {
-                                return <h4 key={idx} className="font-bold text-zinc-200 text-xs mt-1">{line.replace(/^#+\s*/, '')}</h4>;
+                                return <h4 key={idx} className="font-bold text-[#18181B] dark:text-zinc-200 text-xs mt-1">{line.replace(/^#+\s*/, '')}</h4>;
                               }
                               if (line.startsWith('- ') || line.startsWith('* ')) {
                                 return (
-                                  <div key={idx} className="flex items-start gap-1.5 pl-1 text-[11.5px] text-zinc-300">
-                                    <span className="text-zinc-500">•</span>
+                                  <div key={idx} className="flex items-start gap-1.5 pl-1 text-[11.5px] text-[#27272A] dark:text-zinc-300">
+                                    <span className="text-[#384CFF] dark:text-zinc-500">•</span>
                                     <span>{line.replace(/^[-*]\s*/, '')}</span>
                                   </div>
                                 );
                               }
-                              return <p key={idx} className="text-[11.5px] text-zinc-400">{line}</p>;
+                              return <p key={idx} className="text-[11.5px] text-[#3F3F46] dark:text-zinc-400">{line}</p>;
                             })}
                         </div>
                       );
@@ -2482,7 +2686,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                           setEditingNodeId(node.id);
                         }}
                         title="Double-click to edit card"
-                        className="w-full h-full overflow-y-auto cursor-text text-[#111113] select-text font-sans p-1 hover:bg-black/[0.02] rounded-lg transition-colors"
+                        className="w-full h-full overflow-y-auto cursor-text text-[#18181B] dark:text-zinc-100 select-text font-sans p-1 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] rounded-lg transition-colors"
                       >
                         {renderCanvasMarkdown(node.text || 'Double-click to edit this card in markdown.', onNavigateFile)}
                       </div>
@@ -2592,6 +2796,162 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             </div>
           );
         })}
+      </div>
+
+      {/* Top-Right Vertical Floating Tool Pill matching Image 5 (media_1793544760161_9dab59c4.png) */}
+      <div className="canvas-controls absolute top-4 right-4 z-30 flex flex-col items-center gap-3 bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.08] dark:border-transparent rounded-full py-3 px-1.5 shadow-2xl transition-colors">
+        {/* 1. Sliders / Settings */}
+        <button
+          onClick={() => setTransform({ x: 500, y: 350, scale: 0.85 })}
+          title="Canvas Settings / Recenter"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <SlidersHorizontal className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 2. Zoom In */}
+        <button
+          onClick={() => setTransform(prev => ({ ...prev, scale: Math.min(2.5, prev.scale * 1.2) }))}
+          title="Zoom In"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 3. Fullscreen / Zoom to Fit */}
+        <button
+          onClick={() => {
+            if (canvasData.nodes.length === 0) {
+              setTransform({ x: 500, y: 350, scale: 0.85 });
+              return;
+            }
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            canvasData.nodes.forEach(n => {
+              const nx = typeof n.x === 'number' ? n.x : 0;
+              const ny = typeof n.y === 'number' ? n.y : 0;
+              const nw = typeof n.width === 'number' ? n.width : 280;
+              const nh = typeof n.height === 'number' ? n.height : 180;
+              minX = Math.min(minX, nx);
+              minY = Math.min(minY, ny);
+              maxX = Math.max(maxX, nx + nw);
+              maxY = Math.max(maxY, ny + nh);
+            });
+            const pad = 80;
+            const bboxW = (maxX - minX) + pad * 2;
+            const bboxH = (maxY - minY) + pad * 2;
+            const scale = Math.min(1.5, Math.max(0.25, Math.min(window.innerWidth / bboxW, window.innerHeight / bboxH)));
+            setTransform({
+              x: (window.innerWidth - (minX + maxX) * scale) / 2,
+              y: (window.innerHeight - (minY + maxY) * scale) / 2,
+              scale
+            });
+          }}
+          title="Zoom to Fit / Fullscreen"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <Maximize2 className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 4. Zoom Out */}
+        <button
+          onClick={() => setTransform(prev => ({ ...prev, scale: Math.max(0.2, prev.scale * 0.8) }))}
+          title="Zoom Out"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <Minus className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 5. Zoom 100% Reset / 1:1 */}
+        <button
+          onClick={() => setTransform({ x: 500, y: 350, scale: 1.0 })}
+          title="Reset Zoom to 100%"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 6. Undo */}
+        <button
+          onClick={handleUndo}
+          disabled={historyIdx <= 0}
+          title="Undo (Cmd+Z)"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] disabled:text-[#8E8E93] dark:disabled:text-[#6D6D6D] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <Undo2 className="w-4 h-4 stroke-[2]" />
+        </button>
+
+        {/* 7. Redo */}
+        <button
+          onClick={handleRedo}
+          disabled={historyIdx >= history.length - 1}
+          title="Redo (Cmd+Shift+Z)"
+          className="w-7 h-7 rounded-full text-[#18181B] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.1] disabled:text-[#8E8E93] dark:disabled:text-[#6D6D6D] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+        >
+          <Redo2 className="w-4 h-4 stroke-[2]" />
+        </button>
+      </div>
+
+      {/* Bottom Floating Electric Blue Creation Dock matching user requirements & media_1793554376982_ac389c7d.png */}
+      <div className="canvas-card-menu absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-6 bg-[#384CFF] rounded-full px-6 py-2.5 shadow-2xl shadow-blue-600/40 text-white">
+        {/* 1. Add New Card */}
+        <button
+          onClick={handleAddTextCard}
+          title="Add New Card (Text Note)"
+          className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        >
+          <File className="w-4 h-4 text-white stroke-[1.75]" />
+        </button>
+
+        {/* 2. Add Doc from Runagon Vault */}
+        <button
+          onClick={() => {
+            setFileSearchQuery('');
+            setShowFileSuggestPopover(true);
+            setShowCanvasSuggestPopover(false);
+            setShowMediaSuggestPopover(false);
+          }}
+          title="Add Doc from Vault"
+          className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        >
+          <FileText className="w-4 h-4 text-white stroke-[1.75]" />
+        </button>
+
+        {/* 3. Import Other Canvas into Current Canvas */}
+        <button
+          onClick={() => {
+            setCanvasSearchQuery('');
+            setShowCanvasSuggestPopover(true);
+            setShowFileSuggestPopover(false);
+            setShowMediaSuggestPopover(false);
+          }}
+          title="Import Other Canvas into Current Canvas"
+          className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        >
+          <LayoutGrid className="w-4 h-4 text-white stroke-[1.75]" />
+        </button>
+
+        {/* 4. Add Image to Canvas */}
+        <button
+          onClick={() => {
+            setMediaSearchQuery('');
+            setShowMediaSuggestPopover(true);
+            setShowFileSuggestPopover(false);
+            setShowCanvasSuggestPopover(false);
+          }}
+          title="Add Image to Canvas"
+          className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        >
+          <ImageIcon className="w-4 h-4 text-white stroke-[1.75]" />
+        </button>
+
+        {/* 5. Create New Group */}
+        <button
+          onClick={handleAddGroupCard}
+          title="Create New Group Frame"
+          className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+        >
+          <FolderPlus className="w-4 h-4 text-white stroke-[1.75]" />
+        </button>
       </div>
     </div>
   );

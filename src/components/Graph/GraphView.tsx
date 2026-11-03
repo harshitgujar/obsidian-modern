@@ -86,6 +86,23 @@ const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   localJumps: 1
 };
 
+// Helper to parse hex/rgb color strings into RGB numeric tuples
+function parseRgbColor(color: string): [number, number, number] {
+  if (!color) return [56, 76, 255];
+  if (color.startsWith('#')) {
+    let c = color.slice(1);
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c.slice(0, 6), 16);
+    if (!isNaN(num)) return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+  } else if (color.startsWith('rgb')) {
+    const parts = color.match(/\d+/g);
+    if (parts && parts.length >= 3) {
+      return [parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10)];
+    }
+  }
+  return [56, 76, 255];
+}
+
 export const GraphView: React.FC<GraphViewProps> = ({
   data,
   activeFileId,
@@ -104,8 +121,15 @@ export const GraphView: React.FC<GraphViewProps> = ({
     ...initialSettings
   });
 
+  useEffect(() => {
+    if (initialSettings?.localJumps !== undefined) {
+      setSettings(prev => ({ ...prev, localJumps: initialSettings.localJumps }));
+    }
+  }, [initialSettings?.localJumps]);
+
   // UI state
   const [showControls, setShowControls] = useState(false);
+  const [showSubsystemsDrawer, setShowSubsystemsDrawer] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState({
     filters: false,
     groups: false,
@@ -118,6 +142,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
   // Viewport transformation
   const [transform, setTransform] = useState({ x: 0, y: 0, k: isMini ? 0.75 : 1.0 });
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
+  const cameraAnimRef = useRef<number | null>(null);
+
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [hoverInfo, setHoverInfo] = useState<{
     node: GraphNode;
@@ -345,7 +373,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
     simEdgesRef.current = filteredData.edges;
 
     // Default to showing all nodes when not playing timelapse
-    if (!isTimelapseRunning) {
+    if (!isTimelapseRunning && (animProgress === 0 || animProgress >= sortedNodes.length)) {
       setAnimProgress(sortedNodes.length);
     }
     alphaRef.current = Math.max(alphaRef.current, 0.7);
@@ -426,12 +454,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
     if (allNodes.length === 0) return;
 
     // Only simulate visible nodes during timelapse progression
-    const nodes = isTimelapseRunning && animProgress > 0
+    const isTimelapseMode = isTimelapseRunning || (animProgress > 0 && animProgress < allNodes.length);
+    const nodes = isTimelapseMode
       ? allNodes.slice(0, animProgress)
       : allNodes;
 
     const visibleNodeIds = new Set(nodes.map(n => n.id));
-    const edges = isTimelapseRunning && animProgress > 0
+    const edges = isTimelapseMode
       ? simEdgesRef.current.filter(e => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target))
       : simEdgesRef.current;
 
@@ -590,11 +619,12 @@ export const GraphView: React.FC<GraphViewProps> = ({
       }
 
       const allNodes = simNodesRef.current;
-      const nodes = isTimelapseRunning && animProgress > 0
+      const isTimelapseMode = isTimelapseRunning || (animProgress > 0 && animProgress < allNodes.length);
+      const nodes = isTimelapseMode
         ? allNodes.slice(0, animProgress)
         : allNodes;
       const visibleNodeIds = new Set(nodes.map(n => n.id));
-      const edges = isTimelapseRunning && animProgress > 0
+      const edges = isTimelapseMode
         ? simEdgesRef.current.filter(e => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target))
         : simEdgesRef.current;
       const nodeMap = new Map(nodes.map(n => [n.id, n]));
@@ -806,17 +836,82 @@ export const GraphView: React.FC<GraphViewProps> = ({
         if (settings.colorByCommunity && node.communityColor) {
           effectiveColor = node.communityColor;
         }
-        ctx.fillStyle = effectiveColor;
+
+        const [r, g, b] = parseRgbColor(effectiveColor);
+        const focalX = node.x - baseRadius * 0.32;
+        const focalY = node.y - baseRadius * 0.35;
+
+        // Subtle realistic 3D elevation shadow
+        ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.18)';
+        ctx.shadowBlur = Math.min(8, 4.5 / transform.k);
+        ctx.shadowOffsetX = 0.6 / transform.k;
+        ctx.shadowOffsetY = 1.6 / transform.k;
+
+        // 1. Realistic 3D Spherical Radial Gradient with White Shine Reflection
+        const sphereGrad = ctx.createRadialGradient(
+          focalX,
+          focalY,
+          baseRadius * 0.04,
+          node.x,
+          node.y,
+          baseRadius
+        );
+        // Top-left specular shine: pure white reflection highlight
+        sphereGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+        // Luminous reflection aura blending into lightened tint of node color
+        sphereGrad.addColorStop(0.2, `rgba(${Math.min(255, r + 90)}, ${Math.min(255, g + 90)}, ${Math.min(255, b + 90)}, 0.96)`);
+        // Rich vibrant base node color
+        sphereGrad.addColorStop(0.55, `rgb(${r}, ${g}, ${b})`);
+        // Subtle ambient falloff towards edge
+        sphereGrad.addColorStop(0.85, `rgb(${Math.round(r * 0.85)}, ${Math.round(g * 0.85)}, ${Math.round(b * 0.85)})`);
+        // Opposite edge shadow giving spherical volume and curvature
+        sphereGrad.addColorStop(1.0, `rgb(${Math.round(r * 0.52)}, ${Math.round(g * 0.52)}, ${Math.round(b * 0.52)})`);
+
+        ctx.fillStyle = sphereGrad;
         ctx.fill();
 
-        // Node border: Crisp white rim gives a tactile, beveled physical pebble effect on light bg
-        ctx.lineWidth = isTarget ? (2.2 / transform.k) : (1.6 / transform.k);
+        // Reset shadow for clean specular glints and rims
+        ctx.shadowColor = 'transparent';
+
+        // 2. Glossy Specular Hotspot (Crisp glass / shiny bead glint reflection)
+        if (node.nodeType !== 'unresolved') {
+          const glintRadius = baseRadius * 0.48;
+          const glintGrad = ctx.createRadialGradient(
+            focalX,
+            focalY,
+            0,
+            focalX,
+            focalY,
+            glintRadius
+          );
+          glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+          glintGrad.addColorStop(0.45, 'rgba(255, 255, 255, 0.28)');
+          glintGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+          ctx.fillStyle = glintGrad;
+          ctx.fill();
+        }
+
+        // 3. Tactile Beveled Rim / Sheen Border
+        ctx.lineWidth = isTarget ? (2.2 / transform.k) : (1.4 / transform.k);
         if (node.nodeType === 'unresolved') {
           ctx.setLineDash([3 / transform.k, 2 / transform.k]);
           ctx.strokeStyle = isDark ? '#818cf8' : '#6366f1';
         } else {
           ctx.setLineDash([]);
-          ctx.strokeStyle = isTarget ? (isDark ? '#8692ff' : '#384cff') : (isDark ? 'rgba(255, 255, 255, 0.35)' : '#ffffff');
+          if (isTarget) {
+            ctx.strokeStyle = isDark ? '#8692ff' : '#384cff';
+          } else {
+            // Elegant light-reflective beveled rim: white top-left highlight fading to soft edge
+            const rimGrad = ctx.createLinearGradient(
+              node.x - baseRadius, node.y - baseRadius,
+              node.x + baseRadius, node.y + baseRadius
+            );
+            rimGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+            rimGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.3)');
+            rimGrad.addColorStop(1, isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.12)');
+            ctx.strokeStyle = rimGrad;
+          }
         }
         ctx.stroke();
         ctx.restore();
@@ -846,7 +941,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
         const labelText = node.label.replace(/\.md$/, '');
         const fontSize = Math.max(10, Math.min(14, 11 / transform.k));
-        ctx.font = `${isTarget ? '600' : '400'} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.font = `${isTarget ? '600' : '400'} ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
         
         const textMetrics = ctx.measureText(labelText);
         const textWidth = textMetrics.width;
@@ -917,7 +1012,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
   const findNodeAt = (x: number, y: number): GraphNode | null => {
     const allNodes = simNodesRef.current;
-    const nodes = isTimelapseRunning && animProgress > 0
+    const isTimelapseMode = isTimelapseRunning || (animProgress > 0 && animProgress < allNodes.length);
+    const nodes = isTimelapseMode
       ? allNodes.slice(0, animProgress)
       : allNodes;
     for (let i = nodes.length - 1; i >= 0; i--) {
@@ -966,33 +1062,177 @@ export const GraphView: React.FC<GraphViewProps> = ({
     return closest;
   };
 
+  const animateCameraTo = useCallback((targetX: number, targetY: number, targetK: number, duration = 450) => {
+    if (cameraAnimRef.current) {
+      cancelAnimationFrame(cameraAnimRef.current);
+      cameraAnimRef.current = null;
+    }
+
+    const startX = transformRef.current.x;
+    const startY = transformRef.current.y;
+    const startK = transformRef.current.k;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // easeOutCubic: swift acceleration with silky smooth deceleration
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const curX = startX + (targetX - startX) * ease;
+      const curY = startY + (targetY - startY) * ease;
+      const curK = startK + (targetK - startK) * ease;
+
+      setTransform({ x: curX, y: curY, k: curK });
+      alphaRef.current = Math.max(alphaRef.current, 0.3);
+
+      if (progress < 1) {
+        cameraAnimRef.current = requestAnimationFrame(animate);
+      } else {
+        cameraAnimRef.current = null;
+        setTransform({ x: targetX, y: targetY, k: targetK });
+      }
+    };
+
+    cameraAnimRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  const handleClearCommunityFilter = useCallback(() => {
+    setActiveCommunityId(null);
+
+    // Compute bounding box of all active nodes to fit overview in camera
+    const allNodes = simNodesRef.current;
+    if (allNodes.length === 0) {
+      animateCameraTo(0, 0, isMini ? 0.75 : 1.0);
+      return;
+    }
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
+
+    allNodes.forEach(n => {
+      if (typeof n.x === 'number' && !isNaN(n.x) && typeof n.y === 'number' && !isNaN(n.y)) {
+        minX = Math.min(minX, n.x);
+        maxX = Math.max(maxX, n.x);
+        minY = Math.min(minY, n.y);
+        maxY = Math.max(maxY, n.y);
+        sumX += n.x;
+        sumY += n.y;
+        count++;
+      }
+    });
+
+    if (count === 0) {
+      animateCameraTo(0, 0, isMini ? 0.75 : 1.0);
+      return;
+    }
+
+    const centerX = sumX / count;
+    const centerY = sumY / count;
+    const boundWidth = maxX - minX;
+    const boundHeight = maxY - minY;
+
+    const canvas = canvasRef.current;
+    const viewWidth = canvas ? canvas.clientWidth : window.innerWidth;
+    const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
+
+    const padding = 160;
+    const fitK = Math.min(
+      (viewWidth - padding) / Math.max(200, boundWidth),
+      (viewHeight - padding) / Math.max(200, boundHeight)
+    );
+    const targetK = Math.max(0.4, Math.min(1.15, fitK));
+    const targetX = -centerX * targetK;
+    const targetY = -centerY * targetK;
+
+    animateCameraTo(targetX, targetY, targetK);
+    alphaRef.current = Math.max(alphaRef.current, 0.35);
+  }, [animateCameraTo, isMini]);
+
   const handleFocusCommunity = (comm: { id: number; nodes: GraphNode[] }) => {
     if (activeCommunityId === comm.id) {
-      setActiveCommunityId(null);
+      handleClearCommunityFilter();
       return;
     }
     setActiveCommunityId(comm.id);
     if (!settings.colorByCommunity) {
       updateSetting('colorByCommunity', true);
     }
-    if (comm.nodes.length === 0) return;
+
+    // Look up live simulation coordinates from simNodesRef.current
+    const liveSimMap = new Map(simNodesRef.current.map(sn => [sn.id, sn]));
+    const liveNodes = comm.nodes.map(n => liveSimMap.get(n.id) || n);
+
+    if (liveNodes.length === 0) return;
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
     let sumX = 0;
     let sumY = 0;
-    comm.nodes.forEach(n => {
-      sumX += n.x;
-      sumY += n.y;
+    let validCount = 0;
+
+    liveNodes.forEach(n => {
+      const nx = typeof n.x === 'number' && !isNaN(n.x) ? n.x : 0;
+      const ny = typeof n.y === 'number' && !isNaN(n.y) ? n.y : 0;
+      minX = Math.min(minX, nx);
+      maxX = Math.max(maxX, nx);
+      minY = Math.min(minY, ny);
+      maxY = Math.max(maxY, ny);
+      sumX += nx;
+      sumY += ny;
+      validCount++;
     });
-    const avgX = sumX / comm.nodes.length;
-    const avgY = sumY / comm.nodes.length;
-    setTransform(prev => ({
-      ...prev,
-      x: -avgX * 1.15,
-      y: -avgY * 1.15,
-      k: Math.max(0.85, Math.min(2.0, 1.15))
-    }));
+
+    if (validCount === 0) return;
+
+    const centerX = sumX / validCount;
+    const centerY = sumY / validCount;
+    const clusterWidth = maxX - minX;
+    const clusterHeight = maxY - minY;
+
+    const canvas = canvasRef.current;
+    const viewWidth = canvas ? canvas.clientWidth : window.innerWidth;
+    const viewHeight = canvas ? canvas.clientHeight : window.innerHeight;
+
+    // Generous breathing room padding for labels and drawer
+    const paddingX = 220;
+    const paddingY = 260; // Extra padding at bottom for the subsystems drawer & bottom dock
+    const availWidth = Math.max(200, viewWidth - paddingX);
+    const availHeight = Math.max(200, viewHeight - paddingY);
+
+    let targetK = 1.15;
+    if (validCount === 1 || (clusterWidth < 40 && clusterHeight < 40)) {
+      targetK = 1.35;
+    } else {
+      const fitK = Math.min(
+        availWidth / Math.max(120, clusterWidth),
+        availHeight / Math.max(120, clusterHeight)
+      );
+      targetK = Math.max(0.65, Math.min(1.85, fitK));
+    }
+
+    // Center the cluster at the camera center:
+    // screenX = width / 2 + transform.x + centerX * targetK = width / 2 => targetX = -centerX * targetK
+    // screenY = height / 2 + transform.y + centerY * targetK = (height / 2 - 35) => targetY = -centerY * targetK - 35
+    const targetX = -centerX * targetK;
+    const targetY = -centerY * targetK - 35; // slightly offset upward so the bottom drawer doesn't obstruct the nodes
+
+    animateCameraTo(targetX, targetY, targetK);
+    alphaRef.current = Math.max(alphaRef.current, 0.45);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (cameraAnimRef.current) {
+      cancelAnimationFrame(cameraAnimRef.current);
+      cameraAnimRef.current = null;
+    }
     const coords = getCanvasCoords(e);
     const clicked = findNodeAt(coords.x, coords.y);
     mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
@@ -1089,6 +1329,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    if (cameraAnimRef.current) {
+      cancelAnimationFrame(cameraAnimRef.current);
+      cameraAnimRef.current = null;
+    }
     const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
     setTransform(prev => ({
       ...prev,
@@ -1097,8 +1341,11 @@ export const GraphView: React.FC<GraphViewProps> = ({
   };
 
   const handleResetView = () => {
-    setTransform({ x: 0, y: 0, k: isMini ? 0.75 : 1.0 });
-    alphaRef.current = 1.0;
+    if (cameraAnimRef.current) {
+      cancelAnimationFrame(cameraAnimRef.current);
+      cameraAnimRef.current = null;
+    }
+    handleClearCommunityFilter();
   };
 
   const handleReheatSimulation = () => {
@@ -1130,6 +1377,23 @@ export const GraphView: React.FC<GraphViewProps> = ({
     }
   };
 
+  const handleRestartAnimation = () => {
+    const total = simNodesRef.current.length;
+    if (total <= 1) return;
+
+    connectingEdgesRef.current.clear();
+    bloomNodesRef.current.clear();
+    setAnimProgress(1);
+    const firstNode = simNodesRef.current[0];
+    if (firstNode) {
+      bloomNodesRef.current.set(firstNode.id, performance.now());
+      firstNode.x = 0;
+      firstNode.y = 0;
+    }
+    alphaRef.current = 1.0;
+    setIsTimelapseRunning(true);
+  };
+
   const handleResetTimelapse = () => {
     setIsTimelapseRunning(false);
     connectingEdgesRef.current.clear();
@@ -1154,7 +1418,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   };
 
   return (
-    <div className={`relative w-full h-full bg-[#f4f4f6] dark:bg-[#121214] overflow-hidden select-none ${isMini ? 'rounded-xl border border-black/[0.08] dark:border-white/[0.08]' : ''}`}>
+    <div className={`relative w-full h-full bg-[#f4f4f6] dark:bg-[#121214] overflow-hidden select-none transition-colors ${isMini ? 'rounded-2xl' : ''}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-full cursor-grab active:cursor-grabbing block"
@@ -1164,249 +1428,103 @@ export const GraphView: React.FC<GraphViewProps> = ({
         onWheel={handleWheel}
       />
 
-      {/* Top Left Floating Control Center (Unified Search, Timelapse, Dual-Edges & Subsystems) */}
-      {!isMini && (
-        <div className="absolute top-3 left-3 z-30 flex flex-col gap-2 select-none pointer-events-auto">
-          {/* Row 1: Search Input Bar & Animated Timelapse Controls */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] shadow-xs text-xs text-[#111113] dark:text-[#f4f4f6]">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
-              <input
-                type="text"
-                value={settings.search}
-                onChange={e => updateSetting('search', e.target.value)}
-                placeholder="Search graph..."
-                className="bg-transparent text-xs text-[#111113] dark:text-[#f4f4f6] placeholder-zinc-400 dark:placeholder-zinc-500 pl-8 pr-6 py-1.5 rounded-xl border border-transparent focus:border-[#384cff]/40 dark:focus:border-[#6372ff]/40 focus:outline-none w-44 transition-all"
-              />
-              {settings.search && (
-                <button
-                  onClick={() => updateSetting('search', '')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.08] my-auto" />
-
-            {/* Time-lapse Play / Pause button */}
-            <button
-              onClick={handleToggleTimelapse}
-              title={isTimelapseRunning ? 'Pause Animation' : 'Animate Graph Evolution'}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
-                isTimelapseRunning
-                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] border-transparent shadow-sm'
-                  : 'bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#111113] dark:text-[#f4f4f6] border-black/[0.06] dark:border-white/[0.08]'
-              }`}
-            >
-              {isTimelapseRunning ? (
-                <>
-                  <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>Pause ({animProgress}/{filteredData.nodes.length})</span>
-                </>
-              ) : animProgress < filteredData.nodes.length && animProgress > 1 ? (
-                <>
-                  <Play className="w-3.5 h-3.5 fill-current text-zinc-700 dark:text-zinc-300" />
-                  <span>Resume ({animProgress}/{filteredData.nodes.length})</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-3.5 h-3.5 fill-current text-zinc-700 dark:text-zinc-300" />
-                  <span>{animProgress >= filteredData.nodes.length && animProgress > 1 ? 'Replay' : 'Animate'}</span>
-                </>
-              )}
-            </button>
-
-            {/* Show full graph if paused partway */}
-            {animProgress < filteredData.nodes.length && animProgress > 1 && !isTimelapseRunning && (
-              <button
-                onClick={handleResetTimelapse}
-                title="Show Full Graph"
-                className="p-1.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#585860] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Reheat Simulation Forces Button */}
-            <button
-              onClick={handleReheatSimulation}
-              title="Reheat Simulation Forces"
-              className="p-1.5 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] text-[#585860] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200 border border-black/[0.06] dark:border-white/[0.08] transition-colors"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Row 2: Dual-Edge Filters & Subsystem Communities */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] shadow-xs text-xs text-[#111113] dark:text-[#f4f4f6] w-fit">
-            {/* Extracted Edge Pill Toggle */}
-            <button
-              onClick={() => updateSetting('showExtractedEdges', settings.showExtractedEdges === false ? true : false)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
-                settings.showExtractedEdges !== false
-                  ? 'bg-blue-500/10 dark:bg-blue-500/20 text-[#384cff] dark:text-blue-400 font-medium border border-blue-500/20 dark:border-blue-500/35'
-                  : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 opacity-60'
-              }`}
-              title="Toggle Deterministic Code & Wikilink Edges (100% confidence)"
-            >
-              <span className="w-3.5 h-0.5 bg-[#384cff] dark:bg-blue-400 rounded-full inline-block" />
-              <span className="text-[11px]">Extracted</span>
-              <span className="text-[9px] font-mono opacity-80">({extractedEdgesCount})</span>
-            </button>
-
-            {/* Inferred Edge Pill Toggle */}
-            <button
-              onClick={() => updateSetting('showInferredEdges', !settings.showInferredEdges)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
-                settings.showInferredEdges
-                  ? 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium border border-purple-500/20 dark:border-purple-500/35'
-                  : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 opacity-60'
-              }`}
-              title="Toggle Semantic AI Inferred Edges"
-            >
-              <span className="w-3.5 h-0.5 border-t border-dashed border-purple-500 dark:border-purple-400 inline-block" />
-              <span className="text-[11px]">Inferred (AI)</span>
-              <span className="text-[9px] font-mono opacity-80">({inferredEdgesCount})</span>
-            </button>
-
-            {/* Subsystems Drawer Toggle */}
-            <div className="h-4 w-px bg-black/[0.08] dark:bg-white/[0.08] mx-0.5" />
-            <button
-              onClick={() => setShowCommunitiesDrawer(prev => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition-all ${
-                showCommunitiesDrawer || activeCommunityId !== null
-                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] font-medium shadow-xs'
-                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
-              }`}
-              title="Explore Subsystem Communities (Leiden Partitioning)"
-            >
-              <Boxes className="w-3.5 h-3.5 text-[#384cff] dark:text-blue-400" />
-              <span className="text-[11px]">Subsystems</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/15">
+      {/* Standalone Leiden Subsystems Floating Container (Opened by Filter Button) */}
+      {showSubsystemsDrawer && !isMini && (
+        <div className="subsystems-drawer absolute bottom-20 left-1/2 -translate-x-1/2 z-40 w-84 max-h-[75vh] overflow-y-auto bg-white/95 dark:bg-[#1a1a1e]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-2xl p-4 text-xs text-[#18181B] dark:text-zinc-200 space-y-3 transition-colors animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.06] font-semibold text-[#18181B] dark:text-white">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#384CFF]" />
+              <span>Subsystems & Communities</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#384CFF]/10 text-[#384CFF] font-semibold">
                 {communities.length}
               </span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Subsystem Communities Drawer */}
-      {showCommunitiesDrawer && !isMini && (
-        <div className="absolute top-[88px] left-3 z-30 w-72 max-h-[70vh] overflow-y-auto bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.25)] p-3 text-xs text-[#111113] dark:text-[#f4f4f6] space-y-2.5 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.08]">
-            <div>
-              <div className="font-semibold text-xs flex items-center gap-1.5">
-                <Boxes className="w-3.5 h-3.5 text-[#384cff] dark:text-blue-400" />
-                <span>Leiden Subsystems</span>
-              </div>
-              <p className="text-[10px] text-[#8e8e93] dark:text-zinc-400">
-                {communities.length} modular organic clusters detected
-              </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               {activeCommunityId !== null && (
                 <button
-                  onClick={() => setActiveCommunityId(null)}
-                  className="text-[10px] text-[#384cff] dark:text-blue-400 hover:underline font-medium"
+                  onClick={handleClearCommunityFilter}
+                  className="text-[10px] text-[#384CFF] hover:underline font-semibold cursor-pointer"
                 >
-                  Clear
+                  Clear Filter
                 </button>
               )}
               <button
-                onClick={() => setShowCommunitiesDrawer(false)}
-                className="p-1 rounded-md text-[#8e8e93] hover:text-[#111113] dark:text-zinc-400 dark:hover:text-zinc-200"
+                onClick={() => setShowSubsystemsDrawer(false)}
+                className="p-1 rounded-lg text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            {communities.map(comm => {
-              const isSelected = activeCommunityId === comm.id;
-              return (
-                <div
-                  key={comm.id}
-                  onClick={() => handleFocusCommunity(comm)}
-                  className={`p-2 rounded-xl cursor-pointer border transition-all ${
-                    isSelected
-                      ? 'bg-blue-500/10 dark:bg-blue-500/20 border-[#384cff]/40 dark:border-blue-400/40 shadow-xs'
-                      : 'border-black/[0.04] dark:border-white/[0.05] hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 truncate">
-                      <span
-                        className="w-3 h-3 rounded-full shrink-0 shadow-xs"
-                        style={{ backgroundColor: comm.color }}
-                      />
-                      <span className="font-medium truncate text-xs">
-                        {comm.name}
+          <p className="text-[11px] text-[#71717A] dark:text-zinc-400 leading-relaxed">
+            Algorithmic community clustering. Click any subsystem to isolate and inspect its connected knowledge cluster.
+          </p>
+
+          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+            {communities.length === 0 ? (
+              <div className="text-[11px] text-[#71717A] italic py-4 text-center">
+                No subsystems detected yet in this vault.
+              </div>
+            ) : (
+              communities.map(comm => {
+                const isSelected = activeCommunityId === comm.id;
+                return (
+                  <div
+                    key={comm.id}
+                    onClick={() => handleFocusCommunity(comm)}
+                    className={`p-2.5 rounded-xl cursor-pointer border transition-all ${
+                      isSelected
+                        ? 'bg-[#384CFF]/10 border-[#384CFF]/50 shadow-xs'
+                        : 'bg-[#F8F9FA] dark:bg-white/[0.03] border-black/[0.05] dark:border-white/[0.05] hover:bg-[#F0F2F5] dark:hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 truncate">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                          style={{ backgroundColor: comm.color }}
+                        />
+                        <span className="font-semibold truncate text-xs text-[#18181B] dark:text-white">
+                          {comm.name}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#71717A] dark:text-zinc-400 shrink-0">
+                        {comm.nodes.length} notes
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-[#8e8e93] dark:text-zinc-400 shrink-0">
-                      {comm.nodes.length} notes
-                    </span>
+                    <div className="text-[10px] text-[#71717A] dark:text-zinc-400 font-mono truncate mt-1 pl-4.5">
+                      {comm.nodes.slice(0, 3).map(n => n.label.replace(/\.md$/, '')).join(', ')}
+                      {comm.nodes.length > 3 ? '...' : ''}
+                    </div>
                   </div>
-                  <div className="text-[10px] text-[#8e8e93] dark:text-zinc-400 font-mono truncate mt-1 pl-5">
-                    {comm.nodes.slice(0, 3).map(n => n.label.replace(/\.md$/, '')).join(', ')}
-                    {comm.nodes.length > 3 ? '...' : ''}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
-      {/* Top Right Action Strip: Split, Settings, Close */}
-      {!isMini && (
-        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
-          {onSplitRight && (
-            <button
-              onClick={() => onSplitRight()}
-              title="Open Note to the Right (Split)"
-              className="p-2 rounded-xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md text-[#585860] dark:text-zinc-400 border border-black/[0.08] dark:border-white/[0.1] hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] shadow-xs transition-all"
-            >
-              <Columns className="w-4 h-4" />
-            </button>
-          )}
-
-          <button
-            onClick={() => setShowControls(prev => !prev)}
-            title="Graph Settings"
-            className={`p-2 rounded-xl border backdrop-blur-md transition-all ${
-              showControls
-                ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] border-transparent shadow-sm'
-                : 'bg-white/95 dark:bg-[#18181b]/95 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] border-black/[0.08] dark:border-white/[0.1] shadow-xs'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-          </button>
-
-          {onClose && (
-            <button
-              onClick={onClose}
-              title="Close Graph (Esc)"
-              className="p-2 rounded-xl bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md text-[#585860] dark:text-zinc-400 border border-black/[0.08] dark:border-white/[0.1] hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] shadow-xs transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Real Obsidian .graph-controls Floating Drawer */}
+      {/* Real Obsidian .graph-controls Floating Drawer for Graph Controls & Forces */}
       {showControls && !isMini && (
-        <div className="graph-settings-drawer absolute top-12 right-3 z-30 w-64 max-h-[85vh] overflow-y-auto bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-3.5 text-xs text-[#111113] dark:text-[#f4f4f6] space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.08] font-semibold text-[#111113] dark:text-[#f4f4f6]">
-            <span>Graph Settings</span>
-            <span className="text-[10px] text-[#8e8e93] dark:text-zinc-400 font-normal">
-              {filteredData.nodes.length} nodes · {filteredData.edges.length} links
-            </span>
+        <div className="graph-settings-drawer absolute bottom-20 left-1/2 -translate-x-1/2 z-40 w-80 max-h-[75vh] overflow-y-auto bg-white/95 dark:bg-[#1a1a1e]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-2xl p-4 text-xs text-[#18181B] dark:text-zinc-200 space-y-3.5 transition-colors">
+          <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] dark:border-white/[0.06] font-semibold text-[#18181B] dark:text-white">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-[#384CFF]" />
+              <span>Graph Controls & Physics</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[#71717A] dark:text-zinc-400 font-normal">
+                {filteredData.nodes.length} nodes · {filteredData.edges.length} links
+              </span>
+              <button
+                onClick={() => setShowControls(false)}
+                className="p-1 rounded-lg text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Section 1: Filters */}
@@ -1814,57 +1932,138 @@ export const GraphView: React.FC<GraphViewProps> = ({
         </div>
       )}
 
-      {/* Local Graph Depth / Jumps Slider in Mini Mode */}
-      {isMini && (
-        <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-2 py-0.5 text-[10px] text-[#585860] dark:text-zinc-400 shadow-xs">
-          <span>Depth:</span>
-          {[1, 2, 3].map(j => (
+      {/* Bottom Floating Control Bars matching Figma Screen 3 */}
+      {!isMini && (
+        <>
+          {/* Bottom Left: Search node + Replay button + Refresh */}
+          <div className="absolute bottom-6 left-6 z-30 flex items-center gap-2">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-[#71717A] dark:text-[#6D6D6D] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={settings.search}
+                onChange={e => updateSetting('search', e.target.value)}
+                placeholder="Search node in the graph"
+                className="w-56 pl-8 pr-3 py-1.5 rounded-full bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.08] dark:border-white/[0.04] text-xs text-[#18181B] dark:text-white placeholder:text-[#8E8E93] dark:placeholder:text-[#6D6D6D] focus:outline-none focus:border-[#384CFF] shadow-xl transition-all"
+              />
+            </div>
+
             <button
-              key={j}
-              onClick={() => updateSetting('localJumps', j)}
-              className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
-                (settings.localJumps || 1) === j
-                  ? 'bg-[#18181b] text-white dark:bg-white dark:text-[#18181b] shadow-xs'
-                  : 'hover:text-[#111113] dark:hover:text-[#f4f4f6]'
+              onClick={handleToggleTimelapse}
+              title={isTimelapseRunning ? "Pause graph animation" : "Play / Replay graph animation"}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#384CFF] hover:bg-[#4863ff] text-white text-xs font-medium shadow-lg shadow-blue-600/30 transition-all cursor-pointer select-none"
+            >
+              {isTimelapseRunning ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-white stroke-none" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-white stroke-none" />
+                  <span>{animProgress > 1 && animProgress < (simNodesRef.current?.length || 0) ? 'Play' : 'Replay'}</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleRestartAnimation}
+              title="Restart graph animation"
+              className="w-7 h-7 rounded-full bg-[#FFFFFF] dark:bg-[#272727] text-[#71717A] hover:text-[#18181B] hover:bg-[#F2F2F6] dark:text-[#6D6D6D] dark:hover:text-white dark:hover:bg-[#3B3B3B] border border-black/[0.08] dark:border-white/[0.04] flex items-center justify-center shadow-lg transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Bottom Center: Extracted, Inferred, Filter pills & Sliders matching Figma Screen 3 */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-[#FFFFFF] dark:bg-[#272727] border border-black/[0.08] dark:border-white/[0.04] rounded-full p-1 shadow-2xl transition-colors">
+            {/* Extracted Pill */}
+            <button
+              onClick={() => updateSetting('showExtractedEdges', !settings.showExtractedEdges)}
+              className={`px-3.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                settings.showExtractedEdges !== false
+                  ? 'bg-[#384CFF] text-white shadow-xs'
+                  : 'bg-transparent text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white'
               }`}
             >
-              {j}
+              Extracted
             </button>
-          ))}
-        </div>
+
+            {/* Inferred Pill */}
+            <button
+              onClick={() => updateSetting('showInferredEdges', !settings.showInferredEdges)}
+              className={`px-3.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                settings.showInferredEdges
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-transparent text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white'
+              }`}
+            >
+              Inferred
+            </button>
+
+            {/* Filter Pill: Shows Subsystems & Communities Container */}
+            <button
+              onClick={() => {
+                setShowSubsystemsDrawer(prev => !prev);
+                setShowControls(false);
+              }}
+              title="Subsystems & Communities Filter"
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                showSubsystemsDrawer || activeCommunityId !== null
+                  ? 'bg-[#384CFF] text-white shadow-xs'
+                  : 'bg-transparent text-[#71717A] hover:text-[#18181B] dark:text-[#6D6D6D] dark:hover:text-white'
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filter</span>
+              {activeCommunityId !== null && (
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              )}
+            </button>
+
+            {/* Sliders Button: Control Panel for Graph & Physics Forces */}
+            <button
+              onClick={() => {
+                setShowControls(prev => !prev);
+                setShowSubsystemsDrawer(false);
+              }}
+              title="Graph Controls & Physics Forces"
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer outline-none focus:outline-none ring-0 focus:ring-0 ${
+                showControls
+                  ? 'bg-[#384CFF] text-white shadow-xs'
+                  : 'bg-[#F0F0F4] hover:bg-[#E8E8EE] dark:bg-[#3B3B3B] dark:hover:bg-[#484848] text-[#18181B] dark:text-white'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Bottom Right: Zoom In, Zoom Out, Reset Camera */}
+          <div className="absolute bottom-6 right-6 z-30 flex items-center gap-1.5">
+            <button
+              onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
+              className="w-8 h-8 rounded-full bg-[#FFFFFF] dark:bg-[#272727] text-[#71717A] hover:text-[#18181B] hover:bg-[#F2F2F6] dark:text-[#6D6D6D] dark:hover:text-white dark:hover:bg-[#3B3B3B] border border-black/[0.08] dark:border-white/[0.04] flex items-center justify-center shadow-xl transition-all cursor-pointer"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setTransform(t => ({ ...t, k: Math.max(0.15, t.k * 0.8) }))}
+              className="w-8 h-8 rounded-full bg-[#FFFFFF] dark:bg-[#272727] text-[#71717A] hover:text-[#18181B] hover:bg-[#F2F2F6] dark:text-[#6D6D6D] dark:hover:text-white dark:hover:bg-[#3B3B3B] border border-black/[0.08] dark:border-white/[0.04] flex items-center justify-center shadow-xl transition-all cursor-pointer"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleResetView}
+              className="w-8 h-8 rounded-full bg-[#FFFFFF] dark:bg-[#272727] text-[#71717A] hover:text-[#18181B] hover:bg-[#F2F2F6] dark:text-[#6D6D6D] dark:hover:text-white dark:hover:bg-[#3B3B3B] border border-black/[0.08] dark:border-white/[0.04] flex items-center justify-center shadow-xl transition-all cursor-pointer"
+              title="Reset Camera"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </>
       )}
-
-      {/* Floating Zoom & Camera Controls */}
-      <div className="graph-zoom-bar absolute bottom-3 right-3 flex items-center gap-1 z-10 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.1] rounded-xl p-1 shadow-sm">
-        <button
-          onClick={() => setTransform(t => ({ ...t, k: Math.min(4.5, t.k * 1.2) }))}
-          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
-          title="Zoom In"
-        >
-          <ZoomIn className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => setTransform(t => ({ ...t, k: Math.max(0.15, t.k * 0.8) }))}
-          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
-          title="Zoom Out"
-        >
-          <ZoomOut className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={handleResetView}
-          className="graph-control-btn p-1.5 text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f6] hover:bg-[#f4f4f6] dark:hover:bg-[#27272a] rounded-lg transition-colors"
-          title="Reset Camera"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Bottom Left Node Count */}
-      <div className="absolute bottom-3 left-3 text-[11px] text-[#8e8e93] dark:text-zinc-400 font-medium select-none pointer-events-none">
-        {isTimelapseRunning || (animProgress < filteredData.nodes.length && animProgress > 0)
-          ? `${animProgress} of ${filteredData.nodes.length} nodes`
-          : `${filteredData.nodes.length} nodes`} · {simEdgesRef.current.length} links
-      </div>
     </div>
   );
 };

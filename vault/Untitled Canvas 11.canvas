@@ -1,4 +1,135 @@
 {
-  "nodes": [],
+  "nodes": [
+    {
+      "id": "node-1793568822460",
+      "type": "group",
+      "label": "New Group",
+      "x": 188,
+      "y": 366,
+      "width": 480,
+      "height": 360,
+      "color": "0"
+    },
+    {
+      "id": "node-1793567761858",
+      "type": "group",
+      "label": "New Group",
+      "x": 926,
+      "y": 704,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793567750156",
+      "type": "group",
+      "label": "New Group",
+      "x": 572,
+      "y": 1007,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793563599240",
+      "type": "group",
+      "label": "New Group",
+      "x": 159,
+      "y": 1027,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793563589525",
+      "type": "group",
+      "label": "New Group",
+      "x": 1523,
+      "y": 399,
+      "width": 480,
+      "height": 360,
+      "color": "6"
+    },
+    {
+      "id": "node-1793563585552",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 1229,
+      "y": 890,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793567756558",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 1935,
+      "y": 1142,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793567763152",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 967,
+      "y": 744,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-1793568826517",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": -103,
+      "y": 645,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-imp-1793569215457-q36j",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 770,
+      "y": 506,
+      "width": 280,
+      "height": 180,
+      "color": "6"
+    },
+    {
+      "id": "node-imp-1793569215457-nprq",
+      "type": "file",
+      "file": "Attachments/image4.png",
+      "x": 860,
+      "y": -76,
+      "width": 504,
+      "height": 498,
+      "color": "4"
+    },
+    {
+      "id": "node-1793571194312",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 362,
+      "y": -58,
+      "width": 280,
+      "height": 180,
+      "color": "5"
+    },
+    {
+      "id": "node-1793571214481",
+      "type": "text",
+      "text": "### New Idea\nDouble-click to edit this card in markdown.",
+      "x": 1775,
+      "y": 205,
+      "width": 280,
+      "height": 180,
+      "color": "0"
+    }
+  ],
   "edges": []
 }

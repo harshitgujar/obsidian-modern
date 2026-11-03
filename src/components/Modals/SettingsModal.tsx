@@ -382,72 +382,72 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md select-none animate-in fade-in duration-150">
-      <div className="w-[880px] h-[640px] bg-white rounded-3xl skeuo-modal flex overflow-hidden text-[#111113] border border-black/[0.08]">
+      <div className="w-[880px] h-[640px] bg-white dark:bg-[#1A1A1E] rounded-3xl skeuo-modal flex overflow-hidden text-[#18181B] dark:text-[#F4F4F5] border border-black/[0.08] dark:border-white/[0.08] shadow-[0_24px_64px_-12px_rgba(0,0,0,0.22)] transition-colors">
         {/* Left Settings Sidebar */}
-        <div className="w-60 bg-[#f8f8fa] border-r border-black/[0.07] p-3.5 flex flex-col justify-between shrink-0 overflow-y-auto">
+        <div className="w-60 bg-[#f8f8fa] dark:bg-[#141417] border-r border-black/[0.07] dark:border-white/[0.06] p-3.5 flex flex-col justify-between shrink-0 overflow-y-auto">
           <div className="space-y-1">
-            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] dark:text-zinc-500 uppercase tracking-wider">
               Options
             </div>
 
             <button
               onClick={() => setActiveSection('editor')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'editor'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-zinc-600" />
+              <FileText className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>Editor</span>
             </button>
 
             <button
               onClick={() => setActiveSection('files')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'files'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <Folder className="w-3.5 h-3.5 text-zinc-600" />
+              <Folder className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>Files & Links</span>
             </button>
 
             <button
               onClick={() => setActiveSection('appearance')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'appearance'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <Palette className="w-3.5 h-3.5 text-zinc-600" />
+              <Palette className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>Appearance</span>
             </button>
 
             <button
               onClick={() => setActiveSection('hotkeys')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'hotkeys'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <Keyboard className="w-3.5 h-3.5 text-zinc-600" />
+              <Keyboard className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>Hotkeys</span>
             </button>
 
-            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider pt-3">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] dark:text-zinc-500 uppercase tracking-wider pt-3">
               Core Extensions
             </div>
 
             <button
               onClick={() => setActiveSection('plugins')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'plugins'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
               <Puzzle className="w-3.5 h-3.5 text-zinc-600" />
@@ -455,20 +455,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             {/* Plugin Options (Sub-settings) */}
-            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] uppercase tracking-wider pt-3">
+            <div className="px-2 py-1 text-[11px] font-semibold text-[#8e8e93] dark:text-zinc-500 uppercase tracking-wider pt-3">
               Plugin Options
             </div>
 
             {corePluginsConfig['daily-notes'] !== false && (
               <button
                 onClick={() => setActiveSection('daily-notes')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                   activeSection === 'daily-notes'
-                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                    ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                    : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                 }`}
               >
-                <Calendar className="w-3.5 h-3.5 text-zinc-600" />
+                <Calendar className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                 <span>Daily Notes</span>
               </button>
             )}
@@ -476,13 +476,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {corePluginsConfig['templates'] !== false && (
               <button
                 onClick={() => setActiveSection('templates')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                   activeSection === 'templates'
-                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                    ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                    : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5 text-zinc-600" />
+                <Sliders className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                 <span>Templates</span>
               </button>
             )}
@@ -490,13 +490,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {corePluginsConfig['file-recovery'] !== false && (
               <button
                 onClick={() => setActiveSection('file-recovery')}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                   activeSection === 'file-recovery'
-                    ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                    : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                    ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                    : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
                 }`}
               >
-                <History className="w-3.5 h-3.5 text-zinc-600" />
+                <History className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                 <span>File Recovery</span>
               </button>
             )}
@@ -504,54 +504,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* AI & Memory Settings */}
             <button
               onClick={() => setActiveSection('ai')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'ai'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-zinc-700" />
+                <Sparkles className="w-3.5 h-3.5 text-[#384CFF]" />
                 <span>AI & Memory (RAG)</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-200 text-zinc-700 font-medium">
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#384CFF]/10 text-[#384CFF] font-semibold">
                 PRO
               </span>
             </button>
           </div>
 
-          <div className="pt-4 border-t border-black/[0.06]">
+          <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.06]">
             <button
               onClick={() => setActiveSection('about')}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none ${
+              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors border-none cursor-pointer ${
                 activeSection === 'about'
-                  ? 'bg-white text-[#111113] font-medium shadow-xs border border-black/[0.08]'
-                  : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.04]'
+                  ? 'bg-white dark:bg-[#222226] text-[#18181B] dark:text-white font-medium shadow-xs border border-black/[0.08] dark:border-white/[0.08]'
+                  : 'text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
               }`}
             >
-              <Info className="w-3.5 h-3.5 text-zinc-600" />
+              <Info className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>About</span>
             </button>
           </div>
         </div>
 
         {/* Right Settings Body */}
-        <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
+        <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#1A1A1E] overflow-hidden transition-colors">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-3.5 border-b border-black/[0.06] bg-white">
-            <h2 className="text-sm font-semibold text-[#111113] capitalize">
+          <div className="flex items-center justify-between px-6 py-3.5 border-b border-black/[0.06] dark:border-white/[0.06] bg-white dark:bg-[#1A1A1E]">
+            <h2 className="text-sm font-semibold text-[#18181B] dark:text-white capitalize">
               {activeSection === 'files' ? 'Files & Links' : activeSection.replace(/-/g, ' ')} Settings
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-[#585860] hover:text-[#111113] hover:bg-black/[0.04] transition-colors"
+              className="p-1 rounded-lg text-[#585860] dark:text-zinc-400 hover:text-[#18181B] dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-[#585860]">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-[#585860] dark:text-zinc-300">
             {/* Section 1: Editor */}
             {activeSection === 'editor' && (
               <div className="space-y-4">
@@ -1289,19 +1289,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* 5. 1-Click External AI Hub (Claude Desktop & Cursor MCP) */}
-                <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] space-y-3.5">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-[#f8f8fa] dark:bg-[#202024] border border-black/[0.07] dark:border-white/[0.07] space-y-3.5 transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <div className="font-semibold text-[#111113] text-xs flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-zinc-700" />
+                      <div className="font-semibold text-[#111113] dark:text-white text-xs flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-[#384CFF]" />
                         <span>1-Click External AI Hub (Model Context Protocol)</span>
                       </div>
-                      <p className="text-[11px] text-[#585860] mt-0.5">
+                      <p className="text-[11px] text-[#585860] dark:text-zinc-400 mt-0.5">
                         Connect Claude Desktop, Cursor, or terminal assistants to your vault memory seamlessly.
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       {onOpenExternalAIConnect && (
                         <button
                           type="button"
@@ -1309,19 +1309,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             onClose();
                             onOpenExternalAIConnect();
                           }}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white flex items-center gap-1.5 shadow-xs transition-colors shrink-0 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-[#384cff] hover:bg-[#2d3ecc] text-white flex items-center gap-1.5 shadow-xs transition-colors shrink-0 cursor-pointer"
                         >
                           <Zap className="w-3.5 h-3.5" />
                           <span>Open 1-Click Connector</span>
                         </button>
                       )}
 
-                      {/* Claude status pill */}
+                      {/* Claude status pill (Never overflows or clips) */}
                       {mcpStatus && (
-                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1.5 ${
+                        <div className={`px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1.5 shrink-0 ${
                           mcpStatus.isClaudeConnected 
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                            : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
+                            : 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${mcpStatus.isClaudeConnected ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                           <span>{mcpStatus.isClaudeConnected ? 'Claude Connected' : 'Claude Ready'}</span>
@@ -1331,14 +1331,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   {/* Hub Tabs */}
-                  <div className="flex items-center gap-1.5 border-b border-black/[0.06] pb-2">
+                  <div className="flex items-center gap-1.5 border-b border-black/[0.06] dark:border-white/[0.06] pb-2">
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('claude')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
                         activeMcpTab === 'claude' 
-                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
-                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
+                          ? 'bg-white dark:bg-[#2A2A30] text-[#111113] dark:text-white shadow-xs border border-black/[0.08] dark:border-white/[0.08]' 
+                          : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       <Bot className="w-3.5 h-3.5" />
@@ -1347,10 +1347,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('cursor')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
                         activeMcpTab === 'cursor' 
-                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
-                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
+                          ? 'bg-white dark:bg-[#2A2A30] text-[#111113] dark:text-white shadow-xs border border-black/[0.08] dark:border-white/[0.08]' 
+                          : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       <Code2 className="w-3.5 h-3.5" />
@@ -1359,10 +1359,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('cli')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
                         activeMcpTab === 'cli' 
-                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
-                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
+                          ? 'bg-white dark:bg-[#2A2A30] text-[#111113] dark:text-white shadow-xs border border-black/[0.08] dark:border-white/[0.08]' 
+                          : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       <Terminal className="w-3.5 h-3.5" />
@@ -1371,10 +1371,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveMcpTab('raw')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
                         activeMcpTab === 'raw' 
-                          ? 'bg-white text-[#111113] shadow-xs border border-black/[0.08]' 
-                          : 'text-[#585860] hover:text-[#111113] hover:bg-black/[0.03]'
+                          ? 'bg-white dark:bg-[#2A2A30] text-[#111113] dark:text-white shadow-xs border border-black/[0.08] dark:border-white/[0.08]' 
+                          : 'text-[#585860] dark:text-zinc-400 hover:text-[#111113] dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1385,15 +1385,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 1: Claude Desktop (1-Click Auto Installer) */}
                   {activeMcpTab === 'claude' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#18181B] border border-black/[0.06] dark:border-white/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <div className="font-semibold text-[#111113] text-xs">
+                            <div className="font-semibold text-[#111113] dark:text-white text-xs">
                               {mcpStatus?.isClaudeConnected 
                                 ? '✓ Connected to Claude Desktop' 
                                 : '1-Click Claude Desktop Integration'}
                             </div>
-                            <p className="text-[11px] text-[#585860] leading-relaxed">
+                            <p className="text-[11px] text-[#585860] dark:text-zinc-400 leading-relaxed">
                               {mcpStatus?.isClaudeConnected
                                 ? 'Claude Desktop is configured to query your notes using standard MCP tools. If Claude was open, restart it to load the memory tools.'
                                 : 'Click below to automatically configure Claude Desktop. No manual JSON editing or terminal commands required.'}
@@ -1404,7 +1404,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <button
                               onClick={handleUninstallClaude}
                               disabled={isInstallingClaude}
-                              className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-medium transition-all shrink-0 disabled:opacity-50"
+                              className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/20 text-xs font-medium transition-all shrink-0 disabled:opacity-50 cursor-pointer"
                             >
                               {isInstallingClaude ? 'Disconnecting...' : 'Disconnect'}
                             </button>
@@ -1412,7 +1412,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <button
                               onClick={handleInstallClaude}
                               disabled={isInstallingClaude}
-                              className="px-3.5 py-1.5 rounded-xl skeuo-btn-dark text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm shrink-0 disabled:opacity-50"
+                              className="px-3.5 py-1.5 rounded-xl bg-[#384CFF] hover:bg-[#2D3ECC] text-white text-xs font-medium flex items-center gap-1.5 transition-all shadow-xs shrink-0 disabled:opacity-50 cursor-pointer"
                             >
                               <Zap className={`w-3.5 h-3.5 ${isInstallingClaude ? 'animate-bounce' : ''}`} />
                               <span>{isInstallingClaude ? 'Connecting...' : 'Connect to Claude Desktop'}</span>
@@ -1458,33 +1458,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 2: Cursor IDE */}
                   {activeMcpTab === 'cursor' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#18181B] border border-black/[0.06] dark:border-white/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-[#111113]">Cursor MCP Setup</span>
+                          <span className="text-xs font-semibold text-[#18181B] dark:text-white">Cursor MCP Setup</span>
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={handleCopyCursorConfig}
-                              className="px-2.5 py-1 rounded-lg skeuo-btn-dark text-[11px] font-medium flex items-center gap-1.5 shadow-xs"
+                              className="px-2.5 py-1 rounded-lg bg-[#384CFF] hover:bg-[#2D3ECC] text-white text-[11px] font-medium flex items-center gap-1.5 shadow-xs cursor-pointer"
                             >
                               {copiedCursor ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                               <span>{copiedCursor ? 'Copied Full JSON!' : 'Copy Cursor Config'}</span>
                             </button>
                             <button
                               onClick={handleCopyCursorCommand}
-                              className="px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] text-[11px] font-medium flex items-center gap-1.5 border border-black/[0.08]"
+                              className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#242428] text-[#18181B] dark:text-white text-[11px] font-medium flex items-center gap-1.5 border border-black/[0.08] dark:border-white/[0.08] cursor-pointer"
                             >
-                              {copiedCursorCommand ? <Check className="w-3 h-3 text-emerald-600" /> : <Terminal className="w-3 h-3" />}
+                              {copiedCursorCommand ? <Check className="w-3 h-3 text-emerald-500" /> : <Terminal className="w-3 h-3" />}
                               <span>{copiedCursorCommand ? 'Copied Command!' : 'Copy Command Only'}</span>
                             </button>
                           </div>
                         </div>
 
-                        <ol className="list-decimal pl-4 space-y-1 text-[11px] text-[#585860] leading-relaxed">
-                          <li>Open Cursor Settings (<kbd className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-800 border border-zinc-200">Cmd+,</kbd> or <kbd className="bg-zinc-100 px-1 py-0.5 rounded text-zinc-800 border border-zinc-200">Ctrl+,</kbd>) &gt; <strong>Features</strong> &gt; <strong>MCP</strong>.</li>
+                        <ol className="list-decimal pl-4 space-y-1 text-[11px] text-[#585860] dark:text-zinc-400 leading-relaxed">
+                          <li>Open Cursor Settings (<kbd className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded text-[#18181B] dark:text-white border border-black/10 dark:border-white/10 font-mono text-[10px]">Cmd+,</kbd> or <kbd className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded text-[#18181B] dark:text-white border border-black/10 dark:border-white/10 font-mono text-[10px]">Ctrl+,</kbd>) &gt; <strong>Features</strong> &gt; <strong>MCP</strong>.</li>
                           <li>Click <strong>Add New MCP Server</strong> and paste this configuration:</li>
                         </ol>
 
-                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto">
+                        <div className="bg-[#F4F4F6] dark:bg-[#26262B] p-2.5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] font-mono text-[10px] text-zinc-800 dark:text-zinc-200 select-all overflow-x-auto">
                           {mcpStatus?.cursorConfig 
                             ? JSON.stringify(mcpStatus.cursorConfig, null, 2)
                             : 'Loading configuration...'}
@@ -1496,23 +1496,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 3: Claude Code CLI */}
                   {activeMcpTab === 'cli' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#18181B] border border-black/[0.06] dark:border-white/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-[#111113]">Claude Code CLI Terminal Command</span>
+                          <span className="text-xs font-semibold text-[#18181B] dark:text-white">Claude Code CLI Terminal Command</span>
                           <button
                             onClick={handleCopyCliCommand}
-                            className="px-2.5 py-1 rounded-lg skeuo-btn-dark text-[11px] font-medium flex items-center gap-1.5 shadow-xs"
+                            className="px-2.5 py-1 rounded-lg bg-[#384CFF] hover:bg-[#2D3ECC] text-white text-[11px] font-medium flex items-center gap-1.5 shadow-xs cursor-pointer"
                           >
                             {copiedCli ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                             <span>{copiedCli ? 'Copied Command!' : 'Copy Command'}</span>
                           </button>
                         </div>
 
-                        <p className="text-[11px] text-[#585860]">
+                        <p className="text-[11px] text-[#585860] dark:text-zinc-400">
                           Run this single command in your terminal to enable vault memory in Claude Code:
                         </p>
 
-                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto whitespace-pre-wrap break-all">
+                        <div className="bg-[#F4F4F6] dark:bg-[#26262B] p-2.5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] font-mono text-[10px] text-zinc-800 dark:text-zinc-200 select-all overflow-x-auto whitespace-pre-wrap break-all">
                           {mcpStatus?.claudeCliCommand || 'claude mcp add runagon-vault-memory node ...'}
                         </div>
                       </div>
@@ -1522,21 +1522,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {/* Tab 4: Direct Spec / HTTP */}
                   {activeMcpTab === 'raw' && (
                     <div className="space-y-3 pt-1">
-                      <div className="p-3.5 rounded-xl bg-white border border-black/[0.06] shadow-xs space-y-2.5">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-[#18181B] border border-black/[0.06] dark:border-white/[0.06] shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-[#111113]">Direct HTTP Endpoint</span>
+                          <span className="text-xs font-semibold text-[#18181B] dark:text-white">Direct HTTP Endpoint</span>
                           <button
                             onClick={handleCopyMcpConfig}
-                            className="px-2.5 py-1 rounded-lg skeuo-btn text-[#111113] text-[11px] flex items-center gap-1.5 border border-black/[0.08]"
+                            className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#242428] text-[#18181B] dark:text-white text-[11px] flex items-center gap-1.5 border border-black/[0.08] dark:border-white/[0.08] cursor-pointer"
                           >
-                            {copiedMcp ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            {copiedMcp ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                             <span>{copiedMcp ? 'Copied!' : 'Copy URL Config'}</span>
                           </button>
                         </div>
-                        <p className="text-[11px] text-[#585860]">
+                        <p className="text-[11px] text-[#585860] dark:text-zinc-400">
                           For custom AI agents and HTTP MCP clients:
                         </p>
-                        <div className="bg-[#f4f4f6] p-2.5 rounded-xl border border-black/[0.06] font-mono text-[10px] text-zinc-800 select-all overflow-x-auto">
+                        <div className="bg-[#F4F4F6] dark:bg-[#26262B] p-2.5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] font-mono text-[10px] text-zinc-800 dark:text-zinc-200 select-all overflow-x-auto">
                           {`{ "mcpServers": { "runagon-vault": { "url": "http://localhost:${mcpStatus?.port || 5175}/api/vault/ai/mcp" } } }`}
                         </div>
                       </div>
@@ -1544,8 +1544,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   )}
 
                   {/* Privacy & Local Security Notice */}
-                  <div className="pt-1 flex items-center gap-2 text-[10.5px] text-[#8e8e93]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <div className="pt-1 flex items-center gap-2 text-[10.5px] text-[#8e8e93] dark:text-zinc-400">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span>100% Private & Local: All queries are executed directly on 127.0.0.1. Your notes never leave your computer.</span>
                   </div>
                 </div>
@@ -1555,16 +1555,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {/* Section 6: About */}
             {activeSection === 'about' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-[#f8f8fa] border border-black/[0.07] flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-black/[0.08] shadow-sm flex items-center justify-center shrink-0">
+                <div className="p-4 rounded-2xl bg-[#F8F8FA] dark:bg-[#202024] border border-black/[0.07] dark:border-white/[0.07] flex items-start gap-3.5 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-white dark:bg-[#2A2A30] border border-black/[0.08] dark:border-white/[0.08] shadow-sm flex items-center justify-center shrink-0">
                     <img src="/logo-symbol.png" alt="Runagon" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="space-y-1">
-                    <div className="text-base font-bold text-[#111113] flex items-center gap-2">
+                    <div className="text-base font-bold text-[#18181B] dark:text-white flex items-center gap-2">
                       <span>Runagon</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-800 font-mono">v1.0.0</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#384CFF]/10 text-[#384CFF] font-mono font-semibold">v1.0.0</span>
                     </div>
-                    <p className="text-[#585860] text-xs leading-relaxed">
+                    <p className="text-[#585860] dark:text-zinc-400 text-xs leading-relaxed">
                       100% private, local-first knowledge base and AI memory engine. All notes, canvases, bookmarks, CSS snippets, and graph indices live directly on your disk.
                     </p>
                   </div>
