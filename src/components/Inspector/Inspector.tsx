@@ -28,6 +28,8 @@ interface InspectorProps {
   activeTab?: InspectorTab;
   onSelectTab?: (tab: InspectorTab) => void;
   onInsertTextAtCursor?: (text: string) => void;
+  onReplaceActiveNote?: (content: string) => void;
+  onAppendToActiveNote?: (content: string) => void;
   onCreateNoteFromResponse?: (title: string, content: string) => void;
   onOpenSettings?: () => void;
 }
@@ -44,6 +46,8 @@ export const Inspector: React.FC<InspectorProps> = ({
   activeTab: externalActiveTab,
   onSelectTab,
   onInsertTextAtCursor,
+  onReplaceActiveNote,
+  onAppendToActiveNote,
   onCreateNoteFromResponse,
   onOpenSettings
 }) => {
@@ -237,6 +241,8 @@ export const Inspector: React.FC<InspectorProps> = ({
           activeFile={activeFile}
           onNavigateFile={onNavigateFile}
           onInsertTextAtCursor={onInsertTextAtCursor}
+          onReplaceActiveNote={onReplaceActiveNote}
+          onAppendToActiveNote={onAppendToActiveNote}
           onCreateNoteFromResponse={onCreateNoteFromResponse}
           onOpenSettings={onOpenSettings}
         />

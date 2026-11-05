@@ -521,7 +521,7 @@ export const App: React.FC = () => {
     let candidate = titleHint || `${prefix} ${num}`;
     while (vault.getFileByName(candidate)) {
       num++;
-      candidate = `${prefix} ${num}`;
+      candidate = titleHint ? `${titleHint} ${num}` : `${prefix} ${num}`;
     }
 
     const newFile = await vault.createNote(candidate, targetFolder, initialContent, ext);
@@ -618,6 +618,18 @@ export const App: React.FC = () => {
     const current = activeFile.content || '';
     const updated = current ? `${current}\n\n${textToInsert}` : textToInsert;
     handleContentChange(activeFile.path, updated);
+  }, [activeFile, handleContentChange]);
+
+  const handleAppendToActiveNote = useCallback((textToAppend: string) => {
+    if (!activeFile || activeFile.extension !== 'md') return;
+    const current = activeFile.content || '';
+    const updated = current ? `${current}\n\n${textToAppend}` : textToAppend;
+    handleContentChange(activeFile.path, updated);
+  }, [activeFile, handleContentChange]);
+
+  const handleReplaceActiveNote = useCallback((newContent: string) => {
+    if (!activeFile || activeFile.extension !== 'md') return;
+    handleContentChange(activeFile.path, newContent);
   }, [activeFile, handleContentChange]);
 
   const handleCreateNoteFromResponse = useCallback(async (title: string, content: string) => {
@@ -1910,6 +1922,8 @@ export const App: React.FC = () => {
             activeTab={inspectorActiveTab}
             onSelectTab={setInspectorActiveTab}
             onInsertTextAtCursor={handleInsertTextAtCursor}
+            onReplaceActiveNote={handleReplaceActiveNote}
+            onAppendToActiveNote={handleAppendToActiveNote}
             onCreateNoteFromResponse={handleCreateNoteFromResponse}
             onOpenSettings={() => {
               setSettingsInitialSection('ai');

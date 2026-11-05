@@ -173,6 +173,38 @@ function getRelatedNotesOffline(filePath) {
 }
 
 /**
+ * Offline note resolver
+ */
+function resolveNotePathOffline(target) {
+  let clean = (target || '').trim().replace(/^["']|["']$/g, '');
+  if (!clean) return null;
+  if (!clean.toLowerCase().endsWith('.md')) {
+    clean += '.md';
+  }
+  const directPath = path.resolve(vaultPath, clean);
+  if (fs.existsSync(directPath)) return clean;
+
+  const cleanName = path.basename(clean).toLowerCase();
+  function searchDir(dir, prefix = '') {
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const ent of entries) {
+        if (ent.name.startsWith('.')) continue;
+        const rel = prefix ? `${prefix}/${ent.name}` : ent.name;
+        if (ent.isDirectory()) {
+          const res = searchDir(path.join(dir, ent.name), rel);
+          if (res) return res;
+        } else if (ent.name.toLowerCase() === cleanName) {
+          return rel;
+        }
+      }
+    } catch {}
+    return null;
+  }
+  return searchDir(vaultPath);
+}
+
+/**
  * Writes a JSON-RPC 2.0 response to stdout.
  */
 function sendJsonRpc(id, result, error) {
@@ -241,6 +273,61 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {}
+    }
+  },
+  {
+    name: 'read_vault_note',
+    description: 'Reads the complete raw Markdown text of an existing note in the vault by relative file path or title.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePathOrTitle: {
+          type: 'string',
+          description: 'Relative path (e.g. "Features/Feature X.md") or note title (e.g. "Feature X").'
+        }
+      },
+      required: ['filePathOrTitle']
+    }
+  },
+  {
+    name: 'create_vault_note',
+    description: 'Creates a brand new Markdown note in the user\'s Runagon vault with the specified content. Creates any missing subfolders automatically.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'Relative path for the new note (e.g. "Features/New Idea.md" or "Daily/2026-11-06.md"). Will automatically append .md if missing.'
+        },
+        content: {
+          type: 'string',
+          description: 'The full Markdown content to write to the note.'
+        }
+      },
+      required: ['filePath', 'content']
+    }
+  },
+  {
+    name: 'update_vault_note',
+    description: 'Updates, rewrites, or appends to an existing Markdown note in the vault. Automatically saves a backup snapshot before writing.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filePathOrTitle: {
+          type: 'string',
+          description: 'Relative path or title of the note to update (e.g. "Features/Feature X.md" or "Feature X").'
+        },
+        content: {
+          type: 'string',
+          description: 'The new Markdown content, or the text to append.'
+        },
+        mode: {
+          type: 'string',
+          enum: ['replace', 'append'],
+          description: 'Either "replace" to overwrite the full note (default) or "append" to append to the end.'
+        }
+      },
+      required: ['filePathOrTitle', 'content']
     }
   }
 ];
@@ -390,12 +477,106 @@ rl.on('line', async line => {
             }
           ]
         });
+      } else if (toolName === 'read_vault_note') {
+        const resolved = resolveNotePathOffline(toolArgs.filePathOrTitle || '');
+        if (!resolved) {
+          sendJsonRpc(id, null, { code: -32602, message: `Note not found in vault: "${toolArgs.filePathOrTitle}"` });
+        } else {
+          try {
+            const content = fs.readFileSync(path.join(vaultPath, resolved), 'utf8');
+            sendJsonRpc(id, {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(
+                    {
+                      filePath: resolved,
+                      noteTitle: path.basename(resolved, '.md'),
+                      size: content.length,
+                      content
+                    },
+                    null,
+                    2
+                  )
+                }
+              ]
+            });
+          } catch (e) {
+            sendJsonRpc(id, null, { code: -32603, message: `Failed to read note: ${e.message}` });
+          }
+        }
+      } else if (toolName === 'create_vault_note') {
+        let relPath = (toolArgs.filePath || '').trim().replace(/^["']|["']$/g, '');
+        if (!relPath.toLowerCase().endsWith('.md')) relPath += '.md';
+        const fullPath = path.join(vaultPath, relPath);
+        try {
+          fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+          fs.writeFileSync(fullPath, toolArgs.content || '', 'utf8');
+          sendJsonRpc(id, {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    message: `Note created in vault: "${relPath}"`,
+                    filePath: relPath,
+                    bytesWritten: Buffer.byteLength(toolArgs.content || '', 'utf8')
+                  },
+                  null,
+                  2
+                )
+              }
+            ]
+          });
+        } catch (e) {
+          sendJsonRpc(id, null, { code: -32603, message: `Failed to create note: ${e.message}` });
+        }
+      } else if (toolName === 'update_vault_note') {
+        const target = (toolArgs.filePathOrTitle || '').trim().replace(/^["']|["']$/g, '');
+        const mode = toolArgs.mode === 'append' ? 'append' : 'replace';
+        const resolved = resolveNotePathOffline(target) || (target.toLowerCase().endsWith('.md') ? target : `${target}.md`);
+        const fullPath = path.join(vaultPath, resolved);
+        try {
+          fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+          let finalContent = toolArgs.content || '';
+          if (fs.existsSync(fullPath)) {
+            try {
+              fs.copyFileSync(fullPath, `${fullPath}.bak`);
+            } catch {}
+            if (mode === 'append') {
+              const current = fs.readFileSync(fullPath, 'utf8');
+              finalContent = `${current.trimEnd()}\n\n${(toolArgs.content || '').trimStart()}`;
+            }
+          }
+          fs.writeFileSync(fullPath, finalContent, 'utf8');
+          sendJsonRpc(id, {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    message: `Note updated in vault: "${resolved}" (${mode} mode)`,
+                    filePath: resolved,
+                    mode,
+                    bytesWritten: Buffer.byteLength(finalContent, 'utf8')
+                  },
+                  null,
+                  2
+                )
+              }
+            ]
+          });
+        } catch (e) {
+          sendJsonRpc(id, null, { code: -32603, message: `Failed to update note: ${e.message}` });
+        }
       } else {
         sendJsonRpc(id, {
           content: [
             {
               type: 'text',
-              text: `Tool ${toolName} requires Runagon app to be open.`
+              text: `Tool ${toolName} execution error: ${serverErr.message || serverErr}`
             }
           ]
         });

@@ -234,7 +234,18 @@ export class ObsidianVaultServer {
       } catch {}
     }
     this.ragEngine = new RAGEngine(this.activeVaultPath, aiConfig);
-    this.mcpServer = new VaultMCPServer(this.ragEngine);
+    this.mcpServer = new VaultMCPServer(this.ragEngine, {
+      readFile: (relPath: string) => {
+        const abs = this.safeJoinVault(relPath);
+        return fs.readFileSync(abs, 'utf8');
+      },
+      writeFile: (relPath: string, content: string) => {
+        return this.writeFile(relPath, content);
+      },
+      resolveNotePath: (filePathOrTitle: string) => {
+        return this.resolveNotePath(filePathOrTitle);
+      }
+    });
     // Background incremental sync of vault markdown files
     this.syncVaultRAG().catch(err => {
       console.warn('Initial RAG vault sync error:', err);
@@ -638,6 +649,26 @@ export class ObsidianVaultServer {
       createdAt: stat.birthtimeMs || stat.mtimeMs,
       updatedAt: stat.mtimeMs
     };
+  }
+
+  public resolveNotePath(filePathOrTitle: string): string | null {
+    let clean = (filePathOrTitle || '').trim().replace(/^["']|["']$/g, '');
+    if (!clean) return null;
+    if (!clean.toLowerCase().endsWith('.md')) {
+      clean += '.md';
+    }
+    try {
+      const directAbs = this.safeJoinVault(clean);
+      if (fs.existsSync(directAbs) && fs.statSync(directAbs).isFile()) {
+        return clean;
+      }
+    } catch {}
+
+    const { files } = this.scanVault();
+    const baseTarget = path.basename(clean).toLowerCase();
+    const cleanLower = clean.toLowerCase();
+    const found = files.find(f => f.extension === 'md' && (f.path.toLowerCase() === cleanLower || f.name.toLowerCase() === baseTarget));
+    return found ? found.path : null;
   }
 
   private recordFileRecoverySnapshot(relPath: string, content: string) {
@@ -1071,7 +1102,11 @@ export class ObsidianVaultServer {
         const raw = fs.readFileSync(configFilePath, 'utf8');
         const clean = raw.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').trim();
         const parsed = JSON.parse(clean);
-        const entry = parsed.mcpServers?.['runagon-vault-memory'] || parsed.mcpServers?.['obsidian-vault-memory'];
+        const currentVaultName = path.basename(this.activeVaultPath);
+        const serverKey = Object.keys(parsed.mcpServers || {}).find(
+          k => k === currentVaultName || k === `runagon-${currentVaultName}` || k === 'runagon-vault-memory' || k === 'obsidian-vault-memory'
+        );
+        const entry = serverKey ? parsed.mcpServers[serverKey] : undefined;
         if (entry) {
           // Strictly live: ONLY report connected if the application is actually installed!
           isConnected = isAppInstalled;
@@ -1142,8 +1177,13 @@ export class ObsidianVaultServer {
         serverDef.env = execConfig.env;
       }
 
-      config.mcpServers['runagon-vault-memory'] = serverDef;
-      // Clean up legacy naming if present
+      const currentVaultName = path.basename(this.activeVaultPath);
+      const serverKey = currentVaultName || 'runagon-vault-memory';
+      config.mcpServers[serverKey] = serverDef;
+      // Clean up legacy generic naming if different
+      if (serverKey !== 'runagon-vault-memory') {
+        delete config.mcpServers['runagon-vault-memory'];
+      }
       delete config.mcpServers['obsidian-vault-memory'];
 
       fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
@@ -1154,14 +1194,14 @@ export class ObsidianVaultServer {
         configPath: configFilePath
       };
     } else {
+      const currentVaultName = path.basename(this.activeVaultPath);
       let changed = false;
-      if (config.mcpServers?.['runagon-vault-memory']) {
-        delete config.mcpServers['runagon-vault-memory'];
-        changed = true;
-      }
-      if (config.mcpServers?.['obsidian-vault-memory']) {
-        delete config.mcpServers['obsidian-vault-memory'];
-        changed = true;
+      const keysToRemove = [currentVaultName, `runagon-${currentVaultName}`, 'runagon-vault-memory', 'obsidian-vault-memory'];
+      for (const k of keysToRemove) {
+        if (config.mcpServers?.[k]) {
+          delete config.mcpServers[k];
+          changed = true;
+        }
       }
       if (changed || fs.existsSync(configFilePath)) {
         fs.writeFileSync(configFilePath, JSON.stringify(config, null, 2), 'utf8');
