@@ -1627,6 +1627,15 @@ export const App: React.FC = () => {
     }
   }, [activeFile, vaultName]);
 
+  // Listen for file selection requests from Electron tray or external events
+  useEffect(() => {
+    if (window.electronAPI?.onSelectFile) {
+      return window.electronAPI.onSelectFile((filePath: string) => {
+        handleSelectFile(filePath);
+      });
+    }
+  }, [handleSelectFile]);
+
   if (!isVaultLoaded) {
     return (
       <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#f4f4f6] text-[#585860] gap-4 select-none">

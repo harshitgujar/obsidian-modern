@@ -1,6 +1,11 @@
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, Tray, nativeImage, globalShortcut, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+let mainWindow = null;
+let tray = null;
+let trayWindow = null;
+let isTrayPinned = false;
 
 function setupAppMenu() {
   const isMac = process.platform === 'darwin';
@@ -217,6 +222,12 @@ function createWindow(targetUrl) {
     }
   });
 
+  mainWindow = win;
+
+  win.on('closed', () => {
+    mainWindow = null;
+  });
+
   win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
     const levelNames = ['VERBOSE', 'INFO', 'WARNING', 'ERROR'];
     console.log(`[Renderer] [${levelNames[level] || level}] ${message} (${sourceId}:${line})`);
@@ -266,6 +277,194 @@ function registerObsidianIpc() {
     if (res.canceled || res.filePaths.length === 0) return null;
     return res.filePaths[0];
   });
+
+  // Quick Capture & Retrieval Tray IPC channels
+  ipcMain.on('tray:hide', () => {
+    if (trayWindow && trayWindow.isVisible()) {
+      trayWindow.hide();
+    }
+  });
+
+  ipcMain.on('tray:set-pinned', (_event, pinned) => {
+    isTrayPinned = Boolean(pinned);
+    if (trayWindow) {
+      trayWindow.setAlwaysOnTop(isTrayPinned);
+    }
+  });
+
+  ipcMain.on('tray:open-in-main', (_event, { filePath, vaultPath }) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+      if (filePath) {
+        mainWindow.webContents.send('app:select-file', filePath);
+      }
+    }
+  });
+
+  ipcMain.on('tray:reveal-file', (_event, targetPath) => {
+    if (targetPath && fs.existsSync(targetPath)) {
+      shell.showItemInFolder(targetPath);
+    }
+  });
+
+  ipcMain.handle('tray:save-dropped-file', async (_event, { sourcePath, targetVaultPath, targetFolder, fileName }) => {
+    try {
+      const destDir = path.join(targetVaultPath, targetFolder || '');
+      fs.mkdirSync(destDir, { recursive: true });
+      const destPath = path.join(destDir, fileName);
+      fs.copyFileSync(sourcePath, destPath);
+      const relPath = path.join(targetFolder || '', fileName).replace(/^[\/\\]+/, '');
+      return { ok: true, relPath, absPath: destPath };
+    } catch (err) {
+      return { ok: false, error: String(err) };
+    }
+  });
+}
+
+function getTrayIcon() {
+  const iconPath = path.join(__dirname, '../build/icon.png');
+  if (fs.existsSync(iconPath)) {
+    const icon = nativeImage.createFromPath(iconPath).resize({ width: 18, height: 18 });
+    if (process.platform === 'darwin') {
+      icon.setTemplateImage(true);
+    }
+    return icon;
+  }
+  return nativeImage.createEmpty();
+}
+
+function createTrayWindow(targetUrl) {
+  const base = targetUrl || process.env.VITE_DEV_SERVER_URL || `file://${path.join(__dirname, '../dist/index.html')}`;
+  const separator = base.includes('?') ? '&' : '?';
+  const trayUrl = `${base}${separator}view=tray`;
+
+  trayWindow = new BrowserWindow({
+    width: 440,
+    height: 580,
+    show: false,
+    frame: false,
+    resizable: false,
+    movable: true,
+    fullscreenable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    backgroundColor: '#18181b',
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  trayWindow.loadURL(trayUrl);
+
+  trayWindow.on('blur', () => {
+    if (!isTrayPinned && trayWindow && trayWindow.isVisible()) {
+      trayWindow.hide();
+    }
+  });
+
+  trayWindow.on('close', (e) => {
+    if (!app.isQuitting) {
+      e.preventDefault();
+      trayWindow.hide();
+    }
+  });
+}
+
+function toggleTrayWindow(bounds) {
+  if (!trayWindow) return;
+  if (trayWindow.isVisible()) {
+    trayWindow.hide();
+    return;
+  }
+
+  const windowBounds = trayWindow.getBounds();
+  const currentBounds = bounds || (tray ? tray.getBounds() : null);
+
+  if (currentBounds && currentBounds.x > 0) {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
+    let x = Math.round(currentBounds.x + (currentBounds.width / 2) - (windowBounds.width / 2));
+    let y = Math.round(currentBounds.y + currentBounds.height + 6);
+
+    if (x < 12) x = 12;
+    if (x + windowBounds.width > screenWidth - 12) x = screenWidth - windowBounds.width - 12;
+    if (y + windowBounds.height > screenHeight - 12) y = Math.max(12, currentBounds.y - windowBounds.height - 6);
+
+    trayWindow.setPosition(x, y, false);
+  } else {
+    const cursor = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(cursor);
+    const { width, height, x: dispX, y: dispY } = display.workArea;
+    const x = Math.round(dispX + (width / 2) - (windowBounds.width / 2));
+    const y = Math.round(dispY + Math.min(80, height * 0.1));
+    trayWindow.setPosition(x, y, false);
+  }
+
+  trayWindow.show();
+  trayWindow.focus();
+}
+
+function setupTray(targetUrl) {
+  try {
+    createTrayWindow(targetUrl);
+    tray = new Tray(getTrayIcon());
+    tray.setToolTip('Runagon Quick Capture & Retrieval (⌥Space)');
+
+    tray.on('click', (_event, bounds) => {
+      toggleTrayWindow(bounds);
+    });
+
+    tray.on('right-click', () => {
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: 'Quick Capture & Retrieval',
+          accelerator: 'Option+Space',
+          click: () => toggleTrayWindow()
+        },
+        {
+          label: 'Open Runagon',
+          click: () => {
+            if (mainWindow) {
+              if (mainWindow.isMinimized()) mainWindow.restore();
+              mainWindow.show();
+              mainWindow.focus();
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Quit Runagon',
+          click: () => {
+            app.isQuitting = true;
+            app.quit();
+          }
+        }
+      ]);
+      tray.popUpContextMenu(contextMenu);
+    });
+
+    try {
+      globalShortcut.register('Option+Space', () => {
+        toggleTrayWindow();
+      });
+    } catch (e) {
+      console.warn('Could not register Option+Space:', e);
+    }
+
+    try {
+      globalShortcut.register('CommandOrControl+Shift+R', () => {
+        toggleTrayWindow();
+      });
+    } catch {}
+  } catch (err) {
+    console.warn('Tray initialization failed:', err);
+  }
 }
 
 function startDevControlServer() {
@@ -273,13 +472,28 @@ function startDevControlServer() {
     try {
       const parsedUrl = new URL(req.url, 'http://127.0.0.1:5178');
       const wins = BrowserWindow.getAllWindows();
-      const win = wins[0];
+      const winParam = parsedUrl.searchParams.get('win');
+      let win = wins[0];
+      if (winParam === 'tray') {
+        win = trayWindow || wins[1] || wins[0];
+      } else if (winParam !== null && !isNaN(Number(winParam))) {
+        win = wins[Number(winParam)] || wins[0];
+      }
+
+      if (parsedUrl.pathname === '/toggle-tray') {
+        toggleTrayWindow();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: true, visible: trayWindow ? trayWindow.isVisible() : false }));
+      }
 
       if (parsedUrl.pathname === '/screenshot') {
         const outPath = parsedUrl.searchParams.get('path');
         if (!win) {
           res.writeHead(500);
           return res.end('No window');
+        }
+        if (!win.isVisible()) {
+          win.show();
         }
         const img = await win.webContents.capturePage();
         const buf = img.toPNG();
@@ -363,10 +577,21 @@ app.whenReady().then(async () => {
   }
 
   createWindow(targetUrl);
+  setupTray(targetUrl);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow(targetUrl);
   });
+});
+
+app.on('before-quit', () => {
+  app.isQuitting = true;
+});
+
+app.on('will-quit', () => {
+  try {
+    globalShortcut.unregisterAll();
+  } catch {}
 });
 
 app.on('window-all-closed', () => {

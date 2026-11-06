@@ -170,3 +170,28 @@ export interface RecoverySnapshot {
   size: number;
   content?: string;
 }
+
+export interface ElectronAPI {
+  pickVaultFolder: () => Promise<string | null>;
+  openUrl: (url: string) => void;
+  onFileNewNote: (callback: () => void) => () => void;
+  onSwitcherOpen: (callback: () => void) => () => void;
+  onSelectFile: (callback: (filePath: string) => void) => () => void;
+  hideTrayWindow: () => void;
+  setTrayPinned: (pinned: boolean) => void;
+  openInMainWindow: (filePath?: string, vaultPath?: string) => void;
+  revealInFinder: (filePath: string) => void;
+  saveDroppedFile: (data: {
+    sourcePath: string;
+    targetVaultPath: string;
+    targetFolder: string;
+    fileName: string;
+  }) => Promise<{ ok: boolean; relPath?: string; absPath?: string; error?: string }>;
+  getPathForFile: (file: File) => string;
+}
+
+declare global {
+  interface Window {
+    electronAPI?: ElectronAPI;
+  }
+}
